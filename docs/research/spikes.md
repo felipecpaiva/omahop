@@ -26,6 +26,22 @@ Our decision input for D5: the poll works with a focusless overlay and needs no 
 `hyprctl eval dofile(...)` twice registered each bind twice, so every event fired twice. Our module must be idempotent: unbind its own chords before binding, and keep a load guard.
 Also: `hl.get_time` does not exist; `os.clock` is CPU time, not wall time. Use `/proc/uptime` for timestamps in probes.
 
+## S8 raise: what brings a floating window to the front? `alter_zorder top` or `bring_to_top`, NOT focus alone
+
+Test `tests/spikes/s8_raise.py`: three coloured kitty windows overlapping on a spare workspace in real floating mode (the windows carried the
+`omarchy-floating-workspace` tag), one-pixel `grim` screenshot says which is on top. Hyprland 0.56.2.
+
+| Scenario | focus only | focus + `alter_zorder top` | focus + `bring_to_top` | `alter_zorder top` only |
+|---|---|---|---|---|
+| Plain overlapping floating windows | **stays behind** | front | front | front |
+| Top window maximized | front | front | front | front |
+| Top window fullscreen | front | front | front | front |
+
+Reading: the stacking bug (core issues 16241, 16973, 17724) is real for plain overlapping floating windows: a focus call alone does not raise.
+For a maximized or fullscreen top window, focus alone already works here, because Omarchy sets `misc.on_focus_under_fullscreen = 1` (seen in core PR 16548's comments) and hands the screen to the focused window.
+Our rule: always focus AND `alter_zorder top`. Not tested: a window on another workspace, two monitors, a dialog over its owner, XWayland apps.
+Cleanup was verified: no test windows left, workspace mode file removed, original workspace restored.
+
 ## Still open
 
-S2 thumbnails cost, S3 IPC and latency, S4 focusless hover, S6 load order, S7 and S8 (raise), L1 (Alt menu on tap). See `ROADMAP.md`.
+S2 thumbnails cost, S3 IPC and latency, S4 focusless hover, S6 load order, S7 (ghost windows, Alt scan codes already covered by S9), L1 (Alt menu on tap). See `ROADMAP.md`.
