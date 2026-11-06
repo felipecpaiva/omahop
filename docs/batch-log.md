@@ -71,3 +71,9 @@ Built: `lua/search.lua` (pure: every word must appear in the app display name, c
 overlay (`SearchChip.qml` above the list, the names file the overlay writes so Lua can search by display name such as "Files").
 Verified: unit and glue tests (including a user's own ALT+X left alone), `State.js` tests, and live with real keys: typing 'alp' picks alpha although the default pick is bravo, backspace, Escape clears first, no match leaves focus alone.
 Left: hand checks (display-name search, own shortcuts), tuning ranking after real use.
+
+## Batch 7 (2026-11-06, branch v0.2): release material and checks
+
+Core PRs 16548, 16219 and 16479 are all still open (read-only check), so D9 stands. Highlight pictures made from the real overlay on a spare workspace with public content only (`branding/tools/highlight.py v0.2.0`): cards, list, search.
+First attempt showed the home folder in a file-manager window: those pictures were deleted before any commit and the demo now opens a system folder (the check is: look at every highlight picture before committing it). `docs/releases/v0.2.0.md` written (image links point at the `v0.2` branch until it is merged to main).
+Left for Felipe before the tag: hand checks (`docs/validation-checklist.md`, v0.2 sections), picking a logo concept, plugging in a second monitor for the multi-monitor and unplug checks, and the decision to merge `v0.2` into main.
