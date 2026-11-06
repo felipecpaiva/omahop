@@ -13,8 +13,8 @@ Every row must meet [engineering-standards.md](engineering-standards.md): flexib
 | **v0.1** basic (RELEASED 2026-11-06, tag v0.1.0) | A working list switcher you can use daily | Phase 0 spikes. Phase 1 rows A1 to A6: Alt+Tab override, `scope` (floating default, `all`), window set filter (A2b), MRU, first Tab picks previous window, tap vs hold with 100 ms reveal, Esc/Enter/arrows, vertical list with icon, app name and title, live theme. Settings by hand-edited `config.toml` (no app yet). No thumbnails. Must handle the rivals' known failures: raise the focused floating window (`bring_to_top`), skip ghost windows (Wine, Proton, no real toplevel), both Alt keys by scan code, no pointer warp. |
 | v0.2 (RELEASED 2026-11-06, tag v0.2.0; plan in `v0.2-plan.md`) | Looks and settings app | Type-to-search in the list (moved up from v0.4, rivals have it), Phase 2 cards style with thumbnails (B1 to B3), `thumbnails` setting, Phase 3 settings panel (C1 to C3), multi-monitor overlay (B5) |
 | v0.3 (RELEASED 2026-11-06, tag v0.3.0; plan in `v0.3-plan.md`) | Pointer, quick actions, peek strip | Phase 4 hover previews (needs D8), minimized and special windows (B4), quick actions close and minimize (B6) |
-| v0.4 (RELEASED 2026-11-07 when its tag exists; plan in `v0.4-plan.md`) | Power features | Profiles, letter hints, per-app rules, ignore-when-fullscreen (BetterCmdTab ideas, see its reference) |
-| v1.0 | Release polish | Phase 5: branding kit, marketplace submission (only with Felipe's go) |
+| v0.4 (RELEASED 2026-11-07, tag v0.4.0; plan in `v0.4-plan.md`) | Power features | Profiles, letter hints, per-app rules, ignore-when-fullscreen (BetterCmdTab ideas, see its reference) |
+| v1.0 (release candidate `v1.0.0-rc.1` 2026-11-07; plan in `v1.0-plan.md`) | Release polish | Requirements and privacy in the README, launch material in `docs/launch/`. `v1.0.0` after Felipe's hand checks; marketplace submission only with his go |
 
 Rule: v0.1 stays small on purpose. A feature not in the v0.1 row waits, but the settings model (`settings.md`) and the
 Lua/QML contract are built so that later features add values and views without rewriting the key handling.
