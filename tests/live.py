@@ -64,8 +64,11 @@ try:
         kb.down("alt"); kb.down("tab"); kb.up("tab"); time.sleep(0.3)
         st = read_state()
         check("session open and revealed while Alt is held", st.get("open") == "1" and st.get("revealed") == "1", str(st))
+        layers = sh("hyprctl", "layers", "-j")
+        check("overlay layer is on screen while revealed (needs the plugin enabled)", '"omahop"' in layers, "plugin not enabled? omarchy plugin list")
         kb.down("escape"); kb.up("escape"); time.sleep(0.2); kb.up("alt"); time.sleep(0.5)
         check("Alt+Escape cancels: focus stays on C", active_class() == "omahop-C", active_class())
+        check("overlay layer is gone after cancel", '"omahop"' not in sh("hyprctl", "layers", "-j"))
         check("closed after cancel", read_state().get("open") == "0", str(read_state()))
 
         sp.reset_order()

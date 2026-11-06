@@ -24,3 +24,9 @@ Feature complete for the v0.1 row of the release plan: Alt+Tab override with sco
 Verified: all unit and glue tests, the state parser, plugin validation, QML syntax, 16 live checks with real keys (run before the overlay plugin was enabled), and the overlay itself with a synthetic state file (icons, names, titles, dimmed minimized row, elided long title, highlight on the selected row, scrolling with 12 entries). A bug found that way: ListView resets `currentIndex` on every model replacement, so the highlight now comes from `selected` directly.
 NOT verified end to end: the live test with the overlay plugin enabled (key events were declined by the user at the end of the session, so none were sent), state-file watch latency (S3), minimized restore and two monitors on real hardware, non-Qt apps for the Alt-menu fix.
 To close v0.1: run `bash tests/run-all.sh` (live part drives the keyboard, hands off for about a minute), tick `docs/validation-checklist.md`, then tag `v0.1.0`.
+
+## v0.1 live run with the overlay (2026-11-06)
+
+With the plugin enabled and the install line in `hyprland.lua`, `bash tests/run-all.sh` passed everything: unit, glue, scrub, state parser, plugin validation, QML syntax, and 18 live checks with real keys
+(the 16 from before plus: the overlay layer is on screen while revealed, and gone after cancel). No test windows left, the temporary config removed, the original workspace restored.
+Still on Felipe's hand-check list: non-Qt apps for the Alt-menu fix, two monitors, minimized restore on real windows, theme change, the real keyboard feel.
