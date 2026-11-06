@@ -140,14 +140,39 @@ Item {
     onLoadFailed: root.apply("")
   }
 
+  // The pointer: a click on a row or card, and its close and minimize buttons, call into the Lua side through `hyprctl eval` from here (never the other way round:
+  // hyprctl called from Lua would freeze the compositor). Arguments are checked here and again in Lua.
+  function lua(code) { Quickshell.execDetached(["hyprctl", "eval", code]) }
+  function pick(index) { if (Number.isInteger(index) && index >= 1) root.lua("_G.omahop.pick(" + index + ")") }
+  function closeWindow(address) { if (/^0x[0-9a-fA-F]+$/.test(String(address))) root.lua("_G.omahop.close_window('" + address + "')") }
+  function minimizeWindow(address) { if (/^0x[0-9a-fA-F]+$/.test(String(address))) root.lua("_G.omahop.minimize_window('" + address + "')") }
+
+  // Where the rows or cards are on screen, one rectangle per line, for the live tests that click with a virtual mouse. Rewritten shortly after the list changes.
+  FileView {
+    id: geometryFile
+    path: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/omahop/geometry"
+    atomicWrites: true
+    printErrors: false
+  }
+  Timer {
+    id: geometryTimer
+    interval: 120
+    onTriggered: {
+      var item = styleLoader.item
+      geometryFile.setText(item && item.rects ? item.rects().join("\n") + "\n" : "")
+    }
+  }
+
   OverlayWindow {
     id: window
     shown: root.st.open && root.st.revealed
     shownKeyboardFocus: WlrKeyboardFocus.None
     WlrLayershell.namespace: "omahop"
-    mask: Region {}
+    // The pointer is taken only over the card (and the search line); everywhere else clicks go through to the windows below.
+    mask: Region { item: column }
 
     Column {
+      id: column
       anchors.centerIn: parent
       spacing: Style.space(8)
       visible: window.contentRevealed
@@ -159,8 +184,10 @@ Item {
         outline: root.outline
       }
       Loader {
+        id: styleLoader
         anchors.horizontalCenter: parent.horizontalCenter
         visible: root.entries.length > 0
+        onLoaded: geometryTimer.restart()
         sourceComponent: root.st.style === "cards" ? cardsStyle : listStyle
       }
     }
@@ -173,6 +200,12 @@ Item {
         screenHeight: window.height
         resolve: root.resolve
         outline: root.outline
+        actions: root.st.actions
+        onPicked: function (index) { root.pick(index) }
+        onCloseRequested: function (address) { root.closeWindow(address) }
+        onMinimizeRequested: function (address) { root.minimizeWindow(address) }
+        onEntriesChanged: geometryTimer.restart()
+        onSelectedChanged: geometryTimer.restart()
       }
     }
 
@@ -186,6 +219,12 @@ Item {
         resolve: root.resolve
         toplevelFor: root.toplevelFor
         outline: root.outline
+        actions: root.st.actions
+        onPicked: function (index) { root.pick(index) }
+        onCloseRequested: function (address) { root.closeWindow(address) }
+        onMinimizeRequested: function (address) { root.minimizeWindow(address) }
+        onEntriesChanged: geometryTimer.restart()
+        onSelectedChanged: geometryTimer.restart()
       }
     }
   }

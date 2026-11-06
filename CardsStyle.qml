@@ -11,6 +11,23 @@ BorderSurface {
   property int selected: 1
   property string thumbnails: "snapshot"
   property real screenWidth: 1280
+  property bool actions: true
+
+  signal picked(int index)
+  signal closeRequested(string address)
+  signal minimizeRequested(string address)
+
+  // Where each visible card is, in window coordinates (the live tests click on these; nothing else uses them).
+  function rects() {
+    var out = []
+    for (var i = 0; i < view.count; i++) {
+      var it = view.itemAtIndex(i)
+      if (!it) continue
+      var p = it.mapToItem(null, 0, 0)
+      out.push([Math.round(p.x), Math.round(p.y), Math.round(it.width), Math.round(it.height)].join(","))
+    }
+    return out
+  }
   property int outline: Math.max(1, Style.space(2))
   // The owner supplies these, so this file needs no desktop-entry or Hyprland knowledge.
   property var resolve: function (appId) { return { icon: "", name: appId } }
@@ -62,6 +79,10 @@ BorderSurface {
       thumbnails: strip.thumbnails
       toplevel: strip.toplevelFor(modelData.address)
       selected: index === strip.selected - 1
+      actions: strip.actions
+      onPicked: strip.picked(index + 1)
+      onCloseRequested: strip.closeRequested(modelData.address)
+      onMinimizeRequested: strip.minimizeRequested(modelData.address)
     }
   }
 }

@@ -26,6 +26,8 @@ C.spec = {
     thumbnails = { default = "snapshot", values = { "live", "snapshot", "off" }, group = "look", label = "Thumbnails (cards)",
       names = { live = "Live", snapshot = "Snapshot when it opens", off = "Off (icons only)" },
       help = "Snapshot takes one picture of each window when the cards open and costs almost nothing. Live keeps them updating and uses noticeable CPU with many windows." },
+    actions = { default = true, group = "look", label = "Close and minimize buttons",
+      help = "Show close and minimize buttons on the row or card under the pointer. Delete (with Alt held) closes the picked window either way." },
     border = { default = "auto", values = { "auto", "on", "off" }, group = "look", label = "Outline",
       names = { auto = "Follow Hyprland's window border", on = "Always", off = "Never" },
       help = "Auto draws no outline when you turned window borders off." },
@@ -56,7 +58,7 @@ C.groups = {
   { id = "keys", title = "Keys" },
 }
 C.order = { "top.takeover", "top.scope", "top.search", "windows.workspaces", "windows.monitors", "windows.minimized", "windows.specials", "windows.ignore",
-  "top.style", "top.thumbnails", "top.reveal_delay_ms", "top.border", "keys.repeat_delay_ms", "keys.repeat_ms" }
+  "top.style", "top.thumbnails", "top.reveal_delay_ms", "top.border", "top.actions", "keys.repeat_delay_ms", "keys.repeat_ms" }
 
 local function contains(list, v)
   for _, x in ipairs(list) do if x == v then return true end end

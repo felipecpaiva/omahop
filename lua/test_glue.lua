@@ -14,7 +14,7 @@ local here = arg[0]:match("^(.*)/") or "."
 local TESTDIR = os.getenv("OMAHOP_TEST_DIR")
 
 -- ---- a fake hl ----
-local binds, dispatched, timers, key_state, handlers = {}, {}, {}, {}, {}
+local binds, dispatched, timers, key_state, handlers, execd = {}, {}, {}, {}, {}, {}
 local windows, active = {}, nil
 local clock = 1000
 local function win(addr, class, ws, extra)
@@ -27,7 +27,7 @@ end
 local function dsp(name) return function(args) return { name = name, args = args } end end
 hl = {
   dsp = { focus = dsp("focus"), send_key_state = dsp("send_key_state"),
-    window = { move = dsp("move"), alter_zorder = dsp("alter_zorder"), cycle_next = dsp("cycle_next"), bring_to_top = dsp("bring_to_top") } },
+    window = { move = dsp("move"), alter_zorder = dsp("alter_zorder"), cycle_next = dsp("cycle_next"), bring_to_top = dsp("bring_to_top"), close = dsp("close") } },
   get_windows = function() return windows end,
   get_active_window = function() return active end,
   get_active_workspace = function() return active and active.workspace or { id = 1, name = "1" } end,
@@ -39,7 +39,7 @@ hl = {
   unbind = function(chord) binds[chord] = nil end,
   on = function(ev, fn) handlers[ev] = fn end,
   timer = function(fn, opts) timers[#timers + 1] = fn end,
-  exec_cmd = function(cmd) end,
+  exec_cmd = function(cmd) execd[#execd + 1] = cmd end,
   is_key_down = function(k) return key_state[k] end,
 }
 local function names() local t = {} for i, d in ipairs(dispatched) do t[i] = d.name end return table.concat(t, ",") end
@@ -187,5 +187,46 @@ windows = { a, t }; active = t; key_state.Alt_L = true; key_state.Tab = true
 dofile(here .. "/omahop.lua"); M = _G.omahop; M.now = function() return clock end
 reset(); binds["ALT + TAB"]()
 assert(M.session:is_open() and #M.entries == 2, "scope all on a tiling workspace opens the switcher")
+
+-- pointer entry points and quick actions (the overlay calls these through hyprctl eval; arguments are validated)
+do
+  windows = {}
+  local wa = win("0xa3", "app-a", 1, { focus_history_id = 0, tags = { "omarchy-floating-workspace" } })
+  local wb = win("0xb3", "app-b", 1, { focus_history_id = 1, tags = { "omarchy-floating-workspace" } })
+  local wc = win("0xc3", "app-c", 1, { focus_history_id = 2, tags = { "omarchy-floating-workspace" } })
+  active = wa; key_state.Alt_L = true; key_state.Tab = true
+  local cfgf = io.open(TESTDIR .. "/cfg/omahop/config.toml", "w"); cfgf:write('[windows]\nworkspaces = "current"\n'); cfgf:close()
+  M.session:key(clock, "escape"); M.apply({}); reset()
+  binds["ALT + TAB"]()
+  assert(M.session:is_open() and #M.entries == 3, "session for the pointer tests")
+  assert(binds["ALT + DELETE"], "ALT + DELETE bound during the session")
+  assert(read_state():find("actions=1"), "state tells the overlay to show the hover buttons")
+  -- a click on row 3 picks it
+  reset(); M.pick(3)
+  assert(not M.session:is_open() and dispatched[1] and dispatched[1].args.window.address == "0xc3", "pick(3) brings window c forward and ends the session")
+  -- bad input is ignored
+  binds["ALT + TAB"]()
+  reset(); M.pick(0); M.pick(9); M.pick("x"); M.pick(nil); M.pick(2.5)
+  assert(M.session:is_open() and names() == "", "out of range, non numeric and fractional picks do nothing")
+  -- close and minimize validate the address
+  reset(); execd = {}
+  M.close_window("0xb3"); M.close_window("0xb3; echo injected"); M.close_window(42); M.close_window("address:0xb3")
+  assert(names() == "close" and dispatched[1].args.window.address == "0xb3", "only a plain hex address closes a window")
+  M.minimize_window("0xb3"); M.minimize_window("0xb3 && echo injected"); M.minimize_window("$(id)")
+  assert(#execd == 1 and execd[1] == "omarchy-hyprland-window-minimize 0xb3", "only a plain hex address reaches the minimize script, got " .. #execd .. " calls")
+  -- Delete closes the picked window; the row stays until the window is gone
+  reset()
+  binds["ALT + DELETE"]()
+  assert(names() == "close" and #M.entries == 3, "Delete asks for a close, the list is unchanged until the window closes")
+  -- the window closes: it leaves the list, the selection stays in range
+  windows = { wa, wc }
+  M.on_window_closed("0xb3")
+  assert(#M.entries == 2 and M.session:selected() >= 1 and M.session:selected() <= 2, "closed window leaves the list, selection in range")
+  assert(not read_state():find("0xb3"), "and the state file")
+  M.on_window_closed("0xa3"); M.on_window_closed("0xc3")
+  assert(not M.session:is_open(), "the last window closing ends the session")
+  cfgf = io.open(TESTDIR .. "/cfg/omahop/config.toml", "w"); cfgf:write('[windows]\nworkspaces = "all"\n'); cfgf:close()
+end
+
 
 print("glue ok")

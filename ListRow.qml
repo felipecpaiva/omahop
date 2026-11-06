@@ -12,6 +12,12 @@ Item {
   property string title: ""
   property bool selected: false
   property bool minimized: false
+  property bool actions: true   // show the close and minimize buttons while the pointer is over the row
+  readonly property bool hovered: hover.hovered
+
+  signal picked()
+  signal closeRequested()
+  signal minimizeRequested()
 
   implicitHeight: Style.space(46)
   opacity: row.minimized ? 0.6 : 1
@@ -19,7 +25,23 @@ Item {
   Rectangle {
     anchors.fill: parent
     radius: Style.cornerRadius
-    color: row.selected ? Style.selectedFillFor(Color.foreground, Color.accent, Color.urgent) : "transparent"
+    // Hover is visual only: a light fill, clearly weaker than the keyboard selection. Nothing is told to Lua on hover.
+    color: row.selected ? Style.selectedFillFor(Color.foreground, Color.accent, Color.urgent) : (row.hovered ? Util.alpha(Color.popups.text, 0.07) : "transparent")
+  }
+
+  HoverHandler { id: hover }
+  MouseArea { anchors.fill: parent; onClicked: row.picked() }
+
+  Row {
+    id: buttons
+    anchors.right: parent.right
+    anchors.rightMargin: Style.space(10)
+    anchors.verticalCenter: parent.verticalCenter
+    spacing: Style.space(6)
+    opacity: row.actions && row.hovered ? 1 : 0
+    visible: row.actions
+    ActionButton { kind: "minimize"; onClicked: row.minimizeRequested() }
+    ActionButton { kind: "close"; onClicked: row.closeRequested() }
   }
 
   IconImage {
@@ -35,7 +57,7 @@ Item {
     anchors.left: icon.right
     anchors.leftMargin: Style.space(12)
     anchors.right: parent.right
-    anchors.rightMargin: Style.space(12)
+    anchors.rightMargin: Style.space(12) + (row.actions ? Style.space(60) : 0)
     anchors.verticalCenter: parent.verticalCenter
 
     Text {

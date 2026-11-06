@@ -23,3 +23,4 @@ echo "Live test next: it uses your real keyboard. Keep your hands off it."
 python3 tests/live.py
 python3 tests/live_panel.py
 python3 tests/live_cards.py
+python3 tests/live_pointer.py

@@ -13,7 +13,7 @@ M.tick_ms = 16 -- key polling interval: shorter means Alt release is noticed soo
 M.inject_key = "F24" -- see docs/research/spikes.md L1: without it, an app under the overlay sees a bare Alt tap and opens its menu bar
 -- Chords active only while a session is open; ALT is held for the whole session. (Unbinding them at the end would also drop a
 -- user's own bind on the same chord: shortcut, none exist in the stock set; upgrade by reading the bind list if one appears.)
-M.session_keys = { ["ALT + ESCAPE"] = "escape", ["ALT + RETURN"] = "return", ["ALT + LEFT"] = "left", ["ALT + RIGHT"] = "right", ["ALT + UP"] = "up", ["ALT + DOWN"] = "down" }
+M.session_keys = { ["ALT + DELETE"] = "delete", ["ALT + ESCAPE"] = "escape", ["ALT + RETURN"] = "return", ["ALT + LEFT"] = "left", ["ALT + RIGHT"] = "right", ["ALT + UP"] = "up", ["ALT + DOWN"] = "down" }
 
 local state_dir = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/omahop"
 M.state_path = state_dir .. "/state"
@@ -131,7 +131,7 @@ end
 function M.write_state()
   local s = M.session
   local lines = { "version=1", "open=" .. ((s and s:is_open()) and 1 or 0), "revealed=" .. ((s and s:is_revealed()) and 1 or 0),
-    "selected=" .. (s and s:selected() or 0), "style=" .. M.cfg.style, "thumbnails=" .. M.cfg.thumbnails, "border=" .. M.cfg.border }
+    "selected=" .. (s and s:selected() or 0), "style=" .. M.cfg.style, "thumbnails=" .. M.cfg.thumbnails, "border=" .. M.cfg.border, "actions=" .. (M.cfg.actions and 1 or 0) }
   if s and s:is_open() then lines[#lines + 1] = "query=" .. (tostring(M.query):gsub("[%c]", " ")) end
   if s and s:is_open() then
     for _, e in ipairs(M.entries) do
@@ -231,6 +231,7 @@ local function bind_session_keys(on)
     if free(key) then
       add(chord, key, function()
         if name == "escape" and M.query ~= "" then M.query = ""; M.refilter(); return end -- the first Escape clears what was typed
+        if name == "delete" then M.close_selected(); return end                           -- quick action: close the picked window
         M.apply(M.session:key(M.now(), name))
       end)
     end
@@ -251,6 +252,55 @@ local function keys_down()
   local ok, r = pcall(hl.is_key_down, "Tab")
   if ok then tab = r end
   return { alt = alt, tab = tab }
+end
+
+-- Entry points for the overlay's pointer (called from QML through `hyprctl eval`, so every argument is validated: addresses are hex only, an index is an integer).
+local function valid_address(a) return type(a) == "string" and a:match("^0x%x+$") ~= nil end
+
+-- A click on a row or card: that window is picked and the session ends.
+function M.pick(index)
+  index = math.tointeger(tonumber(index))
+  if not index or not (M.session and M.session:is_open()) then return end
+  if index < 1 or index > #M.entries then return end
+  M.session:resize(#M.entries, index)
+  M.apply(M.session:key(M.now(), "return"))
+end
+
+-- Closing is a request (the app may ask first), so the row leaves the list when the window is gone (on_window_closed), not here.
+function M.close_window(address)
+  if not valid_address(address) then return end
+  local w = hl.get_window("address:" .. address)
+  if w then hl.dispatch(hl.dsp.window.close({ window = w })) end
+end
+
+-- Omarchy's own minimize script (it sends the window to the dock's special workspace and remembers where it came from); only acts on floating workspaces.
+function M.minimize_window(address)
+  if not valid_address(address) then return end
+  hl.exec_cmd("omarchy-hyprland-window-minimize " .. address)
+end
+
+function M.close_selected()
+  if not (M.session and M.session:is_open()) then return end
+  local e = M.entries[M.session:selected()]
+  if e then M.close_window(e.address) end
+end
+
+-- A window went away: forget it, and while a session is open take it out of the list (selection stays in range, nothing left ends the session).
+function M.on_window_closed(address)
+  M.order = Mru.forget(M.order, address)
+  if not (M.session and M.session:is_open()) then return end
+  local function drop(list)
+    local out = {}
+    for _, e in ipairs(list) do if e.address ~= address then out[#out + 1] = e end end
+    return out
+  end
+  local before = #M.all_entries
+  M.all_entries, M.entries = drop(M.all_entries), drop(M.entries)
+  if #M.all_entries == before then return end
+  if #M.all_entries < 1 then M.apply(M.session:key(M.now(), "escape")); return end
+  local sel = #M.entries == 0 and 0 or math.min(math.max(M.session:selected(), 1), #M.entries)
+  M.session:resize(#M.entries, sel)
+  M.write_state()
 end
 
 function M.apply(actions)
@@ -360,7 +410,7 @@ function M.setup()
   M.used = nil
   pcall(hl.timer, M.refresh_binds, { type = "oneshot", timeout = 2000 }) -- after the config has finished loading, so the snapshot shows the final binds
   pcall(hl.on, "window.active", function(w) if w and w.address then M.order = Mru.touch(M.order, w.address) end end)
-  pcall(hl.on, "window.close", function(w) if w and w.address then M.order = Mru.forget(M.order, w.address) end end)
+  pcall(hl.on, "window.close", function(w) if w and w.address then M.on_window_closed(w.address) end end)
   for _, chord in ipairs({ "ALT + TAB", "ALT + SHIFT + TAB" }) do pcall(hl.unbind, chord) end
   hl.bind("ALT + TAB", function() M.on_tab(1) end, {})
   hl.bind("ALT + SHIFT + TAB", function() M.on_tab(-1) end, {})

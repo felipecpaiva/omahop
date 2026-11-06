@@ -10,6 +10,23 @@ BorderSurface {
   property var entries: []
   property int selected: 1
   property real screenHeight: 1080
+  property bool actions: true
+
+  signal picked(int index)
+  signal closeRequested(string address)
+  signal minimizeRequested(string address)
+
+  // Where each visible row is, in window coordinates (the live tests click on these; nothing else uses them).
+  function rects() {
+    var out = []
+    for (var i = 0; i < view.count; i++) {
+      var it = view.itemAtIndex(i)
+      if (!it) continue
+      var p = it.mapToItem(null, 0, 0)
+      out.push([Math.round(p.x), Math.round(p.y), Math.round(it.width), Math.round(it.height)].join(","))
+    }
+    return out
+  }
   // Outline width in pixels, 0 for none; the owner decides (it follows Hyprland's window border by default).
   property int outline: Math.max(1, Style.space(2))
   // Resolve an app id to { icon, name }: supplied by the owner so this file needs no desktop-entry knowledge.
@@ -55,6 +72,10 @@ BorderSurface {
       title: modelData.title
       minimized: modelData.minimized
       selected: index === card.selected - 1
+      actions: card.actions
+      onPicked: card.picked(index + 1)
+      onCloseRequested: card.closeRequested(modelData.address)
+      onMinimizeRequested: card.minimizeRequested(modelData.address)
     }
   }
 }

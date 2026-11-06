@@ -99,6 +99,13 @@ Rule from L6 kept: never create a view for a window whose output is gone. Not te
 Safe route: `hl.exec_cmd("sh -c 'hyprctl binds > file'")` runs it detached, and the glue reads the file later (a snapshot taken after load and refreshed on config reload; chords rarely change).
 Registering and removing 38 `ALT + <key>` binds (A to Z, 0 to 9, space, backspace) is under 10 ms each way (below the clock's resolution). No chord with ALT or ALT+SHIFT is bound in the stock set except Tab.
 
+## S4 pointer on a focusless overlay (v0.3, batch 8): works, and hover changes nothing
+
+`tests/live_pointer.py` (virtual keyboard and mouse, spare workspace): the overlay window takes the pointer only over its card (`mask: Region { item: column }`), keyboard focus stays `None`.
+Measured: moving the pointer over a row changes neither the selection nor the focused window (advisor point: assert focus and selection, not only input); a click on row 3 calls `_G.omahop.pick(3)` through `hyprctl eval` from QML and the right window comes forward, ending the session;
+the close button on a hovered row closes that window and the row leaves the list while the session stays open; `Alt+Delete` closes the picked window. The card geometry is written by the overlay to `$XDG_RUNTIME_DIR/omahop/geometry` (one rectangle per visible row or card) so tests click on real positions, not blind ones.
+Design consequence: hover is visual only (a lighter fill than the selection, never a call to Lua), so a pointer resting where the card opens cannot move the selection.
+
 ## Still open
 
 S2 thumbnails cost (needs the overlay), S3 file-watch latency, S4 focusless hover: they need a real overlay window and are the first build step of v0.1. S7 ghost windows: toplevel-only filter, tested with fixtures in batch 1. L1 for non-Qt apps: part of the same batch.

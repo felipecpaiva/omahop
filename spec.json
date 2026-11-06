@@ -171,6 +171,16 @@
       "section": "top",
       "type": "enum",
       "values": ["auto", "on", "off"]
+    }, {
+      "default": true,
+      "help": "Show close and minimize buttons on the row or card under the pointer. Delete (with Alt held) closes the picked window either way.",
+      "hidden": false,
+      "id": "top.actions",
+      "key": "actions",
+      "label": "Close and minimize buttons",
+      "reload": false,
+      "section": "top",
+      "type": "bool"
     }],
     "title": "Look"
   }, {

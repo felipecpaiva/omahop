@@ -103,3 +103,9 @@ Not done by me: the multi-monitor and unplug hand checks (need a second monitor)
 
 Felipe went away for a couple of hours and asked for the remaining releases one by one (v0.3, v0.4, v1.0), each ending in a tag and a release. D8 resolved on evidence: the stock dock cannot be hooked or rebuilt from outside, so hover previews are omahop's own opt-in peek strip. Advisor rules added to `v0.3-plan.md`.
 Resume line: branch v0.3, next is batch 8 (pointer on the switcher, quick actions, Lua entry points). All tests green at the start.
+
+## Batch 8 (2026-11-06 night, branch v0.3): pointer, quick actions
+
+Lua: `pick(index)`, `close_window(address)`, `minimize_window(address)` (Omarchy's minimize script), `close_selected`, `on_window_closed` (a closed window leaves the list, selection stays in range, the last one ends the session), session key `ALT + DELETE`; arguments validated (hex addresses only, integer indexes), unit-tested including malicious-looking input.
+QML: `ActionButton.qml` (close and minimize drawn with shapes), hover (visual only) and click on `ListRow` and `CardItem`, `actions` setting (default on) shown in Look, the overlay takes the pointer only over its card, calls into Lua with `hyprctl eval` from QML, writes the row geometry for tests.
+Verified live (`tests/live_pointer.py`, 9 checks): hover changes neither focus nor selection (S4), click picks, close button closes and the row leaves the list, Alt+Delete closes. Minimize button not testable live on a spare workspace (Omarchy's script needs a saved floating mode): hand check.

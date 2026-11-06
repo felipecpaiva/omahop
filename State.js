@@ -3,7 +3,7 @@
 // Format: "key=value" lines, then one tab-separated line per window: w <address> <class> <minimized 0|1> <title>.
 
 function parse(text) {
-  var st = { open: false, revealed: false, selected: 0, style: "list", thumbnails: "snapshot", border: "auto", query: "", entries: [] }
+  var st = { open: false, revealed: false, selected: 0, style: "list", thumbnails: "snapshot", border: "auto", actions: true, query: "", entries: [] }
   var lines = String(text || "").split("\n")
   for (var i = 0; i < lines.length; i++) {
     var line = lines[i]
@@ -22,6 +22,7 @@ function parse(text) {
     else if (k === "thumbnails") st.thumbnails = v
     else if (k === "border") st.border = v
     else if (k === "query") st.query = v
+    else if (k === "actions") st.actions = v === "1"
   }
   // A selection outside the list means a half-written or stale file: show nothing rather than a wrong row.
   // The one exception: a search that matched nothing is an open session with an empty list (the overlay says so).

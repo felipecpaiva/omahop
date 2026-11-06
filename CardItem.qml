@@ -15,6 +15,12 @@ Item {
   property string title: ""
   property bool selected: false
   property bool minimized: false
+  property bool actions: true   // show the close and minimize buttons while the pointer is over the card
+  readonly property bool hovered: hover.hovered
+
+  signal picked()
+  signal closeRequested()
+  signal minimizeRequested()
 
   readonly property int pad: Style.space(8)
   readonly property int footer: Style.space(34)
@@ -26,10 +32,14 @@ Item {
   Rectangle {
     anchors.fill: parent
     radius: Style.cornerRadius
-    color: card.selected ? Style.selectedFillFor(Color.foreground, Color.accent, Color.urgent) : Util.alpha(Color.popups.text, 0.04)
+    // Hover is visual only: a light fill, clearly weaker than the keyboard selection. Nothing is told to Lua on hover.
+    color: card.selected ? Style.selectedFillFor(Color.foreground, Color.accent, Color.urgent) : Util.alpha(Color.popups.text, card.hovered ? 0.1 : 0.04)
     border.width: card.selected ? Math.max(1, Style.space(2)) : 0
     border.color: Color.accent
   }
+
+  HoverHandler { id: hover }
+  MouseArea { anchors.fill: parent; onClicked: card.picked() }
 
   Item {
     id: thumb
@@ -66,6 +76,18 @@ Item {
       implicitSize: Math.min(thumb.width, thumb.height) * 0.4
       source: card.iconSource
     }
+  }
+
+  Row {
+    id: buttons
+    anchors.right: parent.right
+    anchors.top: parent.top
+    anchors.margins: card.pad + Style.space(4)
+    spacing: Style.space(6)
+    opacity: card.actions && card.hovered ? 1 : 0
+    visible: card.actions
+    ActionButton { kind: "minimize"; onClicked: card.minimizeRequested() }
+    ActionButton { kind: "close"; onClicked: card.closeRequested() }
   }
 
   Row {
