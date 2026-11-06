@@ -1,6 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <path d="M128 280H96Q64 280 64 312V392Q64 424 96 424H224Q256 424 256 392V376" fill="none" stroke="#000000" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M232 236H160Q128 236 128 268V344Q128 376 160 376H288Q320 376 320 344V264" fill="none" stroke="#000000" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M140 200Q168 148 224 140" fill="none" stroke="#000000" stroke-width="20" stroke-linecap="round"/>
-  <rect x="256" y="88" width="200" height="152" rx="32" fill="#000000"/>
+  <path d="M 144 240 H 128 Q 112 240 112 256 V 384 Q 112 400 128 400 H 288 Q 304 400 304 384 V 384" fill="none" stroke="#000000" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 208 192 H 192 Q 176 192 176 208 V 320 Q 176 336 192 336 H 352 Q 368 336 368 320 V 304" fill="none" stroke="#000000" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="240" y="112" width="176" height="144" rx="24" fill="none" stroke="#000000" stroke-width="32"/>
+  <line x1="204" y1="228" x2="222" y2="210" stroke="#000000" stroke-width="9" stroke-linecap="round"/>
+  <line x1="204" y1="247" x2="222" y2="229" stroke="#000000" stroke-width="9" stroke-linecap="round"/>
+  <line x1="204" y1="266" x2="222" y2="248" stroke="#000000" stroke-width="9" stroke-linecap="round"/>
 </svg>

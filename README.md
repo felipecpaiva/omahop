@@ -4,7 +4,17 @@ Jump to any window fast on Omarchy's floating workspaces. Hold Alt, press Tab: a
 
 **Status: v0.1.0 released.** The list switcher works. Cards with thumbnails, a settings app and hover previews come in later releases (see `docs/ROADMAP.md`).
 
-## What v0.1 does
+## See it
+
+![Quick tap, hold, Shift+Tab](branding/demo/switch.gif)
+
+![Cards: a picture of every window](branding/demo/cards.gif)
+
+![Type to search](branding/demo/search.gif)
+
+![The settings window](branding/demo/settings.gif)
+
+## What it does
 
 - Quick Alt+Tab flips between your last two windows with no overlay. Hold Alt and the list shows after a short delay (default 100 ms).
 - Tab and Shift+Tab move through the list (hold Tab to repeat). While you hold Alt: Alt+Escape cancels, Alt+Arrows move, Alt+Return picks.

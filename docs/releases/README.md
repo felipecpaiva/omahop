@@ -5,6 +5,7 @@ Rule (Felipe, 2026-11-06): every tag ships with a feature highlight. A release i
 | Item | Where |
 |---|---|
 | Release notes, written for users: one-line hook, what is new, what was fixed, how it was checked, known limits, how to update | `docs/releases/vX.Y.Z.md` (this is also the GitHub release body) |
+| Feature GIFs for what the release adds (a short captioned GIF and MP4 per feature, recorded on a real screen with `branding/tools/demo.py`), put in `branding/demo/` and embedded in the notes and in the README | `branding/demo/<feature>.gif` |
 | Highlight media of the headline feature: a screenshot (`.png`) or a short recording (`.gif` plus `.mp4`) made on a real screen, with made-up window names and nothing private | `branding/highlights/vX.Y.Z-<feature>.png` or `.gif` |
 | The git tag, annotated | `git tag -a vX.Y.Z -m "..."`, pushed |
 | The GitHub release for that tag, with the notes as body and the highlight embedded by its raw URL | `gh release create vX.Y.Z --notes-file docs/releases/vX.Y.Z.md` |
@@ -13,3 +14,6 @@ Rule (Felipe, 2026-11-06): every tag ships with a feature highlight. A release i
 Order: finish the code and the live run, record the highlight, write the notes, commit and push, tag, push the tag, create the release. Never mention which tool made
 anything in the notes. Posting about a release anywhere else (social, forum, marketplace) is Felipe's call, drafts live in `docs/launch/` when we write them.
 Media rules: no private content (window titles, hostnames, paths, other apps open), no virtual monitors on a dev machine (use an empty workspace, as for the v0.1.0 picture).
+
+GIF recording: `python3 branding/tools/demo.py [scene ...]` records on the spare workspace with real key and mouse events and demo windows that show public content only; it needs about 2 minutes with hands off the keyboard and mouse. Always look at a contact sheet of the frames before committing
+(`ffmpeg -i branding/demo/<name>.mp4 -vf "fps=0.7,scale=400:-1,tile=4x4" -frames:v 1 sheet.png`). Add a scene function for each new feature of a release.

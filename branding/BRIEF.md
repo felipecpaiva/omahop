@@ -18,7 +18,7 @@ project in the few seconds it takes to see its logo and its first screenshot.
 
 1. **Hop.** One quick move and you are in the window you wanted. Speed, not ceremony.
 2. **Windows, stacked and found.** The mark can say "many windows, one of them chosen".
-3. **At home on Omarchy.** It looks like it belongs beside Omarchy's own apps and themes, and beside its sister omagnet, without pretending to be official.
+3. **At home on Omarchy, and beside omagnet.** It looks like it belongs beside Omarchy's own apps and themes, and is clearly the sibling of omagnet, without pretending to be official.
 4. **Small and precise.** A sharp utility, not a platform.
 
 ## Name
@@ -26,12 +26,17 @@ project in the few seconds it takes to see its logo and its first screenshot.
 `omahop`, written lowercase, one word. The `oma` prefix is Omarchy's habit (omarchy, omagnet, the community's `oma...` plugins) and `hop` is
 the move: hop to a window. Say it "oh-ma-hop".
 
-## Family
+## Family: a sibling of omagnet (this is the main rule)
 
-omagnet's mark is a violet "snap grid" (four rounded quarters, one displaced). omahop is a sibling, not a copy: it should sit well next to
-it on a README or a launcher, but it must NOT use violet as its accent, and must not reuse the four-quarters ring. Omarchy's own look uses a
-single bright green on a plain ground: do not use that green either. Choose one confident accent of your own (a warm or a cool colour that is
-not violet and not green), plus a neutral.
+omahop is the second plugin of the same maker, and the two must look like one family on a README, a launcher and a social card. Study omagnet's finished identity before drawing
+anything: `~/Work/omagnet/branding/brand-sheet.png`, `branding/explorations/v2-snapgrid/` (`icon.svg`, `notes.md`) and `branding/logo/glyph.svg`. Keep EXACTLY these family traits:
+
+- **Palette:** graphite ground `#16181d`, white-lilac main shape `#e8e6ff`, electric violet accent `#8b7bff` (on light backgrounds: ink `#16181d` and deep violet `#6a5af0`), mid-grey `#6b7080` for the small decoration. Nothing else.
+- **The three motion ticks:** three short parallel diagonal strokes (mid-grey, round caps) that show movement. omagnet uses them for "a window clicked into place"; omahop uses them for "a window hopped".
+- **Construction:** smooth rounded geometry, one violet element that has just moved, the rest in lilac, on a rounded graphite tile (radius about 19% of the width). Flat colour, no gradients, shadows or glows.
+- **Type:** JetBrains Mono for text; the wordmark is lowercase, one word, drawn as geometric monoline strokes, with the first letter `o` in violet, exactly like omagnet's wordmark.
+
+What must differ from omagnet: the IDEA. omagnet is a ring of four rounded quarters snapping into place. omahop must not use a four-quarter ring or a square ring; it is about hopping to one window among many. Same family, a different picture.
 
 ## References, and what not to take from them
 
@@ -41,7 +46,7 @@ not violet and not green), plus a neutral.
 | **Contexts** (macOS vertical window switcher) | Its idea: a plain vertical list with icon, app and title. | Its icon and name. |
 | **Windows and macOS Alt+Tab / Cmd+Tab** | The universal gesture: hold a modifier, tap Tab. A Tab keycap or arrow is a fair, generic symbol. | Any OS logo or the exact built-in switcher visuals. |
 | **Omarchy** (the logo and icon in `/usr/share/omarchy`) | Its look: chunky pixel blocks with notched corners, a half-block terminal wordmark, a love of monospace. | Its logo, its green, its exact pixel shapes. |
-| **omagnet** (our own sister project) | Family feel: clean, geometric, a single accent, rounded app icon. | Its violet and its ring of four quarters. |
+| **omagnet** (our own sister project) | The whole family look: palette, motion ticks, rounded geometry, wordmark style, tile shape (see Family above). | Its idea: the ring of four rounded quarters. |
 
 Other brand names appear only as plain text, never as marks.
 
@@ -59,11 +64,11 @@ Other brand names appear only as plain text, never as marks.
 
 | Folder | Idea |
 |--------|------|
-| `v1-stackhop/` | A stack of overlapping floating windows (rounded rectangles, cascaded). One window is lifted out of the stack and caught mid-hop, with a short motion arc. The "found one window among many" idea. |
-| `v2-keyhop/` | The gesture itself: a Tab keycap (or a key with a tab arrow) with a small hop arc leaping from one tile to the next. The "Alt+Tab" idea, clean and geometric. |
-| `v3-pixelhop/` | Terminal-native: a chunky pixel cursor block or small pixel mark hopping across three pixel window tiles, on an exact pixel grid with notched corners, a cousin of Omarchy's look. |
+| `v1-stackhop/` | A cascade of three rounded window outlines in lilac. The front one, in violet, has just hopped up and to the right out of the stack, with the three grey motion ticks. "Found one window among many." |
+| `v2-tilehop/` | Two rounded tiles side by side (the first lilac, the second violet) and a short rounded arc leaping from the first to the second, with the three motion ticks at the start of the arc. The Alt+Tab move, abstract and calm. |
+| `v3-ohop/` | The letter `o` (the `oma` prefix and the violet `o` of the wordmark) built as a lilac ring; a small violet rounded square (a window) is caught mid-hop just above it with the three motion ticks. The name as a picture. |
 
 ## Deliverables per concept (the chosen one is then taken to a full kit)
 
-`icon.svg` (the vector master), `icon-mono.svg` (one-colour stencil), `icon-512.png` and `icon-16.png` (exports), `concept.png` (a 1024 pixel render
-of the idea), and `notes.md` (the idea, the palette, why it differs from the references, how it reads at 16 pixels).
+`icon.svg` (the vector master on the graphite tile), `glyph.svg` (the mark alone, lilac and violet, for dark backgrounds), `glyph-light.svg` (ink and deep violet, for light backgrounds), `icon-mono.svg` (one-colour stencil), `icon-512.png` and `icon-16.png` (exports), `concept.png` (a 1024 pixel render
+of the idea), and `notes.md` (the idea, the palette, why it differs from omagnet and the other references, how it reads at 16 pixels).

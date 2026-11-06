@@ -1,36 +1,17 @@
 # v1-stackhop
 
-omahop finds one window among many and gets you there in one quick hop. Two overlapping window outlines form a compact cascade. A filled window lifts up and right, with a short curved motion trail. The filled shape signals the chosen window. Rounded geometry and a restrained tile suit a small Omarchy utility without claiming official status.
+One window found among many. Two stationary lilac window outlines form a rising cascade. The complete violet front window has hopped up and right, with three grey motion ticks beside its lower-left edge. The rear outlines show their exposed contours, using transparent gaps rather than background masks.
 
-## Palette
+Palette: graphite #16181d, white-lilac #e8e6ff, electric violet #8b7bff, mid-grey #6b7080. Light glyph: ink #16181d, deep violet #6a5af0, grey #5b5f6e. Stencil: black #000000 on transparency.
 
-- Warm orange: #FF8A3D, the single confident accent.
-- Charcoal: #20242B, the neutral tile.
-- Black: #000000, the transparent stencil for light backgrounds.
-- White: #FFFFFF, the alternate transparent stencil for dark backgrounds.
+Shared with omagnet: flat colour, smooth chunky rounded geometry, one violet moved element and a graphite tile with a 97.28-unit radius on a 512-unit canvas, exactly 19 percent. The three ticks copy the finished glyph's 18-by-18 diagonal, 9-unit stroke, round caps and 19-unit vertical spacing. The window outlines use 32-unit strokes to leave room for three windows. All vector masters are hand-written simple geometry without gradients, filters, text or bitmaps.
 
-The main icon uses only two colours. No gradients, filters, text, bitmaps or title-bar details are used in the SVGs. Title-bar hints would add noise at small sizes. The stencil paths have real open spaces rather than background-coloured patches.
+Different idea: a stack of window frames and a chosen window hopping away, rather than omagnet's four-quarter ring. The rear contours describe occlusion and retain separate silhouettes in one colour.
 
-## Distinction
+16 px inspection: the violet window remains recognizable and the lilac steps suggest a stack, but the rear frames lose their full window identity and the three grey ticks become faint subpixel detail. The silhouette survives in one colour; counting three windows or three ticks is unreliable at 16 px.
 
-DockDoor provides the useful idea of choosing live window cards. This mark uses an abstract cascade and a hopping selection rather than its icon or name. Contexts provides the idea of quick selection from a list; this mark uses spatial overlap rather than a vertical list or its identity. Omarchy contributes the small, precise utility context, but this design uses rounded windows and orange instead of its green, pixel blocks or logo. omagnet is a geometric sibling, but this mark has neither its violet nor its ring of four quarters. No reference brand marks appear in the artwork.
+Raster provenance: the built-in image generation tool produced the concept. codex-first.png preserves its first raw output unchanged; concept.png is that image resized to 1024 by 1024. The generated image has slight tonal texture and a looser layout. The SVG masters provide the exact flat family palette and geometry.
 
-## Small-size check
+Generation prompt: Create a 1024x1024 flat omahop logo, no text. Use a graphite #16181d rounded tile with 19 percent corner radius, two chunky lilac #e8e6ff rounded window outlines in a rising cascade and one violet #8b7bff window hopping up and right. Put three short parallel 45-degree grey #6b7080 round-capped ticks near its lower-left edge. Match omagnet's smooth geometric family, preserve open counters and small-size clarity. No gradients, shadows, glow, texture, perspective, lettering or four-quarter ring.
 
-I inspected icon-16.png at its native size. The filled lifted window and the stacked outlines remain recognizable, so the main selection idea works. The two outlines become a compact interlocked shape, and the arc reads as a small curved dash rather than an unmistakable hop. It is usable at 16 px, but the motion story is clearer at 32 px and above. No title-bar detail is needed.
-
-## Files and verification
-
-icon.svg is the hand-written vector master with a 0 0 512 512 viewBox. icon-mono.svg is black on transparent; icon-mono-light.svg is white on transparent. Both stencils contain only the mark, without a tile. Their geometry matches the colour master. All three SVGs were rendered successfully with rsvg-convert. icon-512.png and icon-16.png were exported directly from icon.svg using the requested commands. The extra stencil PNGs are rendering checks.
-
-concept.png is a 1024 by 1024 concept render from the built-in image generation tool. codex-first.png preserves the first raw output unchanged. The tool returned a larger square image, so concept.png is a Lanczos resize of it. The generated concept has slight tonal variation; the SVG master makes the palette flat and the geometry precise.
-
-## Generation prompt
-
-Built-in image generation was used with this prompt:
-
-> Use case: logo-brand. Create a 1024x1024 flat app icon for omahop, a fast floating-window switcher. No text. A charcoal #20242B rounded-square tile fills the square canvas, with generous rounded corners. Center a simple geometric mark: two overlapping outlined rounded-rectangle windows cascaded down and left in the lower half; one solid warm orange #FF8A3D rounded-rectangle window is lifted above and right, visibly separated from the stack. A short thick orange curved motion arc above the stack suggests the selected window hopping upward. All mark shapes orange, tile charcoal, no other colors except antialiasing. Bold geometry, broad strokes and negative spaces readable at 16 pixels. No title-bar details, no gradients, shadows, glow, texture, lettering, arrows, OS logos, violet, green, or four-quarter rings. Clean straight-on vector-like artwork, one icon only.
-
-## Licence
-
-Created for this project and released with it under the same MIT licence, unless the maintainer chooses otherwise.
+Artwork follows the project's MIT licence.
