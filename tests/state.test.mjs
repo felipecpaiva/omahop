@@ -35,4 +35,10 @@ assert.equal(State.normalizeAddress("0x55CB5923D480"), "55cb5923d480"); assert.e
 assert.equal(State.visibleCards(1280, 240, 12, 6), 4, "four 240 px cards fit in 90% of 1280 (five need 1248 of 1152 px)")
 assert.equal(State.visibleCards(3000, 240, 12, 6), 6, "capped")
 assert.equal(State.visibleCards(200, 240, 12, 6), 1, "at least one")
+// search: the query is read; a search with no match stays open with an empty list; a bad selection without a query still hides everything
+assert.equal(State.parse("open=1\nrevealed=1\nselected=1\nquery=chr\nw\t0xa\tk\t0\tt\n").query, "chr")
+const none = State.parse("open=1\nrevealed=1\nselected=0\nquery=zzz\n")
+assert.equal(none.open, true); assert.equal(none.entries.length, 0)
+assert.equal(State.parse("open=1\nrevealed=1\nselected=0\n").open, false, "no query and nothing selected: hidden")
+assert.equal(State.parse("").query, "")
 console.log("state ok")

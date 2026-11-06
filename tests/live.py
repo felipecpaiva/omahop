@@ -84,6 +84,33 @@ try:
         kb.down("alt"); kb.down("tab"); kb.up("tab"); kb.down("right"); kb.up("right"); time.sleep(0.2); kb.up("alt"); time.sleep(0.5)
         check("Alt+Right moves the pick (B then A)", active_class() == "omahop-A", active_class())
 
+        # search: hold Alt, Tab, then type part of a title; release picks the match (not the default previous window)
+        time.sleep(2.5)  # the snapshot of the current binds is taken 2 s after the module loads
+        sp.reset_order()
+        kb.down("alt"); kb.down("tab"); kb.up("tab"); time.sleep(0.3)
+        for k in ("a", "l", "p"):
+            kb.down(k); kb.up(k)
+        time.sleep(0.3)
+        st = read_state()
+        check("typing 'alp' puts the query in the state", st.get("query") == "alp", str(st))
+        kb.up("alt"); time.sleep(0.6)
+        check("release after typing 'alp' goes to alpha (A), not the default previous window (B)", active_class() == "omahop-A", active_class())
+        sp.reset_order()
+        kb.down("alt"); kb.down("tab"); kb.up("tab"); time.sleep(0.3)
+        for k in ("b", "r", "a"):
+            kb.down(k); kb.up(k)
+        kb.down("backspace"); kb.up("backspace"); time.sleep(0.3)
+        check("backspace removes the last letter", read_state().get("query") == "br", str(read_state()))
+        kb.down("escape"); kb.up("escape"); time.sleep(0.3)
+        st = read_state()
+        check("the first Escape clears the query and keeps the list open", st.get("query") == "" and st.get("open") == "1", str(st))
+        for k in ("z", "z", "z"):
+            kb.down(k); kb.up(k)
+        time.sleep(0.3)
+        kb.up("alt"); time.sleep(0.6)
+        check("nothing matched: releasing Alt leaves the focus where it was (C)", active_class() == "omahop-C", active_class())
+        check("typed letters did not reach the app (no key echo in the state or a stuck session)", read_state().get("open") == "0", str(read_state()))
+
         # no key is left grabbed after sessions: a plain Escape reaches the app (kitty running sleep ignores it; just assert no state)
         check("binds cleaned: state closed", read_state().get("open") == "0")
 finally:

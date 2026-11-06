@@ -5,7 +5,7 @@ set -e
 cd "$(dirname "$0")/.."
 # Hyprland embeds Lua 5.5; 5.4 accepts code that 5.5 rejects, so a pass on 5.4 proves little.
 lua -e 'assert(_VERSION == "Lua 5.5", "run these tests with Lua 5.5, like Hyprland (found " .. _VERSION .. ")")'
-for t in config scope windows mru session glue; do lua "lua/test_$t.lua"; done
+for t in config scope windows mru session search glue; do lua "lua/test_$t.lua"; done
 bash tests/scrub.sh
 node tests/state.test.mjs
 node tests/config_io.test.mjs

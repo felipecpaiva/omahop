@@ -4,7 +4,7 @@
 -- The overlay is a separate Quickshell service that watches the state file this module writes (see write_state).
 local here = debug.getinfo(1, "S").source:match("^@(.*)/") or "."
 local function mod(name) return dofile(here .. "/" .. name .. ".lua") end
-local Config, Scope, Windows, Mru, Session = mod("config"), mod("scope"), mod("windows"), mod("mru"), mod("session")
+local Config, Scope, Windows, Mru, Session, Search = mod("config"), mod("scope"), mod("windows"), mod("mru"), mod("session"), mod("search")
 
 local M = {}
 _G.omahop = M
@@ -22,7 +22,10 @@ M.config_path = config_home .. "/omahop/config.toml"
 local layouts_dir = (os.getenv("XDG_STATE_HOME") or ((os.getenv("HOME") or "") .. "/.local/state")) .. "/omarchy/workspace-layouts"
 
 M.order = {}
-M.entries = {}
+M.entries = {}      -- what the session shows (filtered by the search query)
+M.all_entries = {}  -- every window of this session, before the query
+M.query = ""
+M.bound = {}        -- chords bound for the running session, unbound exactly at its end
 M.gen = 0
 
 local function log(msg)
@@ -129,6 +132,7 @@ function M.write_state()
   local s = M.session
   local lines = { "version=1", "open=" .. ((s and s:is_open()) and 1 or 0), "revealed=" .. ((s and s:is_revealed()) and 1 or 0),
     "selected=" .. (s and s:selected() or 0), "style=" .. M.cfg.style, "thumbnails=" .. M.cfg.thumbnails, "border=" .. M.cfg.border }
+  if s and s:is_open() then lines[#lines + 1] = "query=" .. (tostring(M.query):gsub("[%c]", " ")) end
   if s and s:is_open() then
     for _, e in ipairs(M.entries) do
       local clean = function(v) return (tostring(v):gsub("[%c]", " ")) end
@@ -160,10 +164,81 @@ function M.activate(entry)
   hl.dispatch(hl.dsp.window.alter_zorder({ mode = "top", window = w }))
 end
 
+-- The chords in use, from a snapshot of `hyprctl binds` that a detached command wrote to a file (hyprctl must never be called from here directly:
+-- Hyprland would wait for itself, see docs/gotchas.md). nil until that file exists.
+local function parse_used(text)
+  local used = {}
+  for block in (text .. "\n\n"):gmatch("(.-)\n\n") do
+    local mod_, key = block:match("modmask: (%d+)"), block:match("key: ([^\n]+)")
+    if mod_ and key then used[mod_ .. ":" .. key:upper()] = true end
+  end
+  return used
+end
+
+function M.refresh_binds()
+  local path = state_dir .. "/binds.txt"
+  hl.exec_cmd(string.format("sh -c 'hyprctl binds > \"%s.tmp\" && mv \"%s.tmp\" \"%s\"'", path, path, path))
+end
+
+local function load_used()
+  if M.used then return M.used end
+  local text = read_file(state_dir .. "/binds.txt")
+  if text and #text > 0 then M.used = parse_used(text) end
+  return M.used
+end
+
+-- Letters, digits, space and backspace, typed while Alt is held (modmask 8). Each maps to what it adds to the query.
+local function typing_keys()
+  local t = {}
+  for c = string.byte("A"), string.byte("Z") do t[string.char(c)] = string.char(c):lower() end
+  for c = string.byte("0"), string.byte("9") do t[string.char(c)] = string.char(c) end
+  t.SPACE = " "; t.BACKSPACE = "backspace"
+  return t
+end
+
+function M.refilter()
+  if not M.names then
+    M.names = {}
+    local text = read_file(state_dir .. "/names")
+    for line in (text or ""):gmatch("[^\n]+") do
+      local class, name = line:match("^(.-)\t(.*)$")
+      if class then M.names[class] = name end
+    end
+  end
+  M.entries = Search.filter(M.all_entries, M.query, M.names)
+  M.session:resize(#M.entries, #M.entries > 0 and 1 or 0)
+  M.write_state()
+end
+
+function M.type_key(ch)
+  if not M.session:is_open() then return end
+  if ch == "backspace" then M.query = Search.backspace(M.query) else M.query = Search.append(M.query, ch) end
+  M.refilter()
+end
+
 local function bind_session_keys(on)
+  for _, chord in ipairs(M.bound) do pcall(hl.unbind, chord) end
+  M.bound = {}
+  if not on then return end
+  local used = load_used()
+  local function free(key) return used == nil or not used["8:" .. key] end
+  local function add(chord, key, fn)
+    -- keys with a bind of the user's own are left alone; unknown (no snapshot yet) is allowed for navigation keys, never for typing
+    if pcall(hl.bind, chord, fn, {}) then M.bound[#M.bound + 1] = chord end
+  end
   for chord, name in pairs(M.session_keys) do
-    pcall(hl.unbind, chord)
-    if on then pcall(hl.bind, chord, function() M.apply(M.session:key(M.now(), name)) end, {}) end
+    local key = chord:match("%+ (%w+)$")
+    if free(key) then
+      add(chord, key, function()
+        if name == "escape" and M.query ~= "" then M.query = ""; M.refilter(); return end -- the first Escape clears what was typed
+        M.apply(M.session:key(M.now(), name))
+      end)
+    end
+  end
+  if M.cfg.search and used ~= nil then
+    for key, ch in pairs(typing_keys()) do
+      if free(key) then add("ALT + " .. key, key, function() M.type_key(ch) end) end
+    end
   end
 end
 
@@ -189,7 +264,7 @@ function M.apply(actions)
       closed = true
     end
   end
-  if closed then bind_session_keys(false); M.gen = M.gen + 1 end
+  if closed then bind_session_keys(false); M.gen = M.gen + 1; M.query = "" end
   M.write_state()
 end
 
@@ -252,6 +327,7 @@ function M.on_tab(delta)
     return
   end
   M.entries = M.build_entries()
+  M.all_entries, M.query, M.names = M.entries, "", nil
   local focused = hl.get_active_window()
   local first = Mru.first_pick(M.entries, focused and focused.address, delta)
   if #M.entries < 2 then M.entries = {}; return end -- nothing to switch to
@@ -281,6 +357,8 @@ function M.setup()
   M.write_state()
   if _G.omahop_takeover == false or cfg.takeover == false then return M end
   seed_order()
+  M.used = nil
+  pcall(hl.timer, M.refresh_binds, { type = "oneshot", timeout = 2000 }) -- after the config has finished loading, so the snapshot shows the final binds
   pcall(hl.on, "window.active", function(w) if w and w.address then M.order = Mru.touch(M.order, w.address) end end)
   pcall(hl.on, "window.close", function(w) if w and w.address then M.order = Mru.forget(M.order, w.address) end end)
   for _, chord in ipairs({ "ALT + TAB", "ALT + SHIFT + TAB" }) do pcall(hl.unbind, chord) end

@@ -35,6 +35,7 @@ The settings window: open **omahop** from the launcher (Super+Space), or run `om
 ```toml
 schema = 1
 takeover = true          # false: leave Alt+Tab alone
+search = true            # type letters while the list is up to filter it
 scope = "floating"       # "floating": only on floating workspaces, "all": everywhere
 reveal_delay_ms = 100    # a quick tap shows no overlay
 style = "list"           # "list" (plain) or "cards" (a picture of each window)

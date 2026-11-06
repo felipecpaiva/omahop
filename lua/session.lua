@@ -37,8 +37,15 @@ local function finish(self)
 end
 
 local function move(self, delta)
+  if self.n < 1 then return { type = "select", index = 0 } end -- an empty list (search found nothing): nothing to move to
   self.sel = (self.sel - 1 + delta) % self.n + 1
   return { type = "select", index = self.sel }
+end
+
+-- The list changed under the session (search): a new size and selection. Nothing is announced; the caller writes the state.
+function S:resize(n, selected)
+  if not self.open_ then return end
+  self.n, self.sel = n, selected
 end
 
 function S:step(now, delta)

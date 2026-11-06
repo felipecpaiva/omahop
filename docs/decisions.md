@@ -17,6 +17,7 @@
 | D9 | Plugin or contribute to core | Core PR omacom/omarchy#16548 (Windows-style Alt+Tab, live thumbnails, all workspaces, MRU) is open. If it merges, a plain switcher is redundant. omahop's difference: floating-scope default, vertical list style, hover previews, settings app, theme-live | decided 2026-11-06: build omahop, grow it release by release (Felipe asked for a gradual roadmap); revisit if #16548 merges |
 
 | D13 | Learn, do not copy: study others, keep the best ideas, avoid their mistakes, design our own structure. Quality bar is the omagnet level (gates in `lessons-from-others.md`) | Felipe, 2026-11-06 | decided |
+| D14 | Search input: while a session is open, dynamic `ALT + <letter, digit, space, backspace>` binds (consuming, so letters never reach the app), only for chords the snapshot of `hyprctl binds` shows free; the snapshot is taken by a detached `hyprctl` after load, never synchronously | Spike (`research/spikes.md`): `io.popen("hyprctl binds")` freezes the desktop for 5 s; 38 binds register in under 10 ms; chords are unbound exactly at session end, so a user's own bind is never lost | decided, built and live-tested in batch 6 |
 
 ## Prior art summary (full table in `research/thumbnails-and-prior-art.md`)
 

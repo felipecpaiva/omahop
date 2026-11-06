@@ -92,6 +92,13 @@ CPU of one core, measured over 3 s (idle shell about 4%, Hyprland about 0%):
 Decision: `thumbnails = snapshot` stays the default (a frame is captured when the list opens, then nothing runs); `live` is an option; `off` shows icons only. Cards are created only for what is on screen.
 Rule from L6 kept: never create a view for a window whose output is gone. Not testable here (one monitor): a hand check.
 
+## D14 spike (batch 6): hyprctl from inside Lua blocks Hyprland; 38 binds register in under 10 ms
+
+`tests/spikes/d14_probe.lua` loaded into the running Hyprland: `io.popen` exists, but `io.popen("hyprctl binds")` took **5090 ms** and returned 55 bytes (an error): Hyprland is busy running our Lua, so its own socket does not answer and hyprctl waits for its timeout.
+**The compositor is frozen for those 5 seconds.** So the plan to read the bind list with popen at session open (advisor suggestion) is refuted; never call hyprctl synchronously from the glue.
+Safe route: `hl.exec_cmd("sh -c 'hyprctl binds > file'")` runs it detached, and the glue reads the file later (a snapshot taken after load and refreshed on config reload; chords rarely change).
+Registering and removing 38 `ALT + <key>` binds (A to Z, 0 to 9, space, backspace) is under 10 ms each way (below the clock's resolution). No chord with ALT or ALT+SHIFT is bound in the stock set except Tab.
+
 ## Still open
 
 S2 thumbnails cost (needs the overlay), S3 file-watch latency, S4 focusless hover: they need a real overlay window and are the first build step of v0.1. S7 ghost windows: toplevel-only filter, tested with fixtures in batch 1. L1 for non-Qt apps: part of the same batch.

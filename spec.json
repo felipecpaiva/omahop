@@ -26,6 +26,16 @@
       "section": "top",
       "type": "enum",
       "values": ["floating", "all"]
+    }, {
+      "default": true,
+      "help": "While the list is up, typing letters filters it (hold Alt, press Tab, then type). Letters are only taken while Alt is held, and never replace a bind of your own.",
+      "hidden": false,
+      "id": "top.search",
+      "key": "search",
+      "label": "Type to search",
+      "reload": false,
+      "section": "top",
+      "type": "bool"
     }],
     "title": "General"
   }, {

@@ -71,4 +71,13 @@ local c0 = C.merge({ top = { reveal_delay_ms = 0 } })
 s = S.new(c0); s:open(0, 3, 2)
 assert(types(s:tick(25, HELD)) == "reveal", "reveal delay 0")
 
+-- resize (search changed the list): new size and selection; an empty list never moves or breaks
+s = S.new(cfg); s:open(0, 5, 3)
+s:resize(2, 1)
+assert(s:selected() == 1 and types(s:step(10, 1)) == "select:2" and types(s:step(20, 1)) == "select:1", "wraps inside the new size")
+s:resize(0, 0)
+assert(types(s:step(30, 1)) == "select:0" and types(s:key(30, "down")) == "select:0", "empty list: selection stays 0, no error")
+assert(types(s:key(40, "return")) == "commit:0", "committing an empty list reports index 0 (the glue activates nothing)")
+s = S.new(cfg); s:resize(3, 1); assert(not s:is_open(), "resize on a closed session does nothing")
+
 print("session ok")

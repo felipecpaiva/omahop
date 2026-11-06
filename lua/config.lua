@@ -16,6 +16,8 @@ C.spec = {
     scope = { default = "floating", values = { "floating", "all" }, group = "general", label = "Where it takes over Alt+Tab",
       names = { floating = "Floating workspaces only", all = "All workspaces" },
       help = "On other workspaces Alt+Tab stays exactly as Omarchy has it." },
+    search = { default = true, group = "general", label = "Type to search",
+      help = "While the list is up, typing letters filters it (hold Alt, press Tab, then type). Letters are only taken while Alt is held, and never replace a bind of your own." },
     style = { default = "list", values = { "list", "cards" }, group = "look", label = "Style",
       names = { list = "List", cards = "Cards with thumbnails" },
       help = "The list is plain and light. Cards show a picture of each window." },
@@ -53,7 +55,7 @@ C.groups = {
   { id = "look", title = "Look" },
   { id = "keys", title = "Keys" },
 }
-C.order = { "top.takeover", "top.scope", "windows.workspaces", "windows.monitors", "windows.minimized", "windows.specials", "windows.ignore",
+C.order = { "top.takeover", "top.scope", "top.search", "windows.workspaces", "windows.monitors", "windows.minimized", "windows.specials", "windows.ignore",
   "top.style", "top.thumbnails", "top.reveal_delay_ms", "top.border", "keys.repeat_delay_ms", "keys.repeat_ms" }
 
 local function contains(list, v)

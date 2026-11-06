@@ -39,6 +39,7 @@ hl = {
   unbind = function(chord) binds[chord] = nil end,
   on = function(ev, fn) handlers[ev] = fn end,
   timer = function(fn, opts) timers[#timers + 1] = fn end,
+  exec_cmd = function(cmd) end,
   is_key_down = function(k) return key_state[k] end,
 }
 local function names() local t = {} for i, d in ipairs(dispatched) do t[i] = d.name end return table.concat(t, ",") end
@@ -95,6 +96,52 @@ binds["ALT + SHIFT + TAB"]()
 assert(M.session:selected() == 3, "Shift+Tab starts at the end")
 reset(); key_state.Alt_L = false; key_state.Tab = false; advance(25, 2)
 assert(dispatched[1].args.window.address == "0xc", "last window picked")
+
+-- search: letters typed while Alt is held filter the list; chords with a bind of the user's own are left alone (snapshot of `hyprctl binds`)
+do
+  local snap = io.open(TESTDIR .. "/run/omahop/binds.txt", "w")
+  snap:write("bind\n\tmodmask: 8\n\tsubmap: \n\tkey: X\n\tkeycode: 0\n\n")  -- the user's own ALT + X
+  snap:close()
+  M.used = nil
+  local userbind = function() end
+  binds["ALT + X"] = userbind
+  key_state.Alt_L = true; key_state.Tab = true; reset(); active = a; windows = { a, windows[2] or a }
+  windows = {}
+  local wa = win("0xa2", "app-a", 1, { focus_history_id = 0, tags = { "omarchy-floating-workspace" } })
+  local wb = win("0xb2", "app-b", 1, { focus_history_id = 1, tags = { "omarchy-floating-workspace" } })
+  local wc = win("0xc2", "app-c", 1, { focus_history_id = 2, tags = { "omarchy-floating-workspace" } })
+  active = wa
+  M.session:key(clock, "escape"); advance(25, 2)
+  binds["ALT + TAB"]()
+  assert(#M.entries == 3 and M.session:selected() == 2, "session with three windows")
+  assert(binds["ALT + A"] and binds["ALT + SPACE"] and binds["ALT + BACKSPACE"] and binds["ALT + 5"], "typing chords bound during the session")
+  assert(binds["ALT + X"] == userbind, "the user's own bind on ALT + X is not replaced")
+  binds["ALT + B"]()
+  assert(M.query == "b" and #M.entries == 1 and M.entries[1].class == "app-b" and M.session:selected() == 1, "typing b keeps only app-b and selects it")
+  assert(read_state():find("query=b") and read_state():find("0xb2") and not read_state():find("0xa2"), "state file carries the query and the filtered list")
+  binds["ALT + BACKSPACE"]()
+  assert(M.query == "" and #M.entries == 3 and M.session:selected() == 1, "backspace brings the list back, first entry selected")
+  binds["ALT + C"]()
+  binds["ALT + ESCAPE"]()
+  assert(M.query == "" and M.session:is_open() and #M.entries == 3, "first Escape clears the query and keeps the session")
+  binds["ALT + Z"]()
+  assert(#M.entries == 0 and M.session:selected() == 0 and M.session:is_open(), "no match: empty list, session stays open")
+  reset(); key_state.Alt_L = false; advance(25, 2)
+  assert(names() == "" and not M.session:is_open(), "releasing Alt with nothing matched activates nothing")
+  assert(binds["ALT + A"] == nil and binds["ALT + X"] == userbind, "typing chords unbound at the end, the user's bind still there")
+  -- picking from the filtered list
+  key_state.Alt_L = true; reset(); active = wa
+  binds["ALT + TAB"](); binds["ALT + C"]()
+  reset(); key_state.Alt_L = false; advance(25, 2)
+  assert(dispatched[1] and dispatched[1].args.window.address == "0xc2", "the filtered match is the window that comes forward")
+  binds["ALT + X"] = nil
+  -- search off in the settings: no typing chords
+  local cfgf = io.open(TESTDIR .. "/cfg/omahop/config.toml", "w"); cfgf:write("search = false\n"); cfgf:close()
+  key_state.Alt_L = true; active = wa; reset(); binds["ALT + TAB"]()
+  assert(M.session:is_open() and binds["ALT + A"] == nil and binds["ALT + ESCAPE"] ~= nil, "search = false: navigation keys only")
+  M.session:key(clock, "escape"); M.apply({}); key_state.Alt_L = false; advance(25, 2)
+  cfgf = io.open(TESTDIR .. "/cfg/omahop/config.toml", "w"); cfgf:write("[windows]\nworkspaces = \"all\"\n"); cfgf:close()
+end
 
 -- minimized window comes back to the active workspace first
 local m = win("0xm", "app-m", -99, { focus_history_id = 9, workspace = { id = -99, name = "special:minimized" }, tags = { "omarchy-minimized-from-1" } })

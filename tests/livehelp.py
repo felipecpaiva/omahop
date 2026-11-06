@@ -4,6 +4,7 @@ import json, os, subprocess, time
 SPARE = "4"
 COLORS = {"A": "#c00000", "B": "#00c000", "C": "#0000c0"}
 POS = {"A": (300, 250), "B": (350, 300), "C": (400, 350)}
+TITLES = {"A": "alpha", "B": "bravo", "C": "charlie"}  # distinct window titles, so search can pick one
 
 
 def sh(*a):
@@ -63,7 +64,7 @@ class Spare:
         ev(f'o.workspace_mode({{ workspace = "{SPARE}", mode = "{self.mode}" }})'); time.sleep(0.8)
         for n in "ABC":
             x, y = POS[n]
-            ev(f'hl.exec_cmd("[float; size 700 450; move {x} {y}] kitty --class omahop-{n} -o background={COLORS[n]} -o background_opacity=1 -e sleep 3600")')
+            ev(f'hl.exec_cmd("[float; size 700 450; move {x} {y}] kitty --class omahop-{n} -o background={COLORS[n]} -o background_opacity=1 --title {TITLES[n]} -e sleep 3600")')
             time.sleep(1.6)
         assert all(addr("omahop-" + n) for n in "ABC"), "test windows did not start"
         return self

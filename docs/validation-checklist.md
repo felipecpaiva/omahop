@@ -31,3 +31,12 @@ Automated checks (`tests/run-all.sh`) cover logic and the keyboard path with a v
 - [ ] With many windows open (more than 7) the strip scrolls and the picked card stays in view.
 - [ ] Thumbnails = Live: the pictures update while the strip is up (try a terminal printing output); notice the CPU cost with many windows. Thumbnails = Off: icons only.
 - [ ] Unplug a monitor while windows are on it, then Alt+Tab: Hyprland must not crash (L6).
+
+## v0.2 (search)
+
+- [ ] Hold Alt, Tab, then type part of an app name or a title: the list narrows, the best match is selected, releasing Alt goes to it.
+- [ ] Typing a display name works (for example "files" finds the file manager although its window class is different).
+- [ ] Backspace deletes a letter; the first Escape clears the query, the second cancels.
+- [ ] Nothing matches: the box says so, releasing Alt does nothing.
+- [ ] None of your own Alt+letter shortcuts stop working after using search (they are only taken during a session, and never when you have bound them).
+- [ ] Settings, "Type to search" off: typing does nothing while the list is up.

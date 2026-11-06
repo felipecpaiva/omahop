@@ -52,6 +52,7 @@ Item {
     if (key !== root.entriesKey) {
       root.entriesKey = key
       root.entries = next.entries
+      if (next.open && next.query === "") root.writeNames()
     }
     root.st = next
   }
@@ -112,6 +113,24 @@ Item {
     return { icon: source, name: entry && entry.name ? entry.name : appId }
   }
 
+  // Display names of the windows' apps, for the Lua side to search by (it only knows window classes). Written when the full list is on show.
+  FileView {
+    id: namesFile
+    path: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/omahop/names"
+    atomicWrites: true
+    printErrors: false
+  }
+  function writeNames() {
+    var seen = {}, lines = []
+    for (var i = 0; i < root.entries.length; i++) {
+      var id = root.entries[i].appId
+      if (seen[id]) continue
+      seen[id] = true
+      lines.push(id + "\t" + root.resolve(id).name)
+    }
+    namesFile.setText(lines.join("\n") + "\n")
+  }
+
   FileView {
     id: file
     path: root.statePath
@@ -128,10 +147,22 @@ Item {
     WlrLayershell.namespace: "omahop"
     mask: Region {}
 
-    Loader {
+    Column {
       anchors.centerIn: parent
+      spacing: Style.space(8)
       visible: window.contentRevealed
-      sourceComponent: root.st.style === "cards" ? cardsStyle : listStyle
+
+      SearchChip {
+        anchors.horizontalCenter: parent.horizontalCenter
+        query: root.st.query
+        empty: root.entries.length === 0
+        outline: root.outline
+      }
+      Loader {
+        anchors.horizontalCenter: parent.horizontalCenter
+        visible: root.entries.length > 0
+        sourceComponent: root.st.style === "cards" ? cardsStyle : listStyle
+      }
     }
 
     Component {

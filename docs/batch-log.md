@@ -63,3 +63,11 @@ Built: `CardItem.qml` (picture or icon, app icon, name and title), `CardsStyle.q
 Verified on the real shell with real windows: `tests/live_cards.py` counts the three test colours in a screenshot (covered, minimized and top window each have a thumbnail; with thumbnails = off none).
 Bugs found: a Loader property named `scale` clashes with Item.scale (renamed `fitScale`); the first test counted the test windows themselves (they are moved out of the photographed area now); minimized cards are dimmed so a colour threshold must be loose.
 Left: many-windows scroll and live mode by hand (checklist), the unplugged-monitor check (L6), a better highlight picture for the release.
+
+## Batch 6 (2026-11-06, branch v0.2): type to search
+
+Spike D14 first: `io.popen("hyprctl binds")` from the glue blocked the whole compositor for 5 seconds (Hyprland waits for itself), so the bind snapshot is taken by a detached `hl.exec_cmd` into a file; 38 binds register in under 10 ms.
+Built: `lua/search.lua` (pure: every word must appear in the app display name, class or title; apps that start with the first word rank first; Node-free Lua tests), `Session:resize`, the glue (typing chords only while a session is open and only for chords the snapshot shows free, exact unbind at the end, first Escape clears the query, empty result keeps the session open and activates nothing, `query=` in the state file, a `search` setting),
+overlay (`SearchChip.qml` above the list, the names file the overlay writes so Lua can search by display name such as "Files").
+Verified: unit and glue tests (including a user's own ALT+X left alone), `State.js` tests, and live with real keys: typing 'alp' picks alpha although the default pick is bravo, backspace, Escape clears first, no match leaves focus alone.
+Left: hand checks (display-name search, own shortcuts), tuning ranking after real use.
