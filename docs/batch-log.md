@@ -54,3 +54,12 @@ Built: `SettingsStore.qml` (reads spec.json and the config file, edits one line 
 Verified on the real shell: the window opens from `omarchy-shell shell toggle`, a virtual mouse click on a button writes `scope = "all"` and then `scope = "floating"` to the same line, comments and other keys untouched (`tests/live_panel.py`, positions measured for a 1280x800 logical screen, SKIPs elsewhere).
 Bugs found: a QML name clash (`store: store` inside the row component refers to its own property, so every control did nothing; the panel's store is now `settings`); BorderSurface padding does not move anchored children (margins added by hand).
 Not yet by hand: number field, text field, reset link, the reload button (on the checklist).
+
+## Batch 5 (2026-11-06, branch v0.2): cards style with thumbnails
+
+Spike S2 first (`research/spikes.md`): thumbnails show real content for a covered window and a minimized one; live capture costs CPU (about 20% of Hyprland for 30 views), snapshots cost almost nothing, so `snapshot` stays the default.
+Built: `CardItem.qml` (picture or icon, app icon, name and title), `CardsStyle.qml` (horizontal strip, scrolls to keep the picked card in view, cards outside the strip are not built so no capture runs for them), `Service.qml` picks the style with a Loader and maps a Hyprland window address to its Wayland toplevel,
+`State.js` (`normalizeAddress`, `visibleCards`, Node-tested), settings `style` and `thumbnails` now shown in the panel. Cards are keyboard-only in v0.2.
+Verified on the real shell with real windows: `tests/live_cards.py` counts the three test colours in a screenshot (covered, minimized and top window each have a thumbnail; with thumbnails = off none).
+Bugs found: a Loader property named `scale` clashes with Item.scale (renamed `fitScale`); the first test counted the test windows themselves (they are moved out of the photographed area now); minimized cards are dimmed so a colour threshold must be loose.
+Left: many-windows scroll and live mode by hand (checklist), the unplugged-monitor check (L6), a better highlight picture for the release.

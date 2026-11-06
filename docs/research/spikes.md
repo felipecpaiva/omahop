@@ -75,6 +75,23 @@ Measured with a plain `ALT + F10` bind: one call alone; two calls (press and rel
 deferred by a 30 ms timer, and one call with `hl.dsp.send_key_state` (F24 down, then up). `is_key_down("Tab")` still reads true when the echo arrives, so it cannot filter it.
 Both `send_key_state` and a 5 ms deferred `send_shortcut` still stop the Qt menu bar from taking focus (L1 test). omahop uses `send_key_state`.
 
+## S2 thumbnails: occluded and minimized windows work; live capture costs, snapshots do not (2026-11-06, batch 5)
+
+Probe `tests/spikes/s2_probe.qml` and driver `s2_run.py`: three coloured test windows overlap on a spare floating workspace (A under B under C), B is moved to `special:minimized` (the same call
+Omarchy's minimize script makes), and an overlay draws a `ScreencopyView` per window while the workspace is visible. A picture of the overlay shows real content for all three: A (fully covered by the others) red,
+B (minimized) green, C blue. All report `hasContent = true`, `sourceSize` = the window's own size. (`Toplevel.minimized` printed false for B: do not use it, take the state from Hyprland's workspace name.)
+
+CPU of one core, measured over 3 s (idle shell about 4%, Hyprland about 0%):
+
+| Views | Hyprland | Shell |
+|---|---|---|
+| live, 3 | 8% | 7% |
+| live, 30 | 20% | 17% |
+| snapshot (`live: false`), 30 | 0% | 3% (idle level) |
+
+Decision: `thumbnails = snapshot` stays the default (a frame is captured when the list opens, then nothing runs); `live` is an option; `off` shows icons only. Cards are created only for what is on screen.
+Rule from L6 kept: never create a view for a window whose output is gone. Not testable here (one monitor): a hand check.
+
 ## Still open
 
 S2 thumbnails cost (needs the overlay), S3 file-watch latency, S4 focusless hover: they need a real overlay window and are the first build step of v0.1. S7 ghost windows: toplevel-only filter, tested with fixtures in batch 1. L1 for non-Qt apps: part of the same batch.

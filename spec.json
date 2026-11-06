@@ -103,7 +103,8 @@
     "id": "look",
     "settings": [{
       "default": "list",
-      "hidden": true,
+      "help": "The list is plain and light. Cards show a picture of each window.",
+      "hidden": false,
       "id": "top.style",
       "key": "style",
       "label": "Style",
@@ -117,10 +118,11 @@
       "values": ["list", "cards"]
     }, {
       "default": "snapshot",
-      "hidden": true,
+      "help": "Snapshot takes one picture of each window when the cards open and costs almost nothing. Live keeps them updating and uses noticeable CPU with many windows.",
+      "hidden": false,
       "id": "top.thumbnails",
       "key": "thumbnails",
-      "label": "Thumbnails",
+      "label": "Thumbnails (cards)",
       "names": {
         "live": "Live",
         "off": "Off (icons only)",

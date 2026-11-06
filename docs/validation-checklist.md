@@ -23,3 +23,11 @@ Automated checks (`tests/run-all.sh`) cover logic and the keyboard path with a v
 - [ ] "Reset to default" appears when a value is set and removes the line from the file.
 - [ ] Turn "Take over Alt+Tab" off: the window offers "Reload Hyprland now", and after the reload Alt+Tab is stock.
 - [ ] Change the Omarchy theme with the window open: colours follow.
+
+## v0.2 (cards)
+
+- [ ] Settings window, Look: Style = Cards. Alt+Tab shows a strip of cards with a picture of each window, the picked card has the accent border and moves with Tab.
+- [ ] A window on another floating workspace, a covered window and a minimized window each show their own picture (or the app icon if the app cannot be captured).
+- [ ] With many windows open (more than 7) the strip scrolls and the picked card stays in view.
+- [ ] Thumbnails = Live: the pictures update while the strip is up (try a terminal printing output); notice the CPU cost with many windows. Thumbnails = Off: icons only.
+- [ ] Unplug a monitor while windows are on it, then Alt+Tab: Hyprland must not crash (L6).

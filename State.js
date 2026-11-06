@@ -41,3 +41,14 @@ function borderWidth(mode, hyprBorder, fallback) {
   if (hyprBorder === 0) return 0          // auto and the user turned window borders off: no outline
   return hyprBorder > 0 ? Math.max(1, hyprBorder) : fallback
 }
+
+// A Hyprland window address with or without the 0x prefix, lower case: how two sources name the same window.
+function normalizeAddress(address) {
+  return String(address || "").toLowerCase().replace(/^0x/, "")
+}
+
+// How many cards fit across before the strip scrolls: from the screen width, a card width and the gap, at most maxCards, at least 1.
+function visibleCards(screenWidth, cardWidth, gap, maxCards) {
+  var fit = Math.floor((screenWidth * 0.9 + gap) / (cardWidth + gap))
+  return Math.max(1, Math.min(maxCards, fit))
+}

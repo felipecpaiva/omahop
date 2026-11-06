@@ -10,6 +10,7 @@ Jump to any window fast on Omarchy's floating workspaces. Hold Alt, press Tab: a
 - Tab and Shift+Tab move through the list (hold Tab to repeat). While you hold Alt: Alt+Escape cancels, Alt+Arrows move, Alt+Return picks.
 - The window you pick comes to the front, even when floating windows overlap (focus alone does not raise a floating window; omahop raises it too). A minimized window is brought back to the workspace you are on.
 - By default it only takes over Alt+Tab on **floating workspaces**. On tiling workspaces Alt+Tab is exactly the stock Omarchy behaviour.
+- **Two looks:** a plain list, or cards with a picture of each window (covered and minimized windows included), set in the settings window.
 - Adds nothing to the bar, the dock or the desktop.
 
 ## Install
@@ -36,6 +37,8 @@ schema = 1
 takeover = true          # false: leave Alt+Tab alone
 scope = "floating"       # "floating": only on floating workspaces, "all": everywhere
 reveal_delay_ms = 100    # a quick tap shows no overlay
+style = "list"           # "list" (plain) or "cards" (a picture of each window)
+thumbnails = "snapshot"  # cards only: "snapshot" (one picture when it opens), "live" (keeps updating, uses CPU), "off" (icons only)
 border = "auto"          # the list's outline: "auto" follows Hyprland's window border (none when you turned window borders off), "on", "off"
 
 [windows]

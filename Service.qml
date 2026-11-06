@@ -42,7 +42,7 @@ Item {
   }
   Connections {
     target: root
-    function onStChanged() { if (root.st.open && !root.wasOpen) root.refreshBorder(); root.wasOpen = root.st.open }
+    function onStChanged() { if (root.st.open && !root.wasOpen) { root.refreshBorder(); Hyprland.refreshToplevels() }; root.wasOpen = root.st.open }
   }
   property bool wasOpen: false
 
@@ -92,6 +92,16 @@ Item {
     return result
   }
 
+  // The Wayland toplevel to capture for a Hyprland window address, or null (a window with no toplevel, such as a Wine ghost, shows its icon instead).
+  function toplevelFor(address) {
+    var key = State.normalizeAddress(address)
+    var all = Hyprland.toplevels.values
+    for (var i = 0; i < all.length; i++) {
+      if (State.normalizeAddress(all[i].address) === key) return all[i].wayland || null
+    }
+    return null
+  }
+
   function lookup(appId) {
     var entry = DesktopEntries.heuristicLookup(appId)
     var icon = entry && entry.icon ? entry.icon : appId
@@ -118,14 +128,34 @@ Item {
     WlrLayershell.namespace: "omahop"
     mask: Region {}
 
-    ListStyle {
+    Loader {
       anchors.centerIn: parent
       visible: window.contentRevealed
-      entries: root.entries
-      outline: root.outline
-      selected: root.st.selected
-      screenHeight: window.height
-      resolve: root.resolve
+      sourceComponent: root.st.style === "cards" ? cardsStyle : listStyle
+    }
+
+    Component {
+      id: listStyle
+      ListStyle {
+        entries: root.entries
+        selected: root.st.selected
+        screenHeight: window.height
+        resolve: root.resolve
+        outline: root.outline
+      }
+    }
+
+    Component {
+      id: cardsStyle
+      CardsStyle {
+        entries: root.entries
+        selected: root.st.selected
+        thumbnails: root.st.thumbnails
+        screenWidth: window.width
+        resolve: root.resolve
+        toplevelFor: root.toplevelFor
+        outline: root.outline
+      }
     }
   }
 }

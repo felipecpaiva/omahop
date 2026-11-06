@@ -1,0 +1,67 @@
+import QtQuick
+import qs.Commons
+import qs.Ui
+import "State.js" as State
+
+// The cards style: a horizontal strip of CardItem with thumbnails. Keyboard only in v0.2 (the overlay takes no pointer). It only draws what it is given.
+BorderSurface {
+  id: strip
+
+  property var entries: []
+  property int selected: 1
+  property string thumbnails: "snapshot"
+  property real screenWidth: 1280
+  property int outline: Math.max(1, Style.space(2))
+  // The owner supplies these, so this file needs no desktop-entry or Hyprland knowledge.
+  property var resolve: function (appId) { return { icon: "", name: appId } }
+  property var toplevelFor: function (address) { return null }
+
+  readonly property int cardWidth: Style.space(220)
+  readonly property int cardHeight: Style.space(176)
+  readonly property int gap: Style.space(10)
+  readonly property int pad: Style.space(12)
+  readonly property int cards: State.visibleCards(strip.screenWidth, strip.cardWidth, strip.gap, 7)
+
+  width: Math.min(strip.entries.length, strip.cards) * strip.cardWidth + Math.max(0, Math.min(strip.entries.length, strip.cards) - 1) * strip.gap + 2 * strip.pad + borderLeft + borderRight
+  height: strip.cardHeight + 2 * strip.pad + borderTop + borderBottom
+  color: Util.alpha(Color.background, 0.97)
+  borderSpec: strip.outline > 0 ? Border.surfaceSpec("popups", "border", Color.popups.border, strip.outline) : Border.none()
+  radius: Style.cornerRadius
+
+  ListView {
+    id: view
+    anchors.fill: parent
+    anchors.topMargin: strip.borderTop + strip.pad
+    anchors.bottomMargin: strip.borderBottom + strip.pad
+    anchors.leftMargin: strip.borderLeft + strip.pad
+    anchors.rightMargin: strip.borderRight + strip.pad
+    orientation: ListView.Horizontal
+    spacing: strip.gap
+    clip: true
+    interactive: false
+    // Cards outside the strip are not built, so no capture runs for a window that is not on screen.
+    cacheBuffer: 0
+    model: strip.entries
+    function follow() { if (strip.selected >= 1) positionViewAtIndex(strip.selected - 1, ListView.Contain) }
+    onCountChanged: Qt.callLater(follow)
+    Connections {
+      target: strip
+      function onSelectedChanged() { Qt.callLater(view.follow) }
+    }
+
+    delegate: CardItem {
+      required property var modelData
+      required property int index
+      width: strip.cardWidth
+      height: view.height
+      readonly property var info: strip.resolve(modelData.appId)
+      iconSource: info.icon
+      appName: info.name
+      title: modelData.title
+      minimized: modelData.minimized
+      thumbnails: strip.thumbnails
+      toplevel: strip.toplevelFor(modelData.address)
+      selected: index === strip.selected - 1
+    }
+  }
+}

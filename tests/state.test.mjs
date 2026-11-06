@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs"
 import assert from "node:assert/strict"
 const src = readFileSync(new URL("../State.js", import.meta.url), "utf8").replace(".pragma library", "")
-const State = new Function(src + "; return { parse, visibleRows, borderWidth }")()
+const State = new Function(src + "; return { parse, visibleRows, borderWidth, normalizeAddress, visibleCards }")()
 
 const text = "version=1\nopen=1\nrevealed=1\nselected=2\nstyle=list\nthumbnails=snapshot\nw\t0xa\tkitty\t0\tfirst title\nw\t0xb\tgoogle-chrome\t1\tsecond\ttitle with a tab\n"
 const s = State.parse(text)
@@ -31,4 +31,8 @@ assert.equal(State.borderWidth("on", 0, 2), 2, "on forces an outline even when H
 assert.equal(State.borderWidth("on", 4, 2), 4)
 assert.equal(State.borderWidth("off", 4, 2), 0, "off removes it")
 assert.equal(State.parse("border=off\nopen=0\n").border, "off"); assert.equal(State.parse("").border, "auto")
+assert.equal(State.normalizeAddress("0x55CB5923D480"), "55cb5923d480"); assert.equal(State.normalizeAddress("55cb5923d480"), "55cb5923d480"); assert.equal(State.normalizeAddress(null), "")
+assert.equal(State.visibleCards(1280, 240, 12, 6), 4, "four 240 px cards fit in 90% of 1280 (five need 1248 of 1152 px)")
+assert.equal(State.visibleCards(3000, 240, 12, 6), 6, "capped")
+assert.equal(State.visibleCards(200, 240, 12, 6), 1, "at least one")
 console.log("state ok")
