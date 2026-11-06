@@ -10,6 +10,8 @@ BorderSurface {
   property var entries: []
   property int selected: 1
   property real screenHeight: 1080
+  // Outline width in pixels, 0 for none; the owner decides (it follows Hyprland's window border by default).
+  property int outline: Math.max(1, Style.space(2))
   // Resolve an app id to { icon, name }: supplied by the owner so this file needs no desktop-entry knowledge.
   property var resolve: function (appId) { return { icon: "", name: appId } }
 
@@ -20,7 +22,7 @@ BorderSurface {
   width: Style.space(560) + borderLeft + borderRight + 2 * pad
   height: Math.min(card.entries.length, card.rows) * card.rowHeight + 2 * pad + borderTop + borderBottom
   color: Util.alpha(Color.background, 0.97)
-  borderSpec: Border.surfaceSpec("popups", "border", Color.popups.border, Math.max(1, Style.space(2)))
+  borderSpec: card.outline > 0 ? Border.surfaceSpec("popups", "border", Color.popups.border, card.outline) : Border.none()
   radius: Style.cornerRadius
 
   ListView {

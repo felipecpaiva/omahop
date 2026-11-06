@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Hyprland
 import Quickshell.Wayland
 import qs.Commons
 import qs.Ui
@@ -22,6 +23,28 @@ Item {
   property string entriesKey: ""
   property var resolved: ({})
 
+  // Hyprland's window border size (general:border_size), -1 until read. The card's outline follows it, so a user who removed window borders
+  // does not get one on the card. Read at load, when the config reloads, and each time a session opens.
+  property int hyprBorder: -1
+  readonly property int outline: State.borderWidth(root.st.border, root.hyprBorder, Math.max(1, Style.space(2)))
+  Process {
+    id: borderProc
+    command: ["hyprctl", "getoption", "general:border_size", "-j"]
+    stdout: StdioCollector {
+      onStreamFinished: { try { var v = JSON.parse(text).int; if (typeof v === "number") root.hyprBorder = v } catch (e) {} }
+    }
+  }
+  function refreshBorder() { if (!borderProc.running) borderProc.running = true }
+  Connections {
+    target: Hyprland
+    function onRawEvent(event) { if (event && String(event.name) === "configreloaded") root.refreshBorder() }
+  }
+  Connections {
+    target: root
+    function onStChanged() { if (root.st.open && !root.wasOpen) root.refreshBorder(); root.wasOpen = root.st.open }
+  }
+  property bool wasOpen: false
+
   function apply(text) {
     var next = State.parse(text)
     var key = next.entries.map(function (e) { return e.address + "|" + e.title + "|" + e.minimized }).join("\n")
@@ -33,7 +56,7 @@ Item {
   }
 
   // DesktopEntries is lazy: the first read is empty, so it is touched at load.
-  Component.onCompleted: { var touch = DesktopEntries.applications.values.length }
+  Component.onCompleted: { var touch = DesktopEntries.applications.values.length; root.refreshBorder() }
 
   function resolve(appId) {
     if (root.resolved[appId] !== undefined) return root.resolved[appId]
@@ -72,6 +95,7 @@ Item {
       anchors.centerIn: parent
       visible: window.contentRevealed
       entries: root.entries
+      outline: root.outline
       selected: root.st.selected
       screenHeight: window.height
       resolve: root.resolve

@@ -3,7 +3,7 @@
 // Format: "key=value" lines, then one tab-separated line per window: w <address> <class> <minimized 0|1> <title>.
 
 function parse(text) {
-  var st = { open: false, revealed: false, selected: 0, style: "list", thumbnails: "snapshot", entries: [] }
+  var st = { open: false, revealed: false, selected: 0, style: "list", thumbnails: "snapshot", border: "auto", entries: [] }
   var lines = String(text || "").split("\n")
   for (var i = 0; i < lines.length; i++) {
     var line = lines[i]
@@ -20,6 +20,7 @@ function parse(text) {
     else if (k === "selected") st.selected = parseInt(v, 10) || 0
     else if (k === "style") st.style = v
     else if (k === "thumbnails") st.thumbnails = v
+    else if (k === "border") st.border = v
   }
   // A selection outside the list means a half-written or stale file: show nothing rather than a wrong row.
   if (st.selected < 1 || st.selected > st.entries.length) st.open = false
@@ -30,4 +31,13 @@ function parse(text) {
 function visibleRows(screenHeight, rowHeight, maxRows) {
   var fit = Math.floor((screenHeight * 0.7) / rowHeight)
   return Math.max(1, Math.min(maxRows, fit))
+}
+
+// The card's border width in pixels. mode is "auto", "on" or "off"; hyprBorder is Hyprland's general:border_size (-1 while unknown); fallback is the width to use
+// when a border is wanted but Hyprland's value cannot say (unknown, or 0 with mode "on").
+function borderWidth(mode, hyprBorder, fallback) {
+  if (mode === "off") return 0
+  if (mode === "on") return hyprBorder > 0 ? hyprBorder : fallback
+  if (hyprBorder === 0) return 0          // auto and the user turned window borders off: no outline
+  return hyprBorder > 0 ? Math.max(1, hyprBorder) : fallback
 }

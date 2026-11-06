@@ -7,6 +7,7 @@ local d = C.merge(nil)
 assert(d.scope == "floating" and d.takeover == true and d.style == "list" and d.reveal_delay_ms == 100, "top defaults")
 assert(d.windows.workspaces == "floating" and d.windows.monitors == "active" and d.windows.minimized == "back", "window defaults")
 assert(d.keys.repeat_delay_ms == 250 and d.keys.repeat_ms == 40, "key defaults")
+assert(d.border == "auto" and C.merge({ top = { border = "off" } }).border == "off" and C.merge({ top = { border = "thick" } }).border == "auto", "border setting: auto default, off accepted, bad value falls back")
 
 -- parse: values, sections, comments, trailing comments, unreadable lines
 local t, bad = C.parse([[

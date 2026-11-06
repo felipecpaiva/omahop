@@ -128,7 +128,7 @@ end
 function M.write_state()
   local s = M.session
   local lines = { "version=1", "open=" .. ((s and s:is_open()) and 1 or 0), "revealed=" .. ((s and s:is_revealed()) and 1 or 0),
-    "selected=" .. (s and s:selected() or 0), "style=" .. M.cfg.style, "thumbnails=" .. M.cfg.thumbnails }
+    "selected=" .. (s and s:selected() or 0), "style=" .. M.cfg.style, "thumbnails=" .. M.cfg.thumbnails, "border=" .. M.cfg.border }
   if s and s:is_open() then
     for _, e in ipairs(M.entries) do
       local clean = function(v) return (tostring(v):gsub("[%c]", " ")) end

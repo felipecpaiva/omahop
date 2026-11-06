@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs"
 import assert from "node:assert/strict"
 const src = readFileSync(new URL("../State.js", import.meta.url), "utf8").replace(".pragma library", "")
-const State = new Function(src + "; return { parse, visibleRows }")()
+const State = new Function(src + "; return { parse, visibleRows, borderWidth }")()
 
 const text = "version=1\nopen=1\nrevealed=1\nselected=2\nstyle=list\nthumbnails=snapshot\nw\t0xa\tkitty\t0\tfirst title\nw\t0xb\tgoogle-chrome\t1\tsecond\ttitle with a tab\n"
 const s = State.parse(text)
@@ -23,4 +23,12 @@ assert.equal(State.parse("open=0\nrevealed=0\nselected=1\nw\t0xa\tk\t0\tt\n").op
 assert.equal(State.visibleRows(1080, 48, 9), 9)
 assert.equal(State.visibleRows(600, 48, 9), 8)
 assert.equal(State.visibleRows(100, 48, 9), 1)
+// border: auto follows Hyprland (0 = no outline), on/off override it
+assert.equal(State.borderWidth("auto", 0, 2), 0, "auto with window borders off: none")
+assert.equal(State.borderWidth("auto", 3, 2), 3, "auto follows a 3 px border")
+assert.equal(State.borderWidth("auto", -1, 2), 2, "auto while Hyprland's value is unknown: the fallback")
+assert.equal(State.borderWidth("on", 0, 2), 2, "on forces an outline even when Hyprland has none")
+assert.equal(State.borderWidth("on", 4, 2), 4)
+assert.equal(State.borderWidth("off", 4, 2), 0, "off removes it")
+assert.equal(State.parse("border=off\nopen=0\n").border, "off"); assert.equal(State.parse("").border, "auto")
 console.log("state ok")

@@ -36,6 +36,7 @@ schema = 1
 takeover = true          # false: leave Alt+Tab alone
 scope = "floating"       # "floating": only on floating workspaces, "all": everywhere
 reveal_delay_ms = 100    # a quick tap shows no overlay
+border = "auto"          # the list's outline: "auto" follows Hyprland's window border (none when you turned window borders off), "on", "off"
 
 [windows]
 workspaces = "floating"  # which workspaces' windows are listed: "current", "floating", "all"

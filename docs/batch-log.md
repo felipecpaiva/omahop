@@ -30,3 +30,7 @@ To close v0.1: run `bash tests/run-all.sh` (live part drives the keyboard, hands
 With the plugin enabled and the install line in `hyprland.lua`, `bash tests/run-all.sh` passed everything: unit, glue, scrub, state parser, plugin validation, QML syntax, and 18 live checks with real keys
 (the 16 from before plus: the overlay layer is on screen while revealed, and gone after cancel). No test windows left, the temporary config removed, the original workspace restored.
 Still on Felipe's hand-check list: non-Qt apps for the Alt-menu fix, two monitors, minimized restore on real windows, theme change, the real keyboard feel.
+
+## Border follows Hyprland (2026-11-06)
+
+Felipe removed window borders (`general:border_size = 0`); the list card still drew an outline. Now the card reads the border size (at load, on config reload, each time a session opens) and `border = auto` follows it (0 means no outline); `on` and `off` override. Checked with a synthetic state on the real shell: auto with border size 0 shows no outline, `on` shows it. Unit tests: `State.borderWidth` (Node), `border` in config (Lua).

@@ -15,6 +15,7 @@ C.spec = {
     style = { default = "list", values = { "list", "cards" } },
     reveal_delay_ms = { default = 100, min = 0, max = 1000 }, -- a quick tap flips windows with no overlay
     thumbnails = { default = "snapshot", values = { "live", "snapshot", "off" } }, -- used by the cards style
+    border = { default = "auto", values = { "auto", "on", "off" } }, -- the card's outline: auto follows Hyprland's general:border_size (0 means none)
   },
   windows = {
     workspaces = { default = "floating", values = { "current", "floating", "all" } },
