@@ -1,7 +1,7 @@
 """Live checks of omahop with real key events (virtual keyboard through /dev/uinput) on a spare workspace with three coloured windows.
 Needs a running Hyprland, kitty, grim, write access to /dev/uinput. Loads lua/omahop.lua into the running Hyprland with `hyprctl eval`
 (replacing the stock Alt+Tab until the end) and puts everything back with `hyprctl reload`. Keep your hands off the keyboard (about 1 minute).
-Usage: python3 tests/live.py"""
+Your own ~/.config/omahop/config.toml is saved and put back. Usage: python3 tests/live.py"""
 import os, sys, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from livehelp import Spare, active_class, ev, pixel, read_state, sh
@@ -34,9 +34,9 @@ def alt_tab(kb, tabs=1, hold=0.0, shift=False, release_alt=True):
 # workspaces are not part of the test (this also exercises the config file). The file is removed afterwards unless the user had one.
 CFG = os.path.expanduser("~/.config/omahop/config.toml")
 had_cfg = os.path.exists(CFG)
-if not had_cfg:
-    os.makedirs(os.path.dirname(CFG), exist_ok=True)
-    open(CFG, "w").write('[windows]\nworkspaces = "current"\n')
+saved_cfg = open(CFG).read() if had_cfg else None  # the user's own settings are put back at the end
+os.makedirs(os.path.dirname(CFG), exist_ok=True)
+open(CFG, "w").write('[windows]\nworkspaces = "current"\n')
 ev(f'dofile("{ROOT}/lua/omahop.lua")'); time.sleep(0.5)
 try:
     with Spare() as sp, Keyboard() as kb:
@@ -97,7 +97,9 @@ try:
 finally:
     sh("hyprctl", "reload"); time.sleep(2.5)
 
-if not had_cfg:
+if had_cfg:
+    open(CFG, "w").write(saved_cfg)
+else:
     os.remove(CFG)
     try:
         os.rmdir(os.path.dirname(CFG))
