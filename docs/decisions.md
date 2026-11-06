@@ -14,6 +14,7 @@
 
 ## Prior art summary (full table in `research/thumbnails-and-prior-art.md`)
 
+- BetterCmdTab (rokartur, macOS, GPL-3.0, active) adds ideas: tap vs hold with a reveal delay, opt-in live config file, per-shortcut profiles, letter hints, per-app rules. Top 6 are in its reference file; fold the winners into ROADMAP phase 1 and 3.
 - Marketplace already lists about 25 switcher, overview and dock plugins, several with live previews.
 - Core dock exists (floating workspaces only), no previews, many open items.
 - Pattern to copy: `omarchy-altswitch` (Lua for keys and state, QML renders the list, Alt release handled by a Lua submap).
