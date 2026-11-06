@@ -129,6 +129,13 @@ def scene_settings(kb, wins):
 
 
 RUN = os.environ["XDG_RUNTIME_DIR"]
+TAG = os.environ.get("DEMO_TAG", "")   # when set (for example v0.3.0), scenes also save a sharp still into branding/highlights/
+
+
+def still(name, region):
+    if TAG:
+        os.makedirs(os.path.join(ROOT, "branding", "highlights"), exist_ok=True)
+        subprocess.run(["grim", "-g", region, "-c", os.path.join(ROOT, "branding", "highlights", f"{TAG}-{name}.png")])
 
 
 def read_rects(name, n=None, seconds=4.0, kinds=None):
@@ -166,6 +173,7 @@ def scene_pointer(kb, wins):
         if len(rects) >= 3:
             x, y, w, h = rects[2]
             move(x + w // 2, y + h // 2); time.sleep(1.8)
+            still("pointer", "260,200 760x340")
             r.caption("Click a card to go straight to that window")
             m.press(); time.sleep(0.1); m.release(); time.sleep(1.8)
         kb.up("alt"); time.sleep(1.0)
@@ -175,10 +183,13 @@ def scene_pointer(kb, wins):
 def scene_peek(kb, wins):
     run_scene_config('peek = "edge"\n'); time.sleep(3.0)
     focus_order(wins)
-    def move(x, y): ev(f"hl.dispatch(hl.dsp.cursor.move({{ x = {x}, y = {y} }}))"); time.sleep(0.6)
     with Recorder() as r, Mouse() as m:
+        def move(x, y):
+            # a warp inside the window the pointer is already in sends the app no motion event: wiggle one pixel like a real mouse would
+            ev(f"hl.dispatch(hl.dsp.cursor.move({{ x = {x}, y = {y} }}))"); time.sleep(0.4)
+            m.move(1, 0); time.sleep(0.1); m.move(-1, 0); time.sleep(0.4)
         time.sleep(0.6)
-        r.caption("Peek strip: off by default, it shows at a free screen edge")
+        r.caption("Peek strip: off by default, shows at the edge")
         time.sleep(1.4); move(1279, 400); time.sleep(1.6)
         slots = [g for g in read_rects("peek-geometry-eDP-1", kinds=("slot",)) if g[1] == "chromium"]
         if slots:
@@ -188,6 +199,7 @@ def scene_peek(kb, wins):
             cards = read_rects("peek-geometry-eDP-1", kinds=("card",))
             if cards:
                 r.caption("Click one to go there")
+                still("peek", "640,120 640x560")
                 _, _, cx, cy, cw, ch = cards[0]
                 move(cx + cw // 2, cy + ch // 2); time.sleep(0.8)
                 m.press(); time.sleep(0.1); m.release(); time.sleep(1.4)

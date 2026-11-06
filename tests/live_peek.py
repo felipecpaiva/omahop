@@ -46,8 +46,13 @@ def wait_geo(pred, seconds=4.0):
     return geo()
 
 
-def move(x, y):
-    ev(f"hl.dispatch(hl.dsp.cursor.move({{ x = {x}, y = {y} }}))"); time.sleep(0.5)
+def move(x, y, mouse=None):
+    """Warp the pointer. A warp inside the window the pointer is already in sends the app no motion event (hover handlers stay still), a real mouse always does:
+    pass the Mouse to add a one-pixel wiggle so the app sees motion at the new place."""
+    ev(f"hl.dispatch(hl.dsp.cursor.move({{ x = {x}, y = {y} }}))"); time.sleep(0.4)
+    if mouse is not None:
+        mouse.move(1, 0); time.sleep(0.1); mouse.move(-1, 0)
+    time.sleep(0.4)
 
 
 def centre(r):
@@ -99,6 +104,12 @@ try:
         check("edge: nothing shown while the pointer is elsewhere", not [r for r in geo() if r[0] == "slot"], str(geo()))
         move(1279, 400); time.sleep(1.2)
         check("edge: the strip appears when the pointer touches the right edge", bool([r for r in wait_geo(lambda g: any(r[0] == "slot" for r in g)) if r[0] == "slot"]))
+        # from the hot edge straight onto an app: the popup must show (the pointer leaves the hot zone and enters the strip in one jump)
+        g = wait_geo(lambda g: any(r[1] == "omahop-A" for r in g)); slots = {r[1]: r for r in g if r[0] == "slot"}
+        if "omahop-A" in slots:
+            x, y = centre(slots["omahop-A"]); move(x, y, m); time.sleep(1.0)
+            cards = [r for r in wait_geo(lambda g: any(r[0] == "card" for r in g)) if r[0] == "card"]
+            check("edge: hovering an app right after the edge shows its window card", len(cards) >= 1, str(geo()))
         move(640, 400); time.sleep(1.5)
         check("edge: it hides again after the pointer leaves", not [r for r in geo() if r[0] == "slot"], str(geo()))
 finally:
