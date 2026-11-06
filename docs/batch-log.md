@@ -9,3 +9,11 @@ in `test_glue.lua`). Live test `tests/live.py` (16 checks, real keys through `/d
 and raises it, hold Alt plus Tab picks, Shift+Tab, Escape cancels, Alt+arrows, hold Tab repeats, tiling workspace keeps stock Alt+Tab. All pass.
 Found on the way: `send_shortcut` echo (fixed with `send_key_state`), minimized windows carry `omarchy-minimized-from-<id>` (so their origin workspace is known and the window filter uses it).
 Not done: the overlay (the state file is written, nothing draws it yet), settings app, install line in `hyprland.lua`, hand checks.
+
+## Batch 2 (2026-11-06): overlay (list style), manifest, README
+
+Built: `State.js` (state file parser, Node-tested in `tests/state.test.mjs`), `ListRow.qml`, `ListStyle.qml`, `Service.qml` (watches the state file, draws with the shell's `OverlayWindow`, never takes keyboard or pointer),
+`manifest.json` (kind `service`, validates). The first live screenshot showed the card in the Omarchy theme with the selected row highlighted; the layer appeared within 60 ms of the reveal and went away on release.
+Not yet verified after the first screenshot: it was taken while the theme picker overlay (which the shell opens after a restart) held the keyboard, so list order and pick in that picture are not trustworthy.
+Fixes after seeing it: subtitle contrast (was `Color.muted`, too dim on the card), generic icon instead of the missing-image checkerboard. `qmllint` cannot resolve the shell's `qs.*` imports, so it only checks syntax.
+Left for v0.1: a clean overlay screenshot with the picker closed, hand checks, tag.
