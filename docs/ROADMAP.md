@@ -38,13 +38,13 @@ Lua/QML contract are built so that later features add values and views without r
 
 | ID | Feature | Source ids |
 |---|---|---|
-| A1 | Override Alt+Tab and Alt+Shift+Tab, guarded Lua load | C-baseline |
-| A2 | Scope guard: floating default, `all` option, stock behaviour out of scope | D4 |
-| A2b | Window set filter: `windows.workspaces` (current, floating, all), `windows.monitors` (active, all), minimized, specials, ignore; table test over every combination | `settings.md` |
-| A3 | MRU list from focus events, first Tab picks previous window | C-UX |
-| A4 | Alt hold/release commit, Esc cancel, Enter, arrows, Tab repeat | S1 |
-| A5 | Vertical list overlay: icon, app name, title, theme colours | C1.. |
-| A6 | Show delay (quick tap flips with no overlay) | C-UX |
+| A1 (DONE batch 1-2) | Override Alt+Tab and Alt+Shift+Tab, guarded Lua load | C-baseline |
+| A2 (DONE batch 1-2) | Scope guard: floating default, `all` option, stock behaviour out of scope | D4 |
+| A2b (DONE batch 1-2) | Window set filter: `windows.workspaces` (current, floating, all), `windows.monitors` (active, all), minimized, specials, ignore; table test over every combination | `settings.md` |
+| A3 (DONE batch 1-2) | MRU list from focus events, first Tab picks previous window | C-UX |
+| A4 (DONE batch 1-2) | Alt hold/release commit, Esc cancel, Enter, arrows, Tab repeat | S1 |
+| A5 (DONE batch 1-2) | Vertical list overlay: icon, app name, title, theme colours | C1.. |
+| A6 (DONE batch 1-2) | Show delay (quick tap flips with no overlay) | C-UX |
 
 ## Phase 2: cards style and thumbnails
 

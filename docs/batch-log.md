@@ -17,3 +17,10 @@ Built: `State.js` (state file parser, Node-tested in `tests/state.test.mjs`), `L
 Not yet verified after the first screenshot: it was taken while the theme picker overlay (which the shell opens after a restart) held the keyboard, so list order and pick in that picture are not trustworthy.
 Fixes after seeing it: subtitle contrast (was `Color.muted`, too dim on the card), generic icon instead of the missing-image checkerboard. `qmllint` cannot resolve the shell's `qs.*` imports, so it only checks syntax.
 Left for v0.1: a clean overlay screenshot with the picker closed, hand checks, tag.
+
+## v0.1 status (2026-11-06, end of session)
+
+Feature complete for the v0.1 row of the release plan: Alt+Tab override with scope and window-set settings, MRU, tap flips, reveal delay, Alt/Tab polling, repeat, Esc/Enter/arrows, list overlay in the Omarchy theme, config file, stock fallback on tiling workspaces.
+Verified: all unit and glue tests, the state parser, plugin validation, QML syntax, 16 live checks with real keys (run before the overlay plugin was enabled), and the overlay itself with a synthetic state file (icons, names, titles, dimmed minimized row, elided long title, highlight on the selected row, scrolling with 12 entries). A bug found that way: ListView resets `currentIndex` on every model replacement, so the highlight now comes from `selected` directly.
+NOT verified end to end: the live test with the overlay plugin enabled (key events were declined by the user at the end of the session, so none were sent), state-file watch latency (S3), minimized restore and two monitors on real hardware, non-Qt apps for the Alt-menu fix.
+To close v0.1: run `bash tests/run-all.sh` (live part drives the keyboard, hands off for about a minute), tick `docs/validation-checklist.md`, then tag `v0.1.0`.

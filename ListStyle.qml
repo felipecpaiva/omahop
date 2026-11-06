@@ -33,8 +33,14 @@ BorderSurface {
     clip: true
     interactive: false
     model: card.entries
-    currentIndex: card.selected - 1
-    onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
+    // The highlight comes straight from `selected`, not from currentIndex: a ListView resets currentIndex to 0 whenever its model is
+    // replaced (every state file change replaces it), which left the highlight on row 1.
+    function follow() { if (card.selected >= 1) positionViewAtIndex(card.selected - 1, ListView.Contain) }
+    onCountChanged: Qt.callLater(follow)
+    Connections {
+      target: card
+      function onSelectedChanged() { Qt.callLater(view.follow) }
+    }
 
     delegate: ListRow {
       required property var modelData
@@ -46,7 +52,7 @@ BorderSurface {
       appName: info.name
       title: modelData.title
       minimized: modelData.minimized
-      selected: index === view.currentIndex
+      selected: index === card.selected - 1
     }
   }
 }
