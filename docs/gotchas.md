@@ -1,0 +1,8 @@
+# omahop gotchas
+
+Traps found so far. The long list from the sister project is in omagnet `docs/gotchas.md`; the short version is at the end of `architecture.md`.
+
+- Quickshell `Quickshell.iconPath(name, true)` returned empty on this machine. Call it with one argument.
+- `ToplevelManager` and `DesktopEntries` are lazy: the first read is empty. Touch them early.
+- The old note "Z13 is on Omarchy 4.0.6" is stale: the machine reports 4.5.0-3 and `Commons/ShellIpc.qml` exists.
+- A probe window opened with `qs -p` is tiled by Hyprland like any client. Float only that window to screenshot it.
