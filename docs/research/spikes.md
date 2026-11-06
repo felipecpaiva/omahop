@@ -42,6 +42,23 @@ For a maximized or fullscreen top window, focus alone already works here, becaus
 Our rule: always focus AND `alter_zorder top`. Not tested: a window on another workspace, two monitors, a dialog over its owner, XWayland apps.
 Cleanup was verified: no test windows left, workspace mode file removed, original workspace restored.
 
+## S6 load order and the escape hatch
+
+Order in `~/.config/hypr/hyprland.lua`: `default.hypr.omarchy` (stock binds, including the four ALT+TAB binds) then the user's
+`hypr.monitors`, `hypr.input`, `hypr.bindings`, `hypr.looknfeel`, `hypr.autostart`, then personal lines at the end (this is where a plugin's guarded
+`dofile` goes, as omagnet's does). So omahop loads AFTER the user's own `bindings.lua`: an unconditional `hl.unbind("ALT + TAB")` would delete a user's own Alt+Tab bind.
+`hyprctl binds -j` lists binds with their description. Stock ones: modmask 8 (ALT) "Focus on next window" and "Reveal active window on top";
+modmask 9 (ALT+SHIFT) "Focus on previous window" and "Reveal active window on top". Lua exposes `hl.get_windows`, `hl.get_workspace_windows`, `hl.get_layers`,
+`hl.get_current_submap`, `hl.get_cursor_pos`, but no bind list.
+Answer: omahop takes over Alt+Tab only if the binds on that chord are the stock ones (checked by description at load, through `hyprctl binds -j`), and the settings app has a
+"Take over Alt+Tab" switch (default on). If a user bind is found, omahop leaves it alone and says so in a log line and in the settings app.
+
+## S3 shell IPC cost: about 42 ms per call
+
+`omarchy-shell -q <target> <method>` takes about 42 ms (a process start), and `hyprctl eval` about 5 ms. Too slow for every Tab press, fine for open and close.
+Plan: Lua writes a small state file (selection index and entries) in `$XDG_RUNTIME_DIR` and the QML overlay watches it; one IPC call opens the overlay.
+File-watch latency is NOT measured yet; it is the first thing to measure in batch 1 (target: overlay updates within one frame of a Tab).
+
 ## Still open
 
-S2 thumbnails cost, S3 IPC and latency, S4 focusless hover, S6 load order, S7 (ghost windows, Alt scan codes already covered by S9), L1 (Alt menu on tap). See `ROADMAP.md`.
+S2 thumbnails cost (needs the overlay), S3 file-watch latency, S4 focusless hover and L1 (Alt menu on tap), both need a minimal overlay prototype: they are the first build step of v0.1, not a separate probe, because they cannot be answered without a real overlay window. S7 ghost windows: toplevel-only filter, tested with fixtures in batch 1. See `ROADMAP.md`.

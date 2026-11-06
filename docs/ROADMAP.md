@@ -23,7 +23,7 @@ Lua/QML contract are built so that later features add values and views without r
 
 | ID | Question | Pass when |
 |---|---|---|
-| S1 | Does `hl.bind` with repeating fire Tab again while Alt is held? | Counted in a Lua probe |
+| S1 | Does `hl.bind` with repeating fire Tab again while Alt is held? | **DONE: yes** (`research/spikes.md`) |
 | S2 | Cost and behaviour of thumbnails: 10 live views, minimized, special, occluded, frame rate | Numbers in `research/`, default for `thumbnails` chosen |
 | S3 | Lua to shell IPC: state file plus which IPC call opens/updates/closes an overlay from a plugin, latency per Tab | Overlay opens within 50 ms of Alt+Tab |
 | S4 | Can an in-shell overlay window be focusless and still receive hover? | Hover works, keys stay in Lua |
@@ -31,8 +31,8 @@ Lua/QML contract are built so that later features add values and views without r
 
 | S6 | Load order: does the guarded load of `omahop.lua` run before or after the user's own `bindings.lua`? `hl.unbind("ALT + TAB")` removes every bind on that chord. Is a "do not take Alt+Tab" escape hatch needed? | Order documented, setting decided |
 | S7 | Competitor traps: floating focus without raise, ghost windows, Alt scan codes 64 and 108, bind lifecycle on monitor hotplug (see `competitive-analysis.md`) | Each has a test or a documented answer |
-| S8 | Raise on Hyprland 0.56.2: does a focus dispatch raise a floating window, a maximized one, a fullscreen one? Which of `bring_to_top`, `alter_zorder`, lowering others works? (core issues 16241, 16973, 17724; PR 16412) | Table of cases and the working call in `research/` |
-| S9 | Cross-check Alt release: our polling versus the submap release bind `release, submap_universal, transparent, non_consuming`, both Alt keys | One method chosen, tested |
+| S8 (DONE: focus alone does not raise; `alter_zorder top` does) | Raise on Hyprland 0.56.2: does a focus dispatch raise a floating window, a maximized one, a fullscreen one? Which of `bring_to_top`, `alter_zorder`, lowering others works? (core issues 16241, 16973, 17724; PR 16412) | Table of cases and the working call in `research/` |
+| S9 (DONE: only polling `hl.is_key_down` is reliable) | Cross-check Alt release: our polling versus the submap release bind `release, submap_universal, transparent, non_consuming`, both Alt keys | One method chosen, tested |
 
 ## Phase 1: switcher core, list style (no thumbnails)
 
