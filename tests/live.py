@@ -72,10 +72,13 @@ try:
         check("closed after cancel", read_state().get("open") == "0", str(read_state()))
 
         sp.reset_order()
-        kb.down("alt"); kb.down("tab"); time.sleep(1.2)
-        sel = read_state().get("selected")
+        kb.down("alt"); kb.down("tab"); time.sleep(0.4)
+        seen = []
+        for _ in range(8):  # sample while Tab is held; with 3 windows the selection wraps, so count changes, not the final value
+            seen.append(read_state().get("selected")); time.sleep(0.1)
         kb.up("tab"); kb.up("alt"); time.sleep(0.5)
-        check("holding Tab repeats (selection moved on by itself)", sel not in (None, "2"), str(sel))
+        changes = sum(1 for a, b in zip(seen, seen[1:]) if a != b)
+        check("holding Tab repeats (the selection keeps moving by itself)", changes >= 3, str(seen))
 
         sp.reset_order()
         kb.down("alt"); kb.down("tab"); kb.up("tab"); kb.down("right"); kb.up("right"); time.sleep(0.2); kb.up("alt"); time.sleep(0.5)
