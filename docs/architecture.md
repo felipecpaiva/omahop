@@ -67,7 +67,7 @@ between two windows.
 
 ## Thumbnails
 
-Verified 2026-11-06 on this machine (`docs/research/thumbnails-and-prior-art.md`): `ScreencopyView` with a `Toplevel` as
+Verified 2026-11-06 on this machine by a probe and a reviewed screenshot (`docs/research/thumbnails-and-prior-art.md`): `ScreencopyView` with a `Toplevel` as
 `captureSource` shows real content for windows on other workspaces, with no permission prompt. Compositor advertises
 `hyprland_toplevel_export` v2 and `ext_image_copy_capture`.
 

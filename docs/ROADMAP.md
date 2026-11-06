@@ -16,6 +16,8 @@ Every row must meet [engineering-standards.md](engineering-standards.md): flexib
 | S4 | Can an in-shell overlay window be focusless and still receive hover? | Hover works, keys stay in Lua |
 | S5 | Read core PR #16548 diff: key handling, IPC, what we can copy by idea | Notes in `research/` |
 
+| S6 | Load order: does the guarded load of `omahop.lua` run before or after the user's own `bindings.lua`? `hl.unbind("ALT + TAB")` removes every bind on that chord. Is a "do not take Alt+Tab" escape hatch needed? | Order documented, setting decided |
+
 ## Phase 1: switcher core, list style (no thumbnails)
 
 | ID | Feature | Source ids |

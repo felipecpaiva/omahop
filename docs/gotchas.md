@@ -6,3 +6,4 @@ Traps found so far. The long list from the sister project is in omagnet `docs/go
 - `ToplevelManager` and `DesktopEntries` are lazy: the first read is empty. Touch them early.
 - The old note "Z13 is on Omarchy 4.0.6" is stale: the machine reports 4.5.0-3 and `Commons/ShellIpc.qml` exists.
 - A probe window opened with `qs -p` is tiled by Hyprland like any client. Float only that window to screenshot it.
+- `hl.unbind("ALT + TAB")` removes every bind on that chord, including a user's own. Load order against the user's `bindings.lua` is open (spike S6).
