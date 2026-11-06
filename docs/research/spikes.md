@@ -68,6 +68,13 @@ Test `tests/spikes/l1_altmenu.py`: a tiny Qt Widgets window with a menu bar (the
 
 So the focusless overlay needs a mitigation, and a harmless injected key (F24) between Alt down and Alt up is one that works in the Qt test app. Not tested: GTK apps, Chromium and Electron apps, XWayland apps, apps that use F24. The injection can leave the app seeing a stray F24; hand check in `validation-checklist.md`.
 
+## Trap: `send_shortcut` and `pass` make Hyprland call the bind a second time
+
+Found by the first live test of the glue (every Alt+Tab stepped twice). A bind handler that calls `hl.dsp.send_shortcut` (or `pass`) is called AGAIN when the key is released.
+Measured with a plain `ALT + F10` bind: one call alone; two calls (press and release) with `send_shortcut`, mods empty or ALT, and with `pass`; one call with `send_shortcut`
+deferred by a 30 ms timer, and one call with `hl.dsp.send_key_state` (F24 down, then up). `is_key_down("Tab")` still reads true when the echo arrives, so it cannot filter it.
+Both `send_key_state` and a 5 ms deferred `send_shortcut` still stop the Qt menu bar from taking focus (L1 test). omahop uses `send_key_state`.
+
 ## Still open
 
 S2 thumbnails cost (needs the overlay), S3 file-watch latency, S4 focusless hover: they need a real overlay window and are the first build step of v0.1. S7 ghost windows: toplevel-only filter, tested with fixtures in batch 1. L1 for non-Qt apps: part of the same batch.

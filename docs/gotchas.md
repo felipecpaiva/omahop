@@ -8,3 +8,6 @@ Traps found so far. The long list from the sister project is in omagnet `docs/go
 - A probe window opened with `qs -p` is tiled by Hyprland like any client. Float only that window to screenshot it.
 - `hl.unbind("ALT + TAB")` removes every bind on that chord, including a user's own. Load order against the user's `bindings.lua` is open (spike S6).
 - Traps other projects hit (floating raise, ghost windows, Alt scan codes, capture on a vanished output, config reload crash, bind duplicates on hotplug, pointer warp): see `competitive-analysis.md`.
+- `hl.dsp.send_shortcut` and `hl.dsp.pass` inside a bind handler make Hyprland call the bind a second time at the key release. Use `send_key_state` (docs/research/spikes.md).
+- A live test that checks "previous window" must start from a known recently-used order (`Spare.reset_order`); earlier steps change it.
+- `hl.is_key_down` takes the xkb names `Tab`, `Alt_L`, `Alt_R` (`TAB`, `ALT_L` return nil).
