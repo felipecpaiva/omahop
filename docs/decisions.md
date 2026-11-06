@@ -11,7 +11,7 @@
 | D6 | Cards and list are both shipped, user picks | Felipe asked for both (DockDoor and Contexts styles) | decided |
 | D7 | Take ideas, never GPL code | DockDoor, end-4, caelestia are GPL-3.0 | decided |
 | D8 | Where hover previews live (upstream dock hook, own dock strip, or hover layer) | Stock dock has no hooks | open, phase 4 |
-| D9 | Plugin or contribute to core | Core PR omacom/omarchy#16548 (Windows-style Alt+Tab, live thumbnails, all workspaces, MRU) is open. If it merges, a plain switcher is redundant. omahop's difference: floating-scope default, vertical list style, hover previews, settings app, theme-live | open, Felipe to decide after reading the PR |
+| D9 | Plugin or contribute to core | Core PR omacom/omarchy#16548 (Windows-style Alt+Tab, live thumbnails, all workspaces, MRU) is open. If it merges, a plain switcher is redundant. omahop's difference: floating-scope default, vertical list style, hover previews, settings app, theme-live | decided 2026-11-06: build omahop, grow it release by release (Felipe asked for a gradual roadmap); revisit if #16548 merges |
 
 ## Prior art summary (full table in `research/thumbnails-and-prior-art.md`)
 

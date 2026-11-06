@@ -6,6 +6,19 @@ Agents on cheaper models do mechanical work, a strong model judges. Agent report
 
 Every row must meet [engineering-standards.md](engineering-standards.md): flexibility, scalability, code standards per language.
 
+## Release plan (features arrive gradually, each release is usable alone)
+
+| Release | Goal | Contents |
+|---|---|---|
+| **v0.1** basic | A working list switcher you can use daily | Phase 0 spikes. Phase 1 rows A1 to A6: Alt+Tab override, `scope` (floating default, `all`), window set filter (A2b), MRU, first Tab picks previous window, tap vs hold with 100 ms reveal, Esc/Enter/arrows, vertical list with icon, app name and title, live theme. Settings by hand-edited `config.toml` (no app yet). No thumbnails. |
+| v0.2 | Looks and settings app | Phase 2 cards style with thumbnails (B1 to B3), `thumbnails` setting, Phase 3 settings panel (C1 to C3), multi-monitor overlay (B5) |
+| v0.3 | Hover and actions | Phase 4 hover previews (needs D8), minimized and special windows (B4), quick actions close and minimize (B6) |
+| v0.4 | Power features | Profiles, search, letter hints, per-app rules, ignore-when-fullscreen (BetterCmdTab ideas, see its reference) |
+| v1.0 | Release polish | Phase 5: branding kit, marketplace submission (only with Felipe's go) |
+
+Rule: v0.1 stays small on purpose. A feature not in the v0.1 row waits, but the settings model (`settings.md`) and the
+Lua/QML contract are built so that later features add values and views without rewriting the key handling.
+
 ## Phase 0: spikes (answer before design is final)
 
 | ID | Question | Pass when |
