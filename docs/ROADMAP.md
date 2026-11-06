@@ -24,6 +24,7 @@ Every row must meet [engineering-standards.md](engineering-standards.md): flexib
 |---|---|---|
 | A1 | Override Alt+Tab and Alt+Shift+Tab, guarded Lua load | C-baseline |
 | A2 | Scope guard: floating default, `all` option, stock behaviour out of scope | D4 |
+| A2b | Window set filter: `windows.workspaces` (current, floating, all), `windows.monitors` (active, all), minimized, specials, ignore; table test over every combination | `settings.md` |
 | A3 | MRU list from focus events, first Tab picks previous window | C-UX |
 | A4 | Alt hold/release commit, Esc cancel, Enter, arrows, Tab repeat | S1 |
 | A5 | Vertical list overlay: icon, app name, title, theme colours | C1.. |

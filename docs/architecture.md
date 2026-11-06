@@ -60,6 +60,8 @@ window list order and fight the switch), and omagnet already proved the hold/rel
 
 ## Window list
 
+Full settings model and combinations: [settings.md](settings.md). The text below is the default.
+
 Default: windows tagged `omarchy-floating-workspace` on the current monitor's workspace, in MRU order, minimized ones
 (on `special:minimized`) at the back, no scratchpad or console specials. Settings: all workspaces, all monitors,
 include minimized, include specials. First Tab selects the previous window (Contexts principle), so a quick tap flips

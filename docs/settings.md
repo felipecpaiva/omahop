@@ -1,0 +1,58 @@
+# omahop settings model
+
+Design, not built. Rule from Felipe (2026-11-06): nothing about scope or window choice is hard-coded; each is a setting, the
+default is the narrow one (floating desktops, active monitor). All settings follow [engineering-standards.md](engineering-standards.md).
+
+## Two separate questions
+
+1. **Trigger scope**: on which workspaces does omahop take over Alt+Tab? Out of scope, stock Alt+Tab runs unchanged.
+2. **Window set**: which windows does the list show, once omahop is open?
+
+They are independent. Mixing them is allowed.
+
+| Setting | Values | Default | Meaning |
+|---|---|---|---|
+| `scope` | `floating`, `all` | `floating` | Trigger scope (question 1) |
+| `windows.workspaces` | `current`, `floating`, `all` | `floating` | `current`: only the workspace you are on. `floating`: every workspace that is in floating mode. `all`: every workspace, tiling too |
+| `windows.monitors` | `active`, `all` | `active` | `active`: only the monitor with focus. `all`: windows on every monitor |
+| `windows.minimized` | `back`, `hide` | `back` | Minimized windows listed last, or not listed |
+| `windows.specials` | `hide`, `show` | `hide` | Scratchpad and console special workspaces |
+| `windows.ignore` | list of app id or title patterns | empty | Never listed |
+
+A window is listed when its workspace matches `windows.workspaces` AND its monitor matches `windows.monitors`, then the
+minimized, specials and ignore rules apply. Order is most recently used first; the first Tab picks the previous window.
+
+## Combinations
+
+| `scope` | `windows.workspaces` | `windows.monitors` | Behaviour |
+|---|---|---|---|
+| floating | floating | active | **Default.** On a floating desktop you see only floating windows on this monitor. Tiling desktops are untouched |
+| floating | floating | all | Same, plus floating windows on the other monitors |
+| floating | current | active | Only this desktop, this monitor: the smallest list |
+| floating | all | any | Triggers only on floating desktops but the list also shows tiled windows. Allowed for power users; choosing one switches desktop (and monitor if needed) |
+| all | floating | any | omahop runs everywhere but only ever lists floating-desktop windows. On a tiling desktop the list may hold windows from other desktops, so picking one moves you there |
+| all | current | active | omahop everywhere, each desktop shows only itself. Closest to a classic per-desktop switcher |
+| all | all | all | Everything everywhere: the Windows-style switcher of core PR 16548 |
+
+Edge rules:
+- Empty list (for example `current` on an empty desktop): do nothing, no overlay, no error.
+- One window: Alt+Tab does nothing visible.
+- Picking a window on another workspace or monitor focuses it and switches there. Same rule everywhere, no special cases.
+- If `scope = floating` and the current desktop is tiling, omahop is out of the picture: the stock bind runs, `windows.*` is not read.
+
+## Later: profiles (idea from BetterCmdTab, B-ids in its reference)
+
+A profile is a named set of the settings above bound to its own shortcut, for example `Alt+Tab` = floating, active monitor,
+and `Alt+Backtick` = all windows, all monitors. The settings model is a flat table now so that profiles can wrap it later
+without a schema change: `profiles.<name>.windows.*` overrides the global values.
+
+## Config file
+
+`~/.config/omahop/config.toml`, `schema = 1`, unknown keys kept, bad values fall back to the default and are logged.
+The settings app reads and writes the same file; hand edits apply live.
+
+## Tests this model needs
+
+- Pure: a table test over every row above with fake windows on several workspaces and monitors, checks the listed set and order.
+- Glue: scope guard calls the stock handler on an out-of-scope desktop.
+- Live (real monitors only): default settings on a tiling desktop equal stock Alt+Tab.

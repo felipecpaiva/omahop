@@ -6,6 +6,7 @@
 | D2 | Public repo, MIT | Felipe's call, like omagnet. Scrub before every push (no LAN IPs, hostnames, home paths, client names) | decided |
 | D3 | One repo, repo root is the plugin | Same as omagnet: `omarchy plugin add <git-url>` clones it, marketplace wants `manifest.json` at root | decided |
 | D4 | `scope` is a setting: `floating` (default) or `all` | Felipe: default floating only, user free to extend. Stock behaviour must stay byte-for-byte on out-of-scope workspaces | decided |
+| D4b | Window set is its own setting group, independent of scope: workspaces (`current`, `floating`, `all`) and monitors (`active`, `all`), default floating and active | Felipe: a user who limits hop to floating desktops should not see other windows; showing other monitors is a separate choice | decided, see `settings.md` |
 | D5 | Lua owns keys and state, QML draws | Overlay never takes focus; omagnet proved the Alt hold/release poll | decided, spike S3 confirms IPC |
 | D6 | Cards and list are both shipped, user picks | Felipe asked for both (DockDoor and Contexts styles) | decided |
 | D7 | Take ideas, never GPL code | DockDoor, end-4, caelestia are GPL-3.0 | decided |
