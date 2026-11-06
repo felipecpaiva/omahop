@@ -4,6 +4,8 @@ Status: design only, nothing is built yet (2026-11-06). Every claim marked UNVER
 Evidence lives in `docs/research/`. Feature lists are in `docs/dockdoor-reference/features.md` (D1 to D95) and
 `docs/contexts-reference/features.md` (C1 to C31), `docs/bettercmdtab-reference/features.md` (B1 to B65, GPL-3.0, ideas only).
 
+Competitors and positioning: [competitive-analysis.md](competitive-analysis.md).
+
 Standing rules for all work: [engineering-standards.md](engineering-standards.md) (flexibility, scalability, code standards per language).
 
 ## What it is

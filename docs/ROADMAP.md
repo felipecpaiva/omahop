@@ -10,10 +10,10 @@ Every row must meet [engineering-standards.md](engineering-standards.md): flexib
 
 | Release | Goal | Contents |
 |---|---|---|
-| **v0.1** basic | A working list switcher you can use daily | Phase 0 spikes. Phase 1 rows A1 to A6: Alt+Tab override, `scope` (floating default, `all`), window set filter (A2b), MRU, first Tab picks previous window, tap vs hold with 100 ms reveal, Esc/Enter/arrows, vertical list with icon, app name and title, live theme. Settings by hand-edited `config.toml` (no app yet). No thumbnails. |
-| v0.2 | Looks and settings app | Phase 2 cards style with thumbnails (B1 to B3), `thumbnails` setting, Phase 3 settings panel (C1 to C3), multi-monitor overlay (B5) |
+| **v0.1** basic | A working list switcher you can use daily | Phase 0 spikes. Phase 1 rows A1 to A6: Alt+Tab override, `scope` (floating default, `all`), window set filter (A2b), MRU, first Tab picks previous window, tap vs hold with 100 ms reveal, Esc/Enter/arrows, vertical list with icon, app name and title, live theme. Settings by hand-edited `config.toml` (no app yet). No thumbnails. Must handle the rivals' known failures: raise the focused floating window (`bring_to_top`), skip ghost windows (Wine, Proton, no real toplevel), both Alt keys by scan code, no pointer warp. |
+| v0.2 | Looks and settings app | Type-to-search in the list (moved up from v0.4, rivals have it), Phase 2 cards style with thumbnails (B1 to B3), `thumbnails` setting, Phase 3 settings panel (C1 to C3), multi-monitor overlay (B5) |
 | v0.3 | Hover and actions | Phase 4 hover previews (needs D8), minimized and special windows (B4), quick actions close and minimize (B6) |
-| v0.4 | Power features | Profiles, search, letter hints, per-app rules, ignore-when-fullscreen (BetterCmdTab ideas, see its reference) |
+| v0.4 | Power features | Profiles, letter hints, per-app rules, ignore-when-fullscreen (BetterCmdTab ideas, see its reference) |
 | v1.0 | Release polish | Phase 5: branding kit, marketplace submission (only with Felipe's go) |
 
 Rule: v0.1 stays small on purpose. A feature not in the v0.1 row waits, but the settings model (`settings.md`) and the
@@ -30,6 +30,7 @@ Lua/QML contract are built so that later features add values and views without r
 | S5 | Read core PR #16548 diff: key handling, IPC, what we can copy by idea | Notes in `research/` |
 
 | S6 | Load order: does the guarded load of `omahop.lua` run before or after the user's own `bindings.lua`? `hl.unbind("ALT + TAB")` removes every bind on that chord. Is a "do not take Alt+Tab" escape hatch needed? | Order documented, setting decided |
+| S7 | Competitor traps: floating focus without raise, ghost windows, Alt scan codes 64 and 108, bind lifecycle on monitor hotplug (see `competitive-analysis.md`) | Each has a test or a documented answer |
 
 ## Phase 1: switcher core, list style (no thumbnails)
 
