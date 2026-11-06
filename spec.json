@@ -293,6 +293,46 @@
       "type": "text"
     }],
     "title": "App rules"
+  }, {
+    "id": "shortcuts",
+    "settings": [{
+      "default": "ALT + GRAVE",
+      "help": "A second shortcut that lists only the windows of the app you are in, like Cmd+backtick on a Mac. It must start with ALT (for example ALT + GRAVE). Leave it empty to turn it off. Applies after a Hyprland reload; a chord you already use is never taken.",
+      "hidden": false,
+      "id": "top.same_app_key",
+      "key": "same_app_key",
+      "label": "Same-app shortcut",
+      "reload": true,
+      "section": "top",
+      "type": "text"
+    }, {
+      "default": "off",
+      "help": "While the list is up and nothing is typed yet, a hint key jumps straight to a window. Any other key still types into the search.",
+      "hidden": false,
+      "id": "top.hints",
+      "key": "hints",
+      "label": "Quick jump keys",
+      "names": {
+        "apps": "App letters (set below)",
+        "numbers": "Number keys (Alt + 1 to 9)",
+        "off": "Off"
+      },
+      "reload": false,
+      "section": "top",
+      "type": "enum",
+      "values": ["off", "numbers", "apps"]
+    }, {
+      "default": "",
+      "help": "Pairs of letter and app class, comma separated, for example: c=google-chrome, t=kitty. Used when Quick jump keys is App letters.",
+      "hidden": false,
+      "id": "top.hint_keys",
+      "key": "hint_keys",
+      "label": "App letters",
+      "reload": false,
+      "section": "top",
+      "type": "text"
+    }],
+    "title": "Shortcuts"
   }],
   "schema": 1
 }

@@ -1,6 +1,6 @@
 .pragma library
 // omahop state file parser. The Lua side (lua/omahop.lua write_state) writes it; the overlay reads it. Pure, so Node tests it (tests/state.test.mjs).
-// Format: "key=value" lines, then one tab-separated line per window: w <address> <class> <minimized 0|1> <title>.
+// Format: "key=value" lines, then one tab-separated line per window: w <address> <class> <minimized 0|1> <hint> <title> (hint: a number or letter, empty for none).
 
 function parse(text) {
   var st = { open: false, revealed: false, selected: 0, style: "list", thumbnails: "snapshot", border: "auto", actions: true, query: "", entries: [] }
@@ -9,7 +9,7 @@ function parse(text) {
     var line = lines[i]
     if (line.indexOf("w\t") === 0) {
       var f = line.split("\t")
-      if (f.length >= 5) st.entries.push({ address: f[1], appId: f[2], minimized: f[3] === "1", title: f.slice(4).join("\t") })
+      if (f.length >= 6) st.entries.push({ address: f[1], appId: f[2], minimized: f[3] === "1", hint: f[4], title: f.slice(5).join("\t") })
       continue
     }
     var eq = line.indexOf("=")

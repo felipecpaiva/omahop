@@ -38,6 +38,9 @@ Jump to any window fast on Omarchy's floating workspaces. Hold Alt, press Tab: a
 - **Two looks:** a plain list, or cards with a picture of each window (covered and minimized windows included), set in the settings window.
 - **Mouse and quick actions:** with the list or cards up, hover a row (a light highlight, it never changes your pick), click to go there, and use the buttons on the hovered row to close or minimize that window. `Alt + Delete` closes the picked window.
 - **Peek strip (off by default):** a slim row of your running apps on a free screen edge (not the dock's, not the bar's). Hover an app to see a picture of each of its windows, click one to go there, close or minimize from the card. Turn it on in the settings (Peek strip): at the screen edge, or always visible.
+- **Same-app shortcut:** `Alt + backtick` lists only the windows of the app you are in (like Cmd+backtick on a Mac). It is bound after Hyprland has loaded and never takes a chord you already use.
+- **App rules:** never list windows by title fragment, list some apps first, and step aside (stock Alt+Tab) for fullscreen apps or named apps such as games and remote desktops.
+- **Quick jump keys:** number keys (`Alt + 1` to `9`) or letters you map to apps jump straight to a window; any other key still types into the search.
 - Adds nothing to the bar, the dock or the desktop unless you turn the peek strip on.
 
 ## Install
@@ -68,6 +71,9 @@ reveal_delay_ms = 100    # a quick tap shows no overlay
 style = "list"           # "list" (plain) or "cards" (a picture of each window)
 thumbnails = "snapshot"  # cards only: "snapshot" (one picture when it opens), "live" (keeps updating, uses CPU), "off" (icons only)
 actions = true           # close and minimize buttons on the hovered row or card
+same_app_key = "ALT + GRAVE"  # the same-app shortcut ("" turns it off, needs a Hyprland reload)
+hints = "off"            # quick jump keys: "off", "numbers", "apps" (with hint_keys = "c=google-chrome, t=kitty")
+passthrough_fullscreen = false  # true: stock Alt+Tab while the focused window is fullscreen
 peek = "off"             # the peek strip: "off", "edge" (shows when the pointer touches the screen edge), "always"
 peek_position = "auto"   # "auto" (a free edge), "bottom", "top", "left", "right"
 border = "auto"          # the list's outline: "auto" follows Hyprland's window border (none when you turned window borders off), "on", "off"
@@ -78,6 +84,8 @@ monitors = "active"      # "active" (the monitor with focus) or "all"
 minimized = "back"       # "back": listed last, "hide"
 specials = "hide"        # "show": scratchpad and other special workspaces
 ignore = ""              # window classes to never list, comma separated
+ignore_titles = ""       # never list windows whose title contains one of these fragments
+first = ""               # apps to list first (window classes)
 
 [keys]
 repeat_delay_ms = 250    # holding Tab: wait, then repeat

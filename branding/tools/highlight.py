@@ -23,7 +23,7 @@ had_file = os.path.exists(mode_file)
 def write(sel, wins, style, query="", thumbs="snapshot", open_=1):
     lines = ["version=1", f"open={open_}", f"revealed={open_}", f"selected={sel}", f"style={style}", f"thumbnails={thumbs}", "border=auto", f"query={query}"]
     for w in wins:
-        lines.append(f"w\t{w['address']}\t{w['class']}\t0\t{w['title']}")
+        lines.append(f"w\t{w['address']}\t{w['class']}\t0\t\t{w['title']}")
     open(STATE + ".new", "w").write("\n".join(lines) + "\n"); os.rename(STATE + ".new", STATE)
 
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Records the feature GIFs for the README and the releases from the REAL overlay on a spare workspace (never a virtual monitor), with real key
 and mouse events from /dev/uinput, demo windows that show public content only, and a screenshot frame loop. gifkit.py builds a captioned GIF and MP4 per scene.
-Scenes: switch (list), cards, search, settings, pointer, peek, quick (quick closes a window, so it goes last). Needs grim, ffmpeg, kitty, chromium, bat, the plugin enabled and the shell restarted since the last QML change.
+Scenes: switch (list), cards, search, settings, pointer, peek, quick (quick closes a window, so it goes last), sameapp, hints. Needs grim, ffmpeg, kitty, chromium, bat, the plugin enabled and the shell restarted since the last QML change.
 Your own ~/.config/omahop/config.toml is saved and put back. Do not touch the keyboard or mouse while it runs (about 2 minutes).
 Usage: python3 branding/tools/demo.py [scene ...]   (no argument: all scenes)"""
 import json, os, shutil, subprocess, sys, tempfile, threading, time
@@ -220,7 +220,35 @@ def scene_quick(kb, wins):
         r.finish("quick")
 
 
-SCENES = {"switch": scene_switch, "cards": scene_cards, "search": scene_search, "settings": scene_settings, "pointer": scene_pointer, "peek": scene_peek, "quick": scene_quick}
+def scene_sameapp(kb, wins):
+    run_scene_config('style = "cards"\nreveal_delay_ms = 120\n'); time.sleep(3.5)
+    kitties = [w for w in wins if w["class"] == "kitty"]
+    focus_order(kitties)
+    with Recorder() as r:
+        time.sleep(0.8)
+        r.caption("Alt + backtick: only the windows of this app")
+        kb.down("alt"); kb.down("grave"); kb.up("grave"); time.sleep(1.4)
+        still("sameapp", "260,200 760x340")
+        kb.down("grave"); kb.up("grave"); time.sleep(1.2)
+        kb.up("alt"); time.sleep(1.4)
+        r.finish("sameapp")
+
+
+def scene_hints(kb, wins):
+    run_scene_config('style = "list"\nreveal_delay_ms = 120\nhints = "numbers"\n'); time.sleep(0.5)
+    focus_order(wins)
+    with Recorder() as r:
+        time.sleep(0.8)
+        r.caption("Number keys jump straight to a window")
+        kb.down("alt"); kb.down("tab"); kb.up("tab"); time.sleep(1.6)
+        still("hints", "300,230 680x340")
+        r.caption("Press 3: that window comes forward")
+        kb.down("3"); kb.up("3"); time.sleep(1.6)
+        kb.up("alt"); time.sleep(1.2)
+        r.finish("hints")
+
+
+SCENES = {"switch": scene_switch, "cards": scene_cards, "search": scene_search, "settings": scene_settings, "pointer": scene_pointer, "peek": scene_peek, "quick": scene_quick, "sameapp": scene_sameapp, "hints": scene_hints}
 
 
 def main():

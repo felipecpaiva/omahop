@@ -4,7 +4,7 @@
 -- The overlay is a separate Quickshell service that watches the state file this module writes (see write_state).
 local here = debug.getinfo(1, "S").source:match("^@(.*)/") or "."
 local function mod(name) return dofile(here .. "/" .. name .. ".lua") end
-local Config, Scope, Windows, Mru, Session, Search, Rules = mod("config"), mod("scope"), mod("windows"), mod("mru"), mod("session"), mod("search"), mod("rules")
+local Config, Scope, Windows, Mru, Session, Search, Rules, Hints = mod("config"), mod("scope"), mod("windows"), mod("mru"), mod("session"), mod("search"), mod("rules"), mod("hints")
 
 local M = {}
 _G.omahop = M
@@ -134,9 +134,11 @@ function M.write_state()
     "selected=" .. (s and s:selected() or 0), "style=" .. M.cfg.style, "thumbnails=" .. M.cfg.thumbnails, "border=" .. M.cfg.border, "actions=" .. (M.cfg.actions and 1 or 0) }
   if s and s:is_open() then lines[#lines + 1] = "query=" .. (tostring(M.query):gsub("[%c]", " ")) end
   if s and s:is_open() then
-    for _, e in ipairs(M.entries) do
+    -- hint labels (a number or a letter on a row) only while nothing is typed: once there is a query, every key types
+    local labels = M.query == "" and Hints.labels(M.entries, M.cfg.hints, Hints.parse_keys(M.cfg.hint_keys)) or {}
+    for i, e in ipairs(M.entries) do
       local clean = function(v) return (tostring(v):gsub("[%c]", " ")) end
-      lines[#lines + 1] = table.concat({ "w", e.address, clean(e.class), e.minimized and 1 or 0, clean(e.title) }, "\t")
+      lines[#lines + 1] = table.concat({ "w", e.address, clean(e.class), e.minimized and 1 or 0, labels[i] or "", clean(e.title) }, "\t")
     end
   end
   local content = table.concat(lines, "\n") .. "\n"
@@ -212,6 +214,11 @@ end
 
 function M.type_key(ch)
   if not M.session:is_open() then return end
+  -- a hint key (a number, or a letter mapped to an app) jumps straight to a window, but only while nothing is typed yet
+  if M.query == "" and M.cfg.hints ~= "off" and ch ~= "backspace" and ch ~= " " then
+    local target = Hints.target(M.entries, M.cfg.hints, Hints.parse_keys(M.cfg.hint_keys), ch)
+    if target then M.pick(target); return end
+  end
   if ch == "backspace" then M.query = Search.backspace(M.query) else M.query = Search.append(M.query, ch) end
   M.refilter()
 end
@@ -336,6 +343,43 @@ local function tick(gen)
   if M.session:is_open() then hl.timer(function() tick(gen) end, { type = "oneshot", timeout = M.tick_ms }) end
 end
 
+-- The windows of the focused window's app (the same-app profile). Without a focused window the list is unchanged.
+function M.same_app(entries, focused)
+  if not focused or not focused.class then return entries end
+  local want, out = tostring(focused.class):lower(), {}
+  for _, e in ipairs(entries) do
+    if (e.class or ""):lower() == want then out[#out + 1] = e end
+  end
+  return out
+end
+
+-- Give a chord's key back to the focused app (used when the same-app chord fires where omahop is not active). send_key_state, never pass: pass makes Hyprland call the bind again.
+function M.pass_chord(chord)
+  local key = chord and chord:match("%+ (%w+)$")
+  local w = hl.get_active_window()
+  if not key or not w then return end
+  key = key:lower()
+  pcall(function()
+    hl.dispatch(hl.dsp.send_key_state({ mods = "ALT", key = key, state = "down", window = w }))
+    hl.dispatch(hl.dsp.send_key_state({ mods = "ALT", key = key, state = "up", window = w }))
+  end)
+end
+
+-- Bind the same-app shortcut (and its Shift variant) once the snapshot of existing binds is there: a chord that is already used is left alone (never unbound).
+-- Only chords that start with ALT work (omahop polls the Alt keys to know when to end).
+function M.bind_same_app()
+  local chord = M.cfg and M.cfg.same_app_key or ""
+  if chord == "" then return end
+  local key = chord:match("^ALT %+ (%w+)$")
+  if not key then log("same_app_key must look like ALT + GRAVE, ignored: " .. chord); return end
+  local used = load_used()
+  if used == nil then log("same_app_key: no snapshot of the binds yet, not bound"); return end
+  if used["8:" .. key:upper()] or used["9:" .. key:upper()] then log("same_app_key: " .. chord .. " is already used, left alone"); return end
+  M.same_app_chord = chord
+  hl.bind(chord, function() M.on_tab(1, "same_app") end, {})
+  hl.bind("ALT + SHIFT + " .. key, function() M.on_tab(-1, "same_app") end, {})
+end
+
 -- Without this key the app under the overlay sees Alt down and Alt up and treats it as a tap (opens its menu bar).
 -- send_key_state, not send_shortcut or pass: those make Hyprland call the Alt+Tab bind a second time at the Tab release (docs/research/spikes.md).
 local function inject()
@@ -373,14 +417,17 @@ function M.reload_config()
   M.session = Session.new(cfg)
 end
 
-function M.on_tab(delta)
+function M.on_tab(delta, profile)
   if not (M.session and M.session:is_open()) then
     M.reload_config()
     -- Fullscreen apps and listed apps keep Alt+Tab to themselves: stock behaviour, decided at the press before anything opens.
     local aw = hl.get_active_window()
     if Rules.passthrough(aw and { class = aw.class, fullscreen = aw.fullscreen } or nil, M.cfg.passthrough_fullscreen, Rules.set(M.cfg.passthrough)) then return M.stock(delta) end
   end
-  if not Scope.active(M.cfg.scope, M.workspace_is_floating()) then return M.stock(delta) end
+  if not Scope.active(M.cfg.scope, M.workspace_is_floating()) then
+    if profile == "same_app" then return M.pass_chord(M.same_app_chord) end -- the chord has no stock meaning: give the key back to the app
+    return M.stock(delta)
+  end
   inject()
   local now = M.now()
   if M.session:is_open() then
@@ -388,8 +435,9 @@ function M.on_tab(delta)
     return
   end
   M.entries = M.build_entries()
-  M.all_entries, M.query, M.names = M.entries, "", nil
   local focused = hl.get_active_window()
+  if profile == "same_app" then M.entries = M.same_app(M.entries, focused) end
+  M.all_entries, M.query, M.names = M.entries, "", nil
   local first = Mru.first_pick(M.entries, focused and focused.address, delta)
   if #M.entries < 2 then M.entries = {}; return end -- nothing to switch to
   M.gen = M.gen + 1
@@ -419,6 +467,7 @@ function M.setup()
   if _G.omahop_takeover == false or cfg.takeover == false then return M end
   seed_order()
   M.used = nil
+  pcall(hl.timer, M.bind_same_app, { type = "oneshot", timeout = 3500 }) -- after the snapshot below is on disk
   pcall(hl.timer, M.refresh_binds, { type = "oneshot", timeout = 2000 }) -- after the config has finished loading, so the snapshot shows the final binds
   pcall(hl.on, "window.active", function(w) if w and w.address then M.order = Mru.touch(M.order, w.address) end end)
   pcall(hl.on, "window.close", function(w) if w and w.address then M.on_window_closed(w.address) end end)

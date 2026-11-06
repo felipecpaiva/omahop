@@ -70,10 +70,9 @@ class Spare:
         return self
 
     def __exit__(self, *exc):
-        for n in "ABC":
-            a = addr("omahop-" + n)
-            if a:
-                ev(f'local w = hl.get_window("address:{a}"); if w then hl.dispatch(hl.dsp.window.close({{ window = w }})) end')
+        for c in clients():  # every window of ours, also extra ones a test opened (several can share a class)
+            if c["class"].startswith("omahop-"):
+                ev(f'local w = hl.get_window("address:{c["address"]}"); if w then hl.dispatch(hl.dsp.window.close({{ window = w }})) end')
         time.sleep(1.0)
         ev(f'hl.dispatch(hl.dsp.focus({{ workspace = "{self.origin}" }}))'); time.sleep(0.5)
         ev(f'o.workspace_mode({{ workspace = "{SPARE}", mode = "dwindle" }})'); time.sleep(0.5)

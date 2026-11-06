@@ -52,3 +52,12 @@ Automated checks (`tests/run-all.sh`) cover logic and the keyboard path with a v
 - [ ] Two monitors: a strip on each screen, listing that screen's windows (minimized ones on every screen).
 - [ ] Peek = Off: no new thing anywhere on the desktop.
 - [ ] Your own mouse snapping (omagnet) and the Omarchy dock still work with the strip on.
+
+## v0.4 (same-app, rules, hints)
+
+- [ ] `Alt + backtick` from an app with several windows lists only that app's windows; the first pick is its previous window; releasing goes there. With one window nothing opens.
+- [ ] If you already use `Alt + backtick` for something, it keeps working (omahop does not take a used chord); set `same_app_key` to another `ALT + key` chord, reload Hyprland, and it works.
+- [ ] Out of scope (a tiling workspace with the default scope): `Alt + backtick` still reaches the app as before.
+- [ ] Rules: a title fragment hides matching windows; "List these apps first" puts them first; fullscreen game or remote desktop: Alt+Tab is left to it with "Step aside for fullscreen apps" on; a named app too.
+- [ ] Quick jump keys: with numbers, `Alt + 3` picks the third row; with app letters (`c=google-chrome`) the letter jumps; a typed letter then a digit types; with hints off digits type.
+- [ ] The settings window shows the new groups (App rules, Shortcuts) and the changes apply.

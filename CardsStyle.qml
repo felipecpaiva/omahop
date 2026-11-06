@@ -80,6 +80,7 @@ BorderSurface {
       toplevel: strip.toplevelFor(modelData.address)
       selected: index === strip.selected - 1
       actions: strip.actions
+      hint: modelData.hint || ""
       onPicked: strip.picked(index + 1)
       onCloseRequested: strip.closeRequested(modelData.address)
       onMinimizeRequested: strip.minimizeRequested(modelData.address)

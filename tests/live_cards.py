@@ -19,7 +19,7 @@ def check(name, ok, detail=""):
 def write(addrs, thumbnails, open_=1, selected=2, style="cards"):
     lines = ["version=1", f"open={open_}", f"revealed={open_}", f"selected={selected}", f"style={style}", f"thumbnails={thumbnails}", "border=on"]
     for i, (a, n) in enumerate(addrs):
-        lines.append(f"w\t{a}\tomahop-{n}\t{1 if n == 'B' else 0}\tWindow {n}")
+        lines.append(f"w\t{a}\tomahop-{n}\t{1 if n == 'B' else 0}\t\tWindow {n}")
     open(STATE + ".new", "w").write("\n".join(lines) + "\n"); os.rename(STATE + ".new", STATE)
 
 

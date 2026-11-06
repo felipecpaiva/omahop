@@ -73,6 +73,7 @@ BorderSurface {
       minimized: modelData.minimized
       selected: index === card.selected - 1
       actions: card.actions
+      hint: modelData.hint || ""
       onPicked: card.picked(index + 1)
       onCloseRequested: card.closeRequested(modelData.address)
       onMinimizeRequested: card.minimizeRequested(modelData.address)

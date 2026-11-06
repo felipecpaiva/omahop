@@ -16,6 +16,7 @@ Item {
   property bool selected: false
   property bool minimized: false
   property bool actions: true   // show the close and minimize buttons while the pointer is over the card
+  property string hint: ""      // a number or letter that jumps here (empty for none)
   readonly property bool hovered: hover.hovered
 
   signal picked()
@@ -76,6 +77,18 @@ Item {
       implicitSize: Math.min(thumb.width, thumb.height) * 0.4
       source: card.iconSource
     }
+  }
+
+  Rectangle {
+    visible: card.hint !== "" && !(card.actions && card.hovered)
+    anchors.right: parent.right
+    anchors.top: parent.top
+    anchors.margins: card.pad + Style.space(4)
+    width: Style.space(24); height: Style.space(24)
+    radius: Style.cornerRadius
+    color: Util.alpha(Color.background, 0.85)
+    border.width: 1; border.color: Util.alpha(Color.popups.text, 0.3)
+    Text { anchors.centerIn: parent; textFormat: Text.PlainText; text: card.hint; color: Color.popups.text; font.family: Style.font.family; font.pixelSize: Style.font.body; font.bold: true }
   }
 
   Row {

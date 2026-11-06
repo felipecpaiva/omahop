@@ -38,6 +38,13 @@ C.spec = {
       help = "When the focused window is fullscreen (a game, a remote desktop, a virtual machine), Alt+Tab is left to it and works as Omarchy has it." },
     passthrough = { default = "", group = "rules", label = "Step aside for these apps",
       help = "Window classes, comma separated, for which Alt+Tab is always left alone, whatever their state." },
+    same_app_key = { default = "ALT + GRAVE", group = "shortcuts", reload = true, label = "Same-app shortcut",
+      help = "A second shortcut that lists only the windows of the app you are in, like Cmd+backtick on a Mac. It must start with ALT (for example ALT + GRAVE). Leave it empty to turn it off. Applies after a Hyprland reload; a chord you already use is never taken." },
+    hints = { default = "off", values = { "off", "numbers", "apps" }, group = "shortcuts", label = "Quick jump keys",
+      names = { off = "Off", numbers = "Number keys (Alt + 1 to 9)", apps = "App letters (set below)" },
+      help = "While the list is up and nothing is typed yet, a hint key jumps straight to a window. Any other key still types into the search." },
+    hint_keys = { default = "", group = "shortcuts", label = "App letters",
+      help = "Pairs of letter and app class, comma separated, for example: c=google-chrome, t=kitty. Used when Quick jump keys is App letters." },
     border = { default = "auto", values = { "auto", "on", "off" }, group = "look", label = "Outline",
       names = { auto = "Follow Hyprland's window border", on = "Always", off = "Never" },
       help = "Auto draws no outline when you turned window borders off." },
@@ -72,10 +79,11 @@ C.groups = {
   { id = "keys", title = "Keys" },
   { id = "peek", title = "Peek strip" },
   { id = "rules", title = "App rules" },
+  { id = "shortcuts", title = "Shortcuts" },
 }
 C.order = { "top.takeover", "top.scope", "top.search", "windows.workspaces", "windows.monitors", "windows.minimized", "windows.specials", "windows.ignore",
   "top.style", "top.thumbnails", "top.reveal_delay_ms", "top.border", "top.actions", "keys.repeat_delay_ms", "keys.repeat_ms", "top.peek", "top.peek_position",
-  "windows.ignore_titles", "windows.first", "top.passthrough_fullscreen", "top.passthrough" }
+  "windows.ignore_titles", "windows.first", "top.passthrough_fullscreen", "top.passthrough", "top.same_app_key", "top.hints", "top.hint_keys" }
 
 local function contains(list, v)
   for _, x in ipairs(list) do if x == v then return true end end

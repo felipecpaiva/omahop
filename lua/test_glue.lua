@@ -275,4 +275,94 @@ do
   setcfg('[windows]\nworkspaces = "all"\n')
 end
 
+-- v0.4 same-app shortcut (the second profile)
+do
+  local function setcfg(text) local f = io.open(TESTDIR .. "/cfg/omahop/config.toml", "w"); f:write(text); f:close() end
+  local function snapshot(extra) local f = io.open(TESTDIR .. "/run/omahop/binds.txt", "w"); f:write("bind\n\tmodmask: 8\n\tkey: TAB\n\n" .. (extra or "")); f:close(); M.used = nil end
+  windows = {}
+  local x1 = win("0xe1", "app-x", 1, { focus_history_id = 0, title = "x one", tags = { "omarchy-floating-workspace" } })
+  local x2 = win("0xe2", "app-x", 1, { focus_history_id = 1, title = "x two", tags = { "omarchy-floating-workspace" } })
+  local y1 = win("0xe3", "app-y", 1, { focus_history_id = 2, title = "y", tags = { "omarchy-floating-workspace" } })
+  local t1 = win("0xe4", "app-x", 2, { focus_history_id = 3, title = "x on tiling" })
+  key_state.Alt_L = true; key_state.Tab = true
+  setcfg('[windows]\nworkspaces = "current"\n')
+  if M.session:is_open() then M.session:key(clock, "escape"); M.apply({}) end
+  binds["ALT + TAB"]()  -- loads the config through the normal path
+  M.session:key(clock, "escape"); M.apply({})
+  -- bound when free, with the Shift variant
+  for _, c in ipairs({ "ALT + GRAVE", "ALT + SHIFT + GRAVE" }) do binds[c] = nil end
+  snapshot(); M.bind_same_app()
+  assert(binds["ALT + GRAVE"] and binds["ALT + SHIFT + GRAVE"], "the same-app chord and its Shift variant are bound when free")
+  -- lists only the focused app's windows, first pick is the app's previous window
+  active = x1; reset(); binds["ALT + GRAVE"]()
+  assert(M.session:is_open() and #M.entries == 2 and M.entries[1].class == "app-x" and M.entries[2].class == "app-x", "only the app's windows, got " .. #M.entries)
+  assert(M.session:selected() == 2, "first pick is the app's previous window")
+  reset(); key_state.Alt_L = false; advance(25, 2)
+  assert(dispatched[1] and dispatched[1].args.window.address == "0xe2", "release goes to the app's other window")
+  -- an app with a single window: nothing to switch to
+  key_state.Alt_L = true; active = y1; reset(); binds["ALT + GRAVE"]()
+  assert(not M.session:is_open(), "one window of the app: no session")
+  -- a chord the user already uses is left alone
+  for _, c in ipairs({ "ALT + GRAVE", "ALT + SHIFT + GRAVE" }) do binds[c] = nil end
+  snapshot("bind\n\tmodmask: 8\n\tkey: GRAVE\n\n"); M.bind_same_app()
+  assert(binds["ALT + GRAVE"] == nil, "a chord already in use is not taken")
+  -- not an ALT chord, or empty: ignored
+  setcfg('same_app_key = "SUPER + X"\n[windows]\nworkspaces = "current"\n'); M.cfg = nil; M.config_text = nil; M.reload_config(); snapshot(); M.bind_same_app()
+  assert(binds["SUPER + X"] == nil and binds["ALT + GRAVE"] == nil, "only ALT chords are accepted")
+  setcfg('same_app_key = ""\n[windows]\nworkspaces = "current"\n'); M.config_text = nil; M.reload_config(); snapshot(); M.bind_same_app()
+  assert(binds["ALT + GRAVE"] == nil, "empty turns it off")
+  -- where omahop is not active the key goes back to the app
+  setcfg('[windows]\nworkspaces = "current"\n'); M.config_text = nil; M.reload_config(); snapshot(); M.bind_same_app()
+  assert(binds["ALT + GRAVE"], "bound again")
+  active = t1; reset(); binds["ALT + GRAVE"]()
+  assert(not M.session:is_open() and names() == "send_key_state,send_key_state", "out of scope: the key is handed back, got " .. names())
+  assert(dispatched[1].args.key == "grave" and dispatched[1].args.mods == "ALT", "as Alt + grave")
+  setcfg('[windows]\nworkspaces = "all"\n'); M.config_text = nil
+end
+
+-- v0.4 hints: number keys and app letters jump while the query is empty; anything else still types
+do
+  local function setcfg(text) local f = io.open(TESTDIR .. "/cfg/omahop/config.toml", "w"); f:write(text); f:close() end
+  local function snapshot() local f = io.open(TESTDIR .. "/run/omahop/binds.txt", "w"); f:write("bind\n\tmodmask: 8\n\tkey: TAB\n\n"); f:close(); M.used = nil end
+  windows = {}
+  local wa = win("0xf1", "app-a", 1, { focus_history_id = 0, tags = { "omarchy-floating-workspace" } })
+  local wb = win("0xf2", "app-b", 1, { focus_history_id = 1, tags = { "omarchy-floating-workspace" } })
+  local wc = win("0xf3", "app-c", 1, { focus_history_id = 2, tags = { "omarchy-floating-workspace" } })
+  key_state.Alt_L = true; key_state.Tab = true
+  local function open_session()
+    if M.session:is_open() then M.session:key(clock, "escape"); M.apply({}) end
+    snapshot(); active = wa; reset(); binds["ALT + TAB"]()
+  end
+  -- numbers
+  setcfg('hints = "numbers"\n[windows]\nworkspaces = "current"\n')
+  open_session()
+  assert(read_state():find("w\t0xf1\tapp%-a\t0\t1\t") and read_state():find("w\t0xf3\tapp%-c\t0\t3\t"), "the state carries a number hint per row")
+  reset(); binds["ALT + 3"]()
+  assert(not M.session:is_open() and dispatched[1] and dispatched[1].args.window.address == "0xf3", "Alt + 3 picks the third row")
+  open_session()
+  reset(); binds["ALT + 9"]()
+  assert(M.session:is_open() and M.query == "9", "a number with no such row types into the search")
+  -- once typing has started, digits type
+  open_session()
+  binds["ALT + B"]()
+  assert(M.query == "b", "a letter that is not a hint types")
+  reset(); binds["ALT + 2"]()
+  assert(M.query == "b2" and M.session:is_open(), "with a query, a digit types and does not jump")
+  assert(not read_state():find("\t1\t"), "no hint labels while a query exists")
+  -- app letters
+  setcfg('hints = "apps"\nhint_keys = "c=app-c, x=app-none"\n[windows]\nworkspaces = "current"\n')
+  open_session()
+  assert(read_state():find("w\t0xf3\tapp%-c\t0\tc\t"), "the mapped app's row carries its letter")
+  reset(); binds["ALT + C"]()
+  assert(not M.session:is_open() and dispatched[1].args.window.address == "0xf3", "the letter jumps to that app's window")
+  open_session(); binds["ALT + X"]()
+  assert(M.session:is_open() and M.query == "x", "a mapped app with no window types instead")
+  -- hints off: digits always type
+  setcfg('[windows]\nworkspaces = "current"\n')
+  open_session(); binds["ALT + 3"]()
+  assert(M.query == "3" and M.session:is_open(), "hints off: a digit types")
+  M.session:key(clock, "escape"); M.apply({})
+  setcfg('[windows]\nworkspaces = "all"\n')
+end
+
 print("glue ok")

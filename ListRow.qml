@@ -13,6 +13,7 @@ Item {
   property bool selected: false
   property bool minimized: false
   property bool actions: true   // show the close and minimize buttons while the pointer is over the row
+  property string hint: ""      // a number or letter that jumps here (empty for none); shown in the place of the buttons until the pointer arrives
   readonly property bool hovered: hover.hovered
 
   signal picked()
@@ -31,6 +32,17 @@ Item {
 
   HoverHandler { id: hover }
   MouseArea { anchors.fill: parent; onClicked: row.picked() }
+
+  Rectangle {
+    visible: row.hint !== "" && !(row.actions && row.hovered)
+    anchors.right: parent.right
+    anchors.rightMargin: Style.space(12)
+    anchors.verticalCenter: parent.verticalCenter
+    width: Style.space(24); height: Style.space(24)
+    radius: Style.cornerRadius
+    color: Util.alpha(Color.popups.text, 0.12)
+    Text { anchors.centerIn: parent; textFormat: Text.PlainText; text: row.hint; color: Color.popups.text; font.family: Style.font.family; font.pixelSize: Style.font.body; font.bold: true }
+  }
 
   Row {
     id: buttons
