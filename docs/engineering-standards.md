@@ -3,6 +3,14 @@
 Three rules always apply, to every batch and every agent brief: **flexibility, scalability, code standards per language.**
 A batch is not done until it meets all three. Agent briefs must quote this file.
 
+## Product principles (same as omagnet)
+
+- **No new icons or widgets by default.** Nothing is added to the bar, the dock or the desktop unless the user turns it on in the settings app (any icon is off by default).
+- **One settings app for everything adjustable.** Every behaviour is a setting there, with the default stated; no hidden options only in a file, and no setting only in the app that the file cannot hold.
+- **Slim and simple, but complete.** Few screens, plain words, sensible defaults that work with zero setup; the details are all present but out of the way (an Advanced section).
+- **Follows Omarchy.** Theme, fonts and spacing come from the shell, no own palette.
+- **Stays out of the way.** Nothing runs while the switcher is closed; out-of-scope desktops are untouched.
+
 ## Flexibility
 
 - Behaviour is a setting with a safe default, never a constant buried in code. Defaults live in one place (`lua/config.lua`

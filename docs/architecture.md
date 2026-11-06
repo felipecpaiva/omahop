@@ -85,7 +85,7 @@ second argument (`true` returned empty here). Touch `ToplevelManager` and `Deskt
 
 ## Hover previews
 
-Blocked on a decision, see `decisions.md` D8. The stock dock (`/usr/share/omarchy/shell/plugins/dock/`, floating
+Blocked on a decision, see `decisions.md` D8 and D11 (no new icons by default, so an own dock strip can only be an opt-in setting). The stock dock (`/usr/share/omarchy/shell/plugins/dock/`, floating
 workspaces only) has no plugin hooks and no previews. Options: (a) upstream PR adding a hover hook to the dock,
 (b) omahop ships its own small dock strip, (c) a click-through hover-detection layer over the stock dock (fragile).
 Phase 4, after the switcher is solid.
