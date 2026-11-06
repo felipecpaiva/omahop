@@ -93,3 +93,8 @@ Honest note: the arch can read as headphones at small sizes; the ticks blur at 1
 
 Felipe picked the yellow variation. `branding/tools/kit.py` (own script, structure learned from omagnet's logo.py, kit.py, social.py and sheet.py, palette parameterised) writes the logo set, the small icon without ticks, wordmark with the letters h and p added in the same stroke style, lockups, eight social images, the marketplace preview (lockup beside the real settings window, cropped to the card) and the brand sheet (all 8 colour pairs computed). README has the banner (dark and light) and the switch GIF at the top.
 Manual step left: upload `branding/social/github-social-preview.png` as the repository social preview on GitHub.
+
+## v0.2.0 tagged (2026-11-06)
+
+Branch `v0.2` merged into `main` (fast-forward), manifest version 0.2.0, release notes `docs/releases/v0.2.0.md` with the logo card, four feature GIFs and three pictures (image links point at `main`). Gate before merging: all non-live checks green; the last full live run (24 key checks, panel clicks, cards screenshots) was before the brand work, which touched no code.
+Not done by me: the multi-monitor and unplug hand checks (need a second monitor), the GitHub release pages for v0.1.0 and v0.2.0 (blocked by the safety check, commands in the report).
