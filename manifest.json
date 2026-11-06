@@ -4,10 +4,14 @@
   "name": "omahop",
   "version": "0.1.0",
   "author": "Felipe Paiva",
-  "description": "Fast window switching for Omarchy floating workspaces: Alt+Tab shows a list of your windows in the Omarchy theme. Adds nothing to the bar. Needs one line in hyprland.lua, see the README.",
+  "description": "Fast window switching for Omarchy floating workspaces: Alt+Tab shows a list of your windows in the Omarchy theme, with a settings window. Adds nothing to the bar. Needs one line in hyprland.lua, see the README. Open the settings from the launcher or with: omarchy-shell shell toggle io.github.felipecpaiva.omahop",
   "license": "MIT",
-  "kinds": ["service"],
+  "kinds": [
+    "service",
+    "panel"
+  ],
   "entryPoints": {
-    "service": "Service.qml"
+    "service": "Service.qml",
+    "panel": "SettingsPanel.qml"
   }
 }

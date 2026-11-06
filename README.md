@@ -29,7 +29,7 @@ If you bound Alt+Tab yourself in `bindings.lua`, omahop (loaded after it) replac
 
 ## Settings
 
-v0.1 has no settings app yet: edit `~/.config/omahop/config.toml` (all keys optional, wrong values fall back to the default and are logged to `$XDG_RUNTIME_DIR/omahop/log`). Changes apply after `hyprctl reload`.
+The settings window: open **omahop** from the launcher (Super+Space), or run `omarchy-shell shell toggle io.github.felipecpaiva.omahop`. Every change is saved after a moment and applies to the next Alt+Tab (only `takeover` needs a Hyprland reload; the window offers a button). You can also edit `~/.config/omahop/config.toml` by hand (all keys optional, wrong values fall back to the default and are logged to `$XDG_RUNTIME_DIR/omahop/log`). Changes apply after `hyprctl reload`.
 
 ```toml
 schema = 1
@@ -56,7 +56,7 @@ The full model and every combination: `docs/settings.md`.
 
 - Alt+Tab with other keys held (for example Ctrl+Alt+Tab) is not touched.
 - The Alt-menu fix (an injected F24 key so apps do not open their menu bar on the Alt tap) is verified on a Qt app only; GTK, Chromium and Electron are on the hand-check list (`docs/validation-checklist.md`).
-- No thumbnails yet (v0.2), no settings app (v0.2), no hover previews (v0.3).
+- No thumbnails yet and no hover previews (planned).
 
 ## Develop
 

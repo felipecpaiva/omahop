@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=omahop
+GenericName=Window Switcher
+Comment=Settings for omahop, the Alt+Tab window switcher for floating workspaces
+Exec=omarchy-shell shell toggle io.github.felipecpaiva.omahop
+TryExec=omarchy-shell
+Icon=preferences-desktop
+Terminal=false
+StartupNotify=false
+Categories=Settings;DesktopSettings;
+Keywords=omarchy;window;switcher;alt;tab;floating;
+X-Omahop-Managed=true

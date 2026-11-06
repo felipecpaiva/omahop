@@ -21,3 +21,4 @@ if [ -x /usr/lib/qt6/bin/qmllint ]; then /usr/lib/qt6/bin/qmllint --unqualified 
 [ "${1:-}" = "--no-live" ] && exit 0
 echo "Live test next: it uses your real keyboard. Keep your hands off it."
 python3 tests/live.py
+python3 tests/live_panel.py

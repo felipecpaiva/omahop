@@ -46,3 +46,11 @@ Built: the spec table in `lua/config.lua` now carries labels, help, names per va
 `ConfigIO.js` edits one line at a time and keeps comments, order, unknown keys and sections byte for byte (`set`, `unset`, `get`, `parse`), Node-tested including a cross-check that Lua and JavaScript parse the same text the same way.
 Bug found by that cross-check: the Lua parser cut a line at ` #` even inside quotes (`ignore = "steam, #hash"` was dropped); fixed with a quote-aware comment strip in both languages.
 Verified: all unit tests, `run-all.sh` with the live part (18 checks) on this branch.
+
+## Batch 4 (2026-11-06, branch v0.2): settings window
+
+Built: `SettingsStore.qml` (reads spec.json and the config file, edits one line per change through ConfigIO, saves after 450 ms with atomic writes), `SettingRow.qml` (one setting drawn from its spec entry: switch, buttons, number field or text field, help line, reset link),
+`SettingsPanel.qml` (scrolling page with groups, "Reload Hyprland now" when a reload-only setting changed), `omahop.desktop` (launcher entry the service installs and removes, only if it carries our marker), `Paths.js`, manifest kinds `service` and `panel`.
+Verified on the real shell: the window opens from `omarchy-shell shell toggle`, a virtual mouse click on a button writes `scope = "all"` and then `scope = "floating"` to the same line, comments and other keys untouched (`tests/live_panel.py`, positions measured for a 1280x800 logical screen, SKIPs elsewhere).
+Bugs found: a QML name clash (`store: store` inside the row component refers to its own property, so every control did nothing; the panel's store is now `settings`); BorderSurface padding does not move anchored children (margins added by hand).
+Not yet by hand: number field, text field, reset link, the reload button (on the checklist).

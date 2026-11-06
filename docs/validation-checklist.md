@@ -15,3 +15,11 @@ Automated checks (`tests/run-all.sh`) cover logic and the keyboard path with a v
 - [ ] `takeover = false`: Alt+Tab is stock everywhere.
 - [ ] Two monitors: with `windows.monitors = "all"` the other monitor's windows are listed and picking one moves you there. (The overlay shows on the focused monitor.)
 - [ ] The empty-state: only one window open, Alt+Tab does nothing visible.
+
+## v0.2 (settings window)
+
+- [ ] Open **omahop** from the launcher: the window opens, looks like the other Omarchy windows, Escape and Close shut it.
+- [ ] Change each control once (switch, buttons, the number field, the text field): the file changes on one line, your comments stay, the next Alt+Tab uses it.
+- [ ] "Reset to default" appears when a value is set and removes the line from the file.
+- [ ] Turn "Take over Alt+Tab" off: the window offers "Reload Hyprland now", and after the reload Alt+Tab is stock.
+- [ ] Change the Omarchy theme with the window open: colours follow.
