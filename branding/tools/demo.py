@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Records the feature GIFs for the README and the releases from the REAL overlay on a spare workspace (never a virtual monitor), with real key
 and mouse events from /dev/uinput, demo windows that show public content only, and a screenshot frame loop. gifkit.py builds a captioned GIF and MP4 per scene.
-Scenes: switch (list), cards, search, settings. Needs grim, ffmpeg, kitty, chromium, bat, the plugin enabled and the shell restarted since the last QML change.
+Scenes: switch (list), cards, search, settings, pointer, peek, quick (quick closes a window, so it goes last). Needs grim, ffmpeg, kitty, chromium, bat, the plugin enabled and the shell restarted since the last QML change.
 Your own ~/.config/omahop/config.toml is saved and put back. Do not touch the keyboard or mouse while it runs (about 2 minutes).
 Usage: python3 branding/tools/demo.py [scene ...]   (no argument: all scenes)"""
 import json, os, shutil, subprocess, sys, tempfile, threading, time
@@ -128,7 +128,87 @@ def scene_settings(kb, wins):
         r.finish("settings")
 
 
-SCENES = {"switch": scene_switch, "cards": scene_cards, "search": scene_search, "settings": scene_settings}
+RUN = os.environ["XDG_RUNTIME_DIR"]
+
+
+def read_rects(name, n=None, seconds=4.0, kinds=None):
+    """Rectangles the overlay writes: `geometry` has x,y,w,h per row or card; `peek-geometry-eDP-1` has kind,name,x,y,w,h per slot and popup card."""
+    end = time.time() + seconds
+    out = []
+    while time.time() < end:
+        try:
+            out = []
+            for line in open(os.path.join(RUN, "omahop", name)).read().split("\n"):
+                if not line:
+                    continue
+                f = line.split(",")
+                if name == "geometry":
+                    out.append(tuple(int(v) for v in f))
+                elif kinds is None or f[0] in kinds:
+                    out.append((f[0], f[1]) + tuple(int(v) for v in f[2:]))
+        except OSError:
+            out = []
+        if out and (n is None or len(out) >= n):
+            return out
+        time.sleep(0.2)
+    return out
+
+
+def scene_pointer(kb, wins):
+    run_scene_config('style = "cards"\nreveal_delay_ms = 120\n'); time.sleep(0.5)
+    focus_order(wins)
+    def move(x, y): ev(f"hl.dispatch(hl.dsp.cursor.move({{ x = {x}, y = {y} }}))"); time.sleep(0.5)
+    with Recorder() as r, Mouse() as m:
+        time.sleep(0.8)
+        r.caption("Hover a card: close and minimize buttons appear")
+        kb.down("alt"); kb.down("tab"); kb.up("tab"); time.sleep(1.4)
+        rects = read_rects("geometry", n=4)
+        if len(rects) >= 3:
+            x, y, w, h = rects[2]
+            move(x + w // 2, y + h // 2); time.sleep(1.8)
+            r.caption("Click a card to go straight to that window")
+            m.press(); time.sleep(0.1); m.release(); time.sleep(1.8)
+        kb.up("alt"); time.sleep(1.0)
+        r.finish("pointer")
+
+
+def scene_peek(kb, wins):
+    run_scene_config('peek = "edge"\n'); time.sleep(3.0)
+    focus_order(wins)
+    def move(x, y): ev(f"hl.dispatch(hl.dsp.cursor.move({{ x = {x}, y = {y} }}))"); time.sleep(0.6)
+    with Recorder() as r, Mouse() as m:
+        time.sleep(0.6)
+        r.caption("Peek strip: off by default, it shows at a free screen edge")
+        time.sleep(1.4); move(1279, 400); time.sleep(1.6)
+        slots = [g for g in read_rects("peek-geometry-eDP-1", kinds=("slot",)) if g[1] == "chromium"]
+        if slots:
+            r.caption("Hover an app: a picture of each of its windows")
+            _, _, x, y, w, h = slots[0]
+            move(x + w // 2, y + h // 2); time.sleep(2.0)
+            cards = read_rects("peek-geometry-eDP-1", kinds=("card",))
+            if cards:
+                r.caption("Click one to go there")
+                _, _, cx, cy, cw, ch = cards[0]
+                move(cx + cw // 2, cy + ch // 2); time.sleep(0.8)
+                m.press(); time.sleep(0.1); m.release(); time.sleep(1.4)
+        move(640, 400); time.sleep(1.8)
+        r.finish("peek")
+
+
+def scene_quick(kb, wins):
+    run_scene_config('style = "cards"\nreveal_delay_ms = 120\n'); time.sleep(0.5)
+    focus_order(wins)
+    with Recorder() as r:
+        time.sleep(0.8)
+        r.caption("Alt + Delete closes the picked window")
+        kb.down("alt"); kb.down("tab"); kb.up("tab"); time.sleep(1.2)
+        kb.down("tab"); kb.up("tab"); time.sleep(1.2)
+        kb.down("delete"); kb.up("delete"); time.sleep(2.0)
+        kb.up("alt"); time.sleep(1.2)
+        r.finish("quick")
+
+
+SCENES = {"switch": scene_switch, "cards": scene_cards, "search": scene_search, "settings": scene_settings, "pointer": scene_pointer, "peek": scene_peek, "quick": scene_quick}
 
 
 def main():
