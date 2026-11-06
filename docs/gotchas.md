@@ -16,3 +16,5 @@ Traps found so far. The long list from the sister project is in omagnet `docs/go
 - Writing the state file every tick makes the overlay redraw every tick: write only on change.
 - The shell keeps a plugin's QML in memory: edits show only after `omarchy restart shell` (a rescan or a disable and enable does not reload them; checked in the shell log, which lists each QML file once per shell start). Close the theme picker it opens with `omarchy-shell image-selector cancel <any-path>`.
 - The shell's `Style` mirrors Hyprland's rounding but not `general:border_size`; read it with `hyprctl getoption general:border_size -j` (omahop does, and its `border` setting can override).
+- v0.2 is developed on branch `v0.2`; the installed plugin is a symlink to this working tree. If a half-done batch misbehaves: `git -C ~/Work/omahop checkout main && hyprctl reload && omarchy restart shell` (then close the theme picker with `omarchy-shell image-selector cancel <any-path>`).
+- `gh release create` (a public page) is blocked by Claude Code's auto-mode safety check; Felipe runs it or allows it explicitly.
