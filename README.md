@@ -2,7 +2,7 @@
 
 Jump to any window fast on Omarchy's floating workspaces. Hold Alt, press Tab: a list of your windows (icon, app name, title) appears in your Omarchy theme. Let go of Alt to switch.
 
-**Status: v0.1 in progress.** The list switcher works. Cards with thumbnails, a settings app and hover previews come in later releases (see `docs/ROADMAP.md`).
+**Status: v0.1.0 released.** The list switcher works. Cards with thumbnails, a settings app and hover previews come in later releases (see `docs/ROADMAP.md`).
 
 ## What v0.1 does
 

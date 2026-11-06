@@ -34,3 +34,7 @@ Still on Felipe's hand-check list: non-Qt apps for the Alt-menu fix, two monitor
 ## Border follows Hyprland (2026-11-06)
 
 Felipe removed window borders (`general:border_size = 0`); the list card still drew an outline. Now the card reads the border size (at load, on config reload, each time a session opens) and `border = auto` follows it (0 means no outline); `on` and `off` override. Checked with a synthetic state on the real shell: auto with border size 0 shows no outline, `on` shows it. Unit tests: `State.borderWidth` (Node), `border` in config (Lua).
+
+## v0.1.0 tagged (2026-11-06)
+
+Felipe tried it on his machine (look fine, performance fine after the state-write fix and `reveal_delay_ms = 0`, outline now follows his Hyprland border setting) and asked for the tag. Next goal: v0.2 (cards with thumbnails, search, settings app, multi-monitor overlay), see `docs/ROADMAP.md`.
