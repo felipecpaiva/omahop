@@ -249,6 +249,50 @@
       "values": ["auto", "bottom", "top", "left", "right"]
     }],
     "title": "Peek strip"
+  }, {
+    "id": "rules",
+    "settings": [{
+      "default": "",
+      "help": "Fragments, comma separated (for example: picture in picture). Case does not matter.",
+      "hidden": false,
+      "id": "windows.ignore_titles",
+      "key": "ignore_titles",
+      "label": "Never list windows whose title contains",
+      "reload": false,
+      "section": "windows",
+      "type": "text"
+    }, {
+      "default": "",
+      "help": "Window classes, comma separated. Their windows come before all others.",
+      "hidden": false,
+      "id": "windows.first",
+      "key": "first",
+      "label": "List these apps first",
+      "reload": false,
+      "section": "windows",
+      "type": "text"
+    }, {
+      "default": false,
+      "help": "When the focused window is fullscreen (a game, a remote desktop, a virtual machine), Alt+Tab is left to it and works as Omarchy has it.",
+      "hidden": false,
+      "id": "top.passthrough_fullscreen",
+      "key": "passthrough_fullscreen",
+      "label": "Step aside for fullscreen apps",
+      "reload": false,
+      "section": "top",
+      "type": "bool"
+    }, {
+      "default": "",
+      "help": "Window classes, comma separated, for which Alt+Tab is always left alone, whatever their state.",
+      "hidden": false,
+      "id": "top.passthrough",
+      "key": "passthrough",
+      "label": "Step aside for these apps",
+      "reload": false,
+      "section": "top",
+      "type": "text"
+    }],
+    "title": "App rules"
   }],
   "schema": 1
 }

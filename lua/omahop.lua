@@ -4,7 +4,7 @@
 -- The overlay is a separate Quickshell service that watches the state file this module writes (see write_state).
 local here = debug.getinfo(1, "S").source:match("^@(.*)/") or "."
 local function mod(name) return dofile(here .. "/" .. name .. ".lua") end
-local Config, Scope, Windows, Mru, Session, Search = mod("config"), mod("scope"), mod("windows"), mod("mru"), mod("session"), mod("search")
+local Config, Scope, Windows, Mru, Session, Search, Rules = mod("config"), mod("scope"), mod("windows"), mod("mru"), mod("session"), mod("search"), mod("rules")
 
 local M = {}
 _G.omahop = M
@@ -116,8 +116,8 @@ function M.build_entries()
   local plain = {}
   for _, w in ipairs(all) do plain[#plain + 1] = describe(w, floating_of, monitor_of) end
   table.sort(plain, function(a, b) return a.focus_history < b.focus_history end) -- Hyprland's own history: the order for windows we have not seen
-  local kept = Windows.filter(plain, M.current_context(), M.cfg.windows, Config.ignore_set(M.cfg))
-  return Mru.sort(M.order, kept)
+  local kept = Windows.filter(plain, M.current_context(), M.cfg.windows, Config.ignore_set(M.cfg), Rules.set(M.cfg.windows.ignore_titles))
+  return Rules.first_apps(Mru.sort(M.order, kept), Rules.set(M.cfg.windows.first))
 end
 
 function M.workspace_is_floating()
@@ -374,7 +374,12 @@ function M.reload_config()
 end
 
 function M.on_tab(delta)
-  if not (M.session and M.session:is_open()) then M.reload_config() end
+  if not (M.session and M.session:is_open()) then
+    M.reload_config()
+    -- Fullscreen apps and listed apps keep Alt+Tab to themselves: stock behaviour, decided at the press before anything opens.
+    local aw = hl.get_active_window()
+    if Rules.passthrough(aw and { class = aw.class, fullscreen = aw.fullscreen } or nil, M.cfg.passthrough_fullscreen, Rules.set(M.cfg.passthrough)) then return M.stock(delta) end
+  end
   if not Scope.active(M.cfg.scope, M.workspace_is_floating()) then return M.stock(delta) end
   inject()
   local now = M.now()

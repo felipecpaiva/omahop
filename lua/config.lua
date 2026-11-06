@@ -34,6 +34,10 @@ C.spec = {
     peek_position = { default = "auto", values = { "auto", "bottom", "top", "left", "right" }, group = "peek", label = "Edge",
       names = { auto = "A free edge", bottom = "Bottom", top = "Top", left = "Left", right = "Right" },
       help = "Auto picks an edge that is not the dock's and not the bar's, so nothing competes or covers the bar." },
+    passthrough_fullscreen = { default = false, group = "rules", label = "Step aside for fullscreen apps",
+      help = "When the focused window is fullscreen (a game, a remote desktop, a virtual machine), Alt+Tab is left to it and works as Omarchy has it." },
+    passthrough = { default = "", group = "rules", label = "Step aside for these apps",
+      help = "Window classes, comma separated, for which Alt+Tab is always left alone, whatever their state." },
     border = { default = "auto", values = { "auto", "on", "off" }, group = "look", label = "Outline",
       names = { auto = "Follow Hyprland's window border", on = "Always", off = "Never" },
       help = "Auto draws no outline when you turned window borders off." },
@@ -49,6 +53,10 @@ C.spec = {
       names = { hide = "Not listed", show = "Listed" } },
     ignore = { default = "", group = "windows", label = "Never list these apps",
       help = "Window classes, comma separated (for example: pavucontrol, steam). Case does not matter." },
+    ignore_titles = { default = "", group = "rules", label = "Never list windows whose title contains",
+      help = "Fragments, comma separated (for example: picture in picture). Case does not matter." },
+    first = { default = "", group = "rules", label = "List these apps first",
+      help = "Window classes, comma separated. Their windows come before all others." },
   },
   keys = {
     repeat_delay_ms = { default = 250, min = 50, max = 2000, group = "keys", label = "Hold Tab: wait before repeating", unit = "ms" },
@@ -63,9 +71,11 @@ C.groups = {
   { id = "look", title = "Look" },
   { id = "keys", title = "Keys" },
   { id = "peek", title = "Peek strip" },
+  { id = "rules", title = "App rules" },
 }
 C.order = { "top.takeover", "top.scope", "top.search", "windows.workspaces", "windows.monitors", "windows.minimized", "windows.specials", "windows.ignore",
-  "top.style", "top.thumbnails", "top.reveal_delay_ms", "top.border", "top.actions", "keys.repeat_delay_ms", "keys.repeat_ms", "top.peek", "top.peek_position" }
+  "top.style", "top.thumbnails", "top.reveal_delay_ms", "top.border", "top.actions", "keys.repeat_delay_ms", "keys.repeat_ms", "top.peek", "top.peek_position",
+  "windows.ignore_titles", "windows.first", "top.passthrough_fullscreen", "top.passthrough" }
 
 local function contains(list, v)
   for _, x in ipairs(list) do if x == v then return true end end

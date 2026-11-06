@@ -13,11 +13,18 @@ local function in_workspaces(w, ctx, mode)
   return w.floating_workspace == true -- "floating"
 end
 
-function W.filter(windows, ctx, opts, ignore)
+-- title_fragments: a set of lower-case fragments; a window whose title contains one (plain text, case ignored) is never listed.
+function W.filter(windows, ctx, opts, ignore, title_fragments)
   local out = {}
   for _, w in ipairs(windows) do
     local keep = w.mapped ~= false -- ghost windows (Wine, Proton) have no real toplevel: never listed
     keep = keep and not (ignore and w.class and ignore[w.class:lower()])
+    if keep and title_fragments and next(title_fragments) ~= nil then
+      local t = tostring(w.title or ""):lower()
+      for f in pairs(title_fragments) do
+        if t:find(f, 1, true) then keep = false; break end
+      end
+    end
     keep = keep and not (w.special and opts.specials ~= "show")
     keep = keep and not (w.minimized and opts.minimized == "hide")
     keep = keep and (opts.monitors == "all" or w.monitor == ctx.monitor)

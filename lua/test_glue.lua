@@ -234,4 +234,45 @@ do
 end
 
 
+-- v0.4 rules: ignore by title, apps listed first, pass-through for fullscreen and for named apps
+do
+  local function setcfg(text) local f = io.open(TESTDIR .. "/cfg/omahop/config.toml", "w"); f:write(text); f:close() end
+  windows = {}
+  local wa = win("0xa4", "app-a", 1, { focus_history_id = 0, title = "Main", tags = { "omarchy-floating-workspace" } })
+  local wb = win("0xb4", "app-b", 1, { focus_history_id = 1, title = "Picture in picture", tags = { "omarchy-floating-workspace" } })
+  local wc = win("0xc4", "app-c", 1, { focus_history_id = 2, title = "Other", tags = { "omarchy-floating-workspace" } })
+  local wd = win("0xd4", "app-d", 1, { focus_history_id = 3, title = "Last", tags = { "omarchy-floating-workspace" } })
+  key_state.Alt_L = true; key_state.Tab = true
+  local function open_session()
+    if M.session:is_open() then M.session:key(clock, "escape"); M.apply({}) end
+    active = wa; reset(); binds["ALT + TAB"]()
+  end
+  local function classes() local t = {} for i, e in ipairs(M.entries) do t[i] = e.class end return table.concat(t, ",") end
+  -- ignore by title
+  setcfg('[windows]\nworkspaces = "current"\nignore_titles = "picture in picture"\n')
+  open_session()
+  assert(classes() == "app-a,app-c,app-d", "ignore_titles drops the matching window, got " .. classes())
+  -- apps first
+  setcfg('[windows]\nworkspaces = "current"\nfirst = "app-d, app-c"\n')
+  open_session()
+  assert(classes() == "app-c,app-d,app-a,app-b", "listed apps come first in recently used order, got " .. classes())
+  -- pass-through: a fullscreen focused window with the setting on runs stock Alt+Tab, nothing opens
+  setcfg('passthrough_fullscreen = true\n[windows]\nworkspaces = "current"\n')
+  M.session:key(clock, "escape"); M.apply({})
+  wa.fullscreen = 2; active = wa; reset(); binds["ALT + TAB"]()
+  assert(not M.session:is_open() and names() == "cycle_next,bring_to_top", "fullscreen focused window: stock Alt+Tab, got " .. names())
+  wa.fullscreen = 1; reset(); binds["ALT + TAB"]()
+  assert(M.session:is_open(), "a maximized window (state 1) does not make omahop step aside")
+  M.session:key(clock, "escape"); M.apply({})
+  wa.fullscreen = 0
+  -- pass-through by app class, any state
+  setcfg('passthrough = "app-a, other"\n[windows]\nworkspaces = "current"\n')
+  active = wa; reset(); binds["ALT + TAB"]()
+  assert(not M.session:is_open() and names() == "cycle_next,bring_to_top", "a listed app keeps stock Alt+Tab")
+  active = wb; reset(); binds["ALT + TAB"]()
+  assert(M.session:is_open(), "other apps still use omahop")
+  M.session:key(clock, "escape"); M.apply({})
+  setcfg('[windows]\nworkspaces = "all"\n')
+end
+
 print("glue ok")

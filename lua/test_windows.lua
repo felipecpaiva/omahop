@@ -48,4 +48,11 @@ assert(run({ workspace_id = 11, monitor = "DP" }) == "d1", "the other monitor: i
 assert(#W.filter({}, on_floating_laptop, C.merge(nil).windows, {}) == 0, "no windows")
 assert(run({ workspace_id = 5, monitor = "NONE" }) == "", "nothing on this monitor: empty list")
 
+-- ignore by title fragment (plain text, case ignored); a window with no title is never excluded by it
+local titled = { w("t1", 1, "eDP", true, { title = "Picture in picture" }), w("t2", 1, "eDP", true, { title = "Main window" }), w("t3", 1, "eDP", true) }
+local cfg0 = C.merge(nil)
+local kept = W.filter(titled, on_floating_laptop, cfg0.windows, {}, { ["picture in"] = true })
+assert(names(kept) == "t2,t3", "title fragment drops the matching window only, got " .. names(kept))
+assert(names(W.filter(titled, on_floating_laptop, cfg0.windows, {}, {})) == "t1,t2,t3" and names(W.filter(titled, on_floating_laptop, cfg0.windows, {})) == "t1,t2,t3", "no fragments, nothing dropped")
+
 print("windows ok")

@@ -120,3 +120,8 @@ Bugs found: a debug block without its import made the WHOLE service fail to load
 
 Batches 8 and 9 merged. GIFs: pointer, peek, quick (and a still of the peek popup); release notes `docs/releases/v0.3.0.md`. Full suite green before the final peek-test fix (switcher 18, panel 4, cards 4, pointer 9, peek 11; omagnet's own suite ALL OK with the strip on); after it: peek test (11 checks) and the non-live checks green.
 Last finding: warps inside the window the pointer is already in send the app no motion event (hover stayed dead in edge mode in a test); real mouse motion works, tests and demos wiggle one pixel after a warp.
+
+## Batch 10 (2026-11-07, branch v0.4): app rules and pass-through
+
+`lua/rules.lua` (pure: lists, title fragments as plain text, apps first, pass-through decision; unit-tested including "a fragment is not a pattern"), `Windows.filter` takes title fragments, four new settings in a new group "App rules" at the end (`windows.ignore_titles`, `windows.first`, `passthrough_fullscreen`, `passthrough`), glue wiring (pass-through is decided at the press before anything opens: stock Alt+Tab runs; only fullscreen state 2 counts, not maximized).
+Verified: unit and glue tests, live with real keys (`tests/live_rules.py`, 5 checks: ignore by title, apps first, pass-through by class, pass-through for a real fullscreen window, and the rules are not sticky).
