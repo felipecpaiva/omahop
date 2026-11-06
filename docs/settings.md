@@ -18,6 +18,8 @@ They are independent. Mixing them is allowed.
 | `windows.minimized` | `back`, `hide` | `back` | Minimized windows listed last, or not listed |
 | `windows.specials` | `hide`, `show` | `hide` | Scratchpad and console special workspaces |
 | `windows.ignore` | list of app id or title patterns | empty | Never listed |
+| `takeover` | on, off | on | Take over Alt+Tab at all. Off leaves a user's own Alt+Tab bind alone (a user can also set `_G.omahop_takeover = false` before omahop loads) |
+| `keys.repeat_delay_ms`, `keys.repeat_ms` | numbers | 250, 40 | Hold-Tab repeat, polled by omahop (no Hyprland `repeating` bind, so stock behaviour on tiling workspaces is untouched) |
 
 A window is listed when its workspace matches `windows.workspaces` AND its monitor matches `windows.monitors`, then the
 minimized, specials and ignore rules apply. Order is most recently used first; the first Tab picks the previous window.

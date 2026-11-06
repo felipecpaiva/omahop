@@ -47,7 +47,12 @@ The settings app exposes it. Design consequences:
    - scope guard: out of scope -> run stock cycle_next + bring_to_top
    - keeps the MRU list (focus events)
    - Alt hold/release: polls hl.is_key_down("Alt_L"/"Alt_R") on chained one-shot timers (omagnet's super_down pattern)
-   - Tab repeat, arrows, Esc (bind enabled only while the session is open), Enter
+   - key handling, as measured: the Tab bind is NOT `repeating` (stock Alt+Tab is not, and a repeating bind would rapid-cycle on a tiling workspace
+     where the stock handler runs); during a session the same per-tick loop that polls Alt also polls `hl.is_key_down("Tab")`, and the first delay and repeat
+     interval are settings. A release bind or a global shortcut cannot end the session: they miss the Alt release once another key was pressed (S9)
+   - the Tab bind consumes the key, so the app under the overlay would see Alt down and Alt up and open its menu bar (L1); the handler injects a harmless
+     key with `hl.dsp.send_shortcut` (F24) so the app sees a chord, not a tap
+   - arrows, Esc (bind enabled only while the session is open), Enter
    - on release: focuses the chosen window
         |  small state file in $XDG_RUNTIME_DIR + a shell IPC call   (UNVERIFIED: exact IPC, spike S3)
         v
@@ -58,7 +63,7 @@ The settings app exposes it. Design consequences:
    - settings panel -> ~/.config/omahop/config.toml
 ```
 
-Status: the split below is the working plan, not final (decision D5 is open and settled by spikes S1, S3, S9, see `lessons-from-others.md`). Why Lua owns the keys and QML only draws, in the working plan: the overlay must never take keyboard focus (focus changes would change the
+Status: the split below is decided on evidence (D5, `research/spikes.md`). Why Lua owns the keys and QML only draws: the overlay must never take keyboard focus (focus changes would change the
 window list order and fight the switch), and omagnet already proved the hold/release poll. The in-flight core PR
 (omacom/omarchy#16548) and the marketplace plugin `omarchy-altswitch` split the work the same way (UNVERIFIED for the second).
 

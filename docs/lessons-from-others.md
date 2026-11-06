@@ -6,7 +6,7 @@ is not decided yet, it is a spike that decides by evidence, not by imitation.
 
 | # | Lesson (problem) | Seen in | Our answer |
 |---|---|---|---|
-| L1 | A tap of Alt with nothing between (app sees Alt down and up) opens the app's menu bar | core #16548 | Spike S1 measures it for our overlay design. Pick the design that passes: test on terminal, browser, GTK and Qt apps. D5 stays open until then |
+| L1 | A tap of Alt with nothing between (app sees Alt down and up) opens the app's menu bar | core #16548 | MEASURED (`research/spikes.md` L1): a consumed Tab leaves the app seeing an Alt tap and its menu bar takes focus (Qt test app). Mitigation that worked: inject a harmless key (F24) with `send_shortcut`. Still to test: GTK, Chromium, Electron, XWayland |
 | L2 | A focus call is refused while an overlay holds the keyboard | core #16548 | Whatever overlay design we pick must show the pick lands on the right window within one frame. Test: pick, then check active window |
 | L3 | A focused floating window stays behind others | omaswitch #14, core #16241, #16973, #17724 | Spike S8 tests every raise call on Hyprland 0.56.2 including maximized and fullscreen; we keep a table of what works |
 | L4 | Wine and Proton ghost windows fill the list | omaswitch #13, core | List only windows with a real Wayland toplevel; unit test with ghost fixtures |

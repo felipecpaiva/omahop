@@ -18,7 +18,8 @@ also fires `onPressed` repeatedly. A bind with `release` or `long_press` cannot 
 | Poll `hl.is_key_down("Alt_L")` / `("Alt_R")` on one-shot timers | works | **works** (false within one tick after release) | works |
 
 Right Alt behaves like left Alt. So a release bind or a global shortcut alone cannot end a switch: after any other key was pressed in between, the
-Alt release is not reported. Core PR #16548 documents a QML key-release fallback while its overlay holds the keyboard, which fits this finding.
+Alt release is not reported.
+Measured only in our probes (virtual keyboard): a GlobalShortcut on ALT_L did not report the release after another key was pressed in between. UNVERIFIED guess about core PR #16548: its overlay takes the keyboard on the first Tab, so its QML key-release handler (the fallback its description mentions) is probably the path that works in practice. We did not run its code.
 Our decision input for D5: the poll works with a focusless overlay and needs no keyboard grab, but see L1 (Alt menu) before closing D5.
 
 ## Trap found: loading the probe twice doubled every bind (L8)
@@ -45,20 +46,28 @@ Cleanup was verified: no test windows left, workspace mode file removed, origina
 ## S6 load order and the escape hatch
 
 Order in `~/.config/hypr/hyprland.lua`: `default.hypr.omarchy` (stock binds, including the four ALT+TAB binds) then the user's
-`hypr.monitors`, `hypr.input`, `hypr.bindings`, `hypr.looknfeel`, `hypr.autostart`, then personal lines at the end (this is where a plugin's guarded
+`hypr.monitors`, `hypr.input`, `hypr.bindings`, `hypr.looknfeel`, `hypr.autostart`, then personal lines at the end (where a plugin's guarded
 `dofile` goes, as omagnet's does). So omahop loads AFTER the user's own `bindings.lua`: an unconditional `hl.unbind("ALT + TAB")` would delete a user's own Alt+Tab bind.
-`hyprctl binds -j` lists binds with their description. Stock ones: modmask 8 (ALT) "Focus on next window" and "Reveal active window on top";
-modmask 9 (ALT+SHIFT) "Focus on previous window" and "Reveal active window on top". Lua exposes `hl.get_windows`, `hl.get_workspace_windows`, `hl.get_layers`,
-`hl.get_current_submap`, `hl.get_cursor_pos`, but no bind list.
-Answer: omahop takes over Alt+Tab only if the binds on that chord are the stock ones (checked by description at load, through `hyprctl binds -j`), and the settings app has a
-"Take over Alt+Tab" switch (default on). If a user bind is found, omahop leaves it alone and says so in a log line and in the settings app.
+Detection of "is it still the stock bind" is not free: `o.bind` (`/usr/share/omarchy/default/hypr/helpers.lua`) keeps no list of binds, and calling `hyprctl` from inside the config load is untested and risky.
+Decision: no detection. The escape hatch is (1) the settings switch "Take over Alt+Tab" (default on) and (2) a global `_G.omahop_takeover = false` that a user sets in `hyprland.lua` or `bindings.lua` before omahop loads. The README says: if you rebind Alt+Tab yourself, turn this off.
+Lua exposes `hl.get_windows`, `hl.get_workspace_windows`, `hl.get_layers`, `hl.get_current_submap`, `hl.get_cursor_pos`, and `hl.dsp.send_shortcut`, `hl.dsp.pass`, `hl.dsp.send_key_state`.
 
-## S3 shell IPC cost: about 42 ms per call
+## L8 reload: does the unbind-first guard matter? Hygiene only
 
-`omarchy-shell -q <target> <method>` takes about 42 ms (a process start), and `hyprctl eval` about 5 ms. Too slow for every Tab press, fine for open and close.
-Plan: Lua writes a small state file (selection index and entries) in `$XDG_RUNTIME_DIR` and the QML overlay watches it; one IPC call opens the overlay.
-File-watch latency is NOT measured yet; it is the first thing to measure in batch 1 (target: overlay updates within one frame of a Tab).
+`hyprctl reload` left the bind count unchanged (282 binds, 11 on TAB, before and after), so a reload clears and re-registers binds. The doubling seen in S1 came from `hyprctl eval dofile(...)`, which never clears. The module still unbinds its own chords before binding (cheap, and it protects development workflows).
+
+## L1 Alt tap opens an app menu: CONFIRMED, and a mitigation works
+
+Test `tests/spikes/l1_altmenu.py`: a tiny Qt Widgets window with a menu bar (the Qt menu bar takes focus on an Alt tap; LibreOffice Writer on this machine does NOT react, so it is a useless control), driven through `/dev/uinput`, screenshots of the menu strip.
+
+| Input the app sees | Result |
+|---|---|
+| Alt down, Alt up (plain tap) | the text cursor disappears: the menu bar took the keyboard focus |
+| Alt down, a key that a Hyprland bind consumes (the Tab step), Alt up | **same as the plain tap**: the app never sees the Tab, so it counts a tap of Alt |
+| Same, but the consuming bind also runs `hl.dsp.send_shortcut({ mods = "ALT", key = "F24", window = active })` (and the variant with `mods = ""`) | **no change**: the menu bar does not take focus |
+
+So the focusless overlay needs a mitigation, and a harmless injected key (F24) between Alt down and Alt up is one that works in the Qt test app. Not tested: GTK apps, Chromium and Electron apps, XWayland apps, apps that use F24. The injection can leave the app seeing a stray F24; hand check in `validation-checklist.md`.
 
 ## Still open
 
-S2 thumbnails cost (needs the overlay), S3 file-watch latency, S4 focusless hover and L1 (Alt menu on tap), both need a minimal overlay prototype: they are the first build step of v0.1, not a separate probe, because they cannot be answered without a real overlay window. S7 ghost windows: toplevel-only filter, tested with fixtures in batch 1. See `ROADMAP.md`.
+S2 thumbnails cost (needs the overlay), S3 file-watch latency, S4 focusless hover: they need a real overlay window and are the first build step of v0.1. S7 ghost windows: toplevel-only filter, tested with fixtures in batch 1. L1 for non-Qt apps: part of the same batch.
