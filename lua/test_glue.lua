@@ -214,6 +214,11 @@ do
   assert(names() == "close" and dispatched[1].args.window.address == "0xb3", "only a plain hex address closes a window")
   M.minimize_window("0xb3"); M.minimize_window("0xb3 && echo injected"); M.minimize_window("$(id)")
   assert(#execd == 1 and execd[1] == "omarchy-hyprland-window-minimize 0xb3", "only a plain hex address reaches the minimize script, got " .. #execd .. " calls")
+  -- the peek strip's click: focus and raise, restore a minimized window first, bad addresses ignored
+  reset(); M.focus_window("0xb3", false)
+  assert(names() == "focus,alter_zorder" and dispatched[1].args.window.address == "0xb3", "focus_window focuses and raises")
+  reset(); M.focus_window("0xb3; echo injected", false); M.focus_window(7, true)
+  assert(names() == "", "focus_window ignores anything but a hex address")
   -- Delete closes the picked window; the row stays until the window is gone
   reset()
   binds["ALT + DELETE"]()

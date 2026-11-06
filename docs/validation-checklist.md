@@ -40,3 +40,15 @@ Automated checks (`tests/run-all.sh`) cover logic and the keyboard path with a v
 - [ ] Nothing matches: the box says so, releasing Alt does nothing.
 - [ ] None of your own Alt+letter shortcuts stop working after using search (they are only taken during a session, and never when you have bound them).
 - [ ] Settings, "Type to search" off: typing does nothing while the list is up.
+
+## v0.3 (pointer, quick actions, peek strip)
+
+- [ ] List or cards up: moving the pointer over a row only highlights it lightly; your keyboard pick does not move; clicking a row goes to that window.
+- [ ] A pointer resting where the list opens does nothing until you move it.
+- [ ] The buttons on a hovered row or card: close closes that window (an app may ask first, the row stays until the window is gone); minimize sends it to the dock (floating workspaces).
+- [ ] `Alt + Delete` closes the picked window.
+- [ ] Settings, Peek strip = "Show when the pointer touches the screen edge": nothing shows until the pointer hits the edge; the strip then appears, an app hover shows its windows, a click goes there; it hides when the pointer leaves.
+- [ ] Peek strip on the same edge as your dock or bar does not happen by default (auto picks a free edge); check with your layout, and try every explicit edge.
+- [ ] Two monitors: a strip on each screen, listing that screen's windows (minimized ones on every screen).
+- [ ] Peek = Off: no new thing anywhere on the desktop.
+- [ ] Your own mouse snapping (omagnet) and the Omarchy dock still work with the strip on.

@@ -9,6 +9,7 @@ for t in config scope windows mru session search glue; do lua "lua/test_$t.lua";
 bash tests/scrub.sh
 node tests/state.test.mjs
 node tests/config_io.test.mjs
+node tests/peek_model.test.mjs
 lua tools/gen-spec.lua --check
 command -v omarchy >/dev/null && omarchy plugin validate . >/dev/null && echo "plugin validates"
 # Linters: run when installed, otherwise say so (a skip is a visible debt, see docs/engineering-standards.md)
@@ -24,3 +25,4 @@ python3 tests/live.py
 python3 tests/live_panel.py
 python3 tests/live_cards.py
 python3 tests/live_pointer.py
+python3 tests/live_peek.py

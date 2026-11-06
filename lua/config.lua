@@ -28,6 +28,12 @@ C.spec = {
       help = "Snapshot takes one picture of each window when the cards open and costs almost nothing. Live keeps them updating and uses noticeable CPU with many windows." },
     actions = { default = true, group = "look", label = "Close and minimize buttons",
       help = "Show close and minimize buttons on the row or card under the pointer. Delete (with Alt held) closes the picked window either way." },
+    peek = { default = "off", values = { "off", "edge", "always" }, group = "peek", label = "Peek strip",
+      names = { off = "Off", edge = "Show when the pointer touches the screen edge", always = "Always visible" },
+      help = "A slim row of your running apps. Hover an app to see a picture of each of its windows; click to go to one. Off by default: nothing is added to your desktop unless you turn it on." },
+    peek_position = { default = "auto", values = { "auto", "bottom", "top", "left", "right" }, group = "peek", label = "Edge",
+      names = { auto = "A free edge", bottom = "Bottom", top = "Top", left = "Left", right = "Right" },
+      help = "Auto picks an edge that is not the dock's and not the bar's, so nothing competes or covers the bar." },
     border = { default = "auto", values = { "auto", "on", "off" }, group = "look", label = "Outline",
       names = { auto = "Follow Hyprland's window border", on = "Always", off = "Never" },
       help = "Auto draws no outline when you turned window borders off." },
@@ -56,9 +62,10 @@ C.groups = {
   { id = "windows", title = "Windows in the list" },
   { id = "look", title = "Look" },
   { id = "keys", title = "Keys" },
+  { id = "peek", title = "Peek strip" },
 }
 C.order = { "top.takeover", "top.scope", "top.search", "windows.workspaces", "windows.monitors", "windows.minimized", "windows.specials", "windows.ignore",
-  "top.style", "top.thumbnails", "top.reveal_delay_ms", "top.border", "top.actions", "keys.repeat_delay_ms", "keys.repeat_ms" }
+  "top.style", "top.thumbnails", "top.reveal_delay_ms", "top.border", "top.actions", "keys.repeat_delay_ms", "keys.repeat_ms", "top.peek", "top.peek_position" }
 
 local function contains(list, v)
   for _, x in ipairs(list) do if x == v then return true end end

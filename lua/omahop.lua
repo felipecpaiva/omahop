@@ -279,6 +279,12 @@ function M.minimize_window(address)
   hl.exec_cmd("omarchy-hyprland-window-minimize " .. address)
 end
 
+-- A click on an app's window in the peek strip: bring it forward (a minimized one comes back to the workspace in front first), same as picking it in the list.
+function M.focus_window(address, minimized)
+  if not valid_address(address) then return end
+  M.activate({ address = address, minimized = minimized == true })
+end
+
 function M.close_selected()
   if not (M.session and M.session:is_open()) then return end
   local e = M.entries[M.session:selected()]

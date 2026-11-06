@@ -30,7 +30,9 @@ Jump to any window fast on Omarchy's floating workspaces. Hold Alt, press Tab: a
 - The window you pick comes to the front, even when floating windows overlap (focus alone does not raise a floating window; omahop raises it too). A minimized window is brought back to the workspace you are on.
 - By default it only takes over Alt+Tab on **floating workspaces**. On tiling workspaces Alt+Tab is exactly the stock Omarchy behaviour.
 - **Two looks:** a plain list, or cards with a picture of each window (covered and minimized windows included), set in the settings window.
-- Adds nothing to the bar, the dock or the desktop.
+- **Mouse and quick actions:** with the list or cards up, hover a row (a light highlight, it never changes your pick), click to go there, and use the buttons on the hovered row to close or minimize that window. `Alt + Delete` closes the picked window.
+- **Peek strip (off by default):** a slim row of your running apps on a free screen edge (not the dock's, not the bar's). Hover an app to see a picture of each of its windows, click one to go there, close or minimize from the card. Turn it on in the settings (Peek strip): at the screen edge, or always visible.
+- Adds nothing to the bar, the dock or the desktop unless you turn the peek strip on.
 
 ## Install
 
@@ -59,6 +61,9 @@ scope = "floating"       # "floating": only on floating workspaces, "all": every
 reveal_delay_ms = 100    # a quick tap shows no overlay
 style = "list"           # "list" (plain) or "cards" (a picture of each window)
 thumbnails = "snapshot"  # cards only: "snapshot" (one picture when it opens), "live" (keeps updating, uses CPU), "off" (icons only)
+actions = true           # close and minimize buttons on the hovered row or card
+peek = "off"             # the peek strip: "off", "edge" (shows when the pointer touches the screen edge), "always"
+peek_position = "auto"   # "auto" (a free edge), "bottom", "top", "left", "right"
 border = "auto"          # the list's outline: "auto" follows Hyprland's window border (none when you turned window borders off), "on", "off"
 
 [windows]

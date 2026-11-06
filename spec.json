@@ -211,6 +211,44 @@
       "unit": "ms"
     }],
     "title": "Keys"
+  }, {
+    "id": "peek",
+    "settings": [{
+      "default": "off",
+      "help": "A slim row of your running apps. Hover an app to see a picture of each of its windows; click to go to one. Off by default: nothing is added to your desktop unless you turn it on.",
+      "hidden": false,
+      "id": "top.peek",
+      "key": "peek",
+      "label": "Peek strip",
+      "names": {
+        "always": "Always visible",
+        "edge": "Show when the pointer touches the screen edge",
+        "off": "Off"
+      },
+      "reload": false,
+      "section": "top",
+      "type": "enum",
+      "values": ["off", "edge", "always"]
+    }, {
+      "default": "auto",
+      "help": "Auto picks an edge that is not the dock's and not the bar's, so nothing competes or covers the bar.",
+      "hidden": false,
+      "id": "top.peek_position",
+      "key": "peek_position",
+      "label": "Edge",
+      "names": {
+        "auto": "A free edge",
+        "bottom": "Bottom",
+        "left": "Left",
+        "right": "Right",
+        "top": "Top"
+      },
+      "reload": false,
+      "section": "top",
+      "type": "enum",
+      "values": ["auto", "bottom", "top", "left", "right"]
+    }],
+    "title": "Peek strip"
   }],
   "schema": 1
 }

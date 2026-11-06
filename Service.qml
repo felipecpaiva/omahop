@@ -145,6 +145,7 @@ Item {
   function lua(code) { Quickshell.execDetached(["hyprctl", "eval", code]) }
   function pick(index) { if (Number.isInteger(index) && index >= 1) root.lua("_G.omahop.pick(" + index + ")") }
   function closeWindow(address) { if (/^0x[0-9a-fA-F]+$/.test(String(address))) root.lua("_G.omahop.close_window('" + address + "')") }
+  function focusWindow(address, minimized) { if (/^0x[0-9a-fA-F]+$/.test(String(address))) root.lua("_G.omahop.focus_window('" + address + "', " + (minimized === true ? "true" : "false") + ")") }
   function minimizeWindow(address) { if (/^0x[0-9a-fA-F]+$/.test(String(address))) root.lua("_G.omahop.minimize_window('" + address + "')") }
 
   // Where the rows or cards are on screen, one rectangle per line, for the live tests that click with a virtual mouse. Rewritten shortly after the list changes.
@@ -160,6 +161,32 @@ Item {
     onTriggered: {
       var item = styleLoader.item
       geometryFile.setText(item && item.rects ? item.rects().join("\n") + "\n" : "")
+    }
+  }
+
+  // ---- the peek strip: only loaded when the setting is on (off by default, so nothing is added to the desktop unless asked)
+  ConfigReader { id: configReader }
+
+  // The stock dock's and the bar's edges (from the shell's own config), so the strip can default to a free edge. Empty if unknown (Omarchy's defaults apply: dock bottom, bar top).
+  property string dockPosition: ""
+  property string barPosition: ""
+  FileView {
+    path: (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")) + "/omarchy/shell.json"
+    watchChanges: true
+    printErrors: false
+    onFileChanged: reload()
+    onLoaded: { try { var d = JSON.parse(text()); root.dockPosition = d.dock && d.dock.position ? String(d.dock.position) : ""; root.barPosition = d.bar && d.bar.position ? String(d.bar.position) : "" } catch (e) { root.dockPosition = ""; root.barPosition = "" } }
+  }
+
+  Variants {
+    model: configReader.value("top", "peek") === "off" || configReader.value("top", "peek") === undefined ? [] : Quickshell.screens
+    PeekStrip {
+      required property var modelData
+      modelScreen: modelData
+      reader: configReader
+      service: root
+      dockPosition: root.dockPosition
+      barPosition: root.barPosition
     }
   }
 
