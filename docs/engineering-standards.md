@@ -54,3 +54,7 @@ prints `SKIP <tool> not installed` instead of passing silently. A skip is a visi
 4. `bash tests/run-all.sh` and `bash tests/scrub.sh` pass.
 5. The scope test still passes: a tiling workspace is untouched when scope is `floating`.
 6. The batch is written in `docs/batch-log.md` with what was verified and how.
+
+## Definition of done for a release
+
+Every tag needs a feature highlight (media plus notes) and a GitHub release: see `docs/releases/README.md`. A tag without them is not released.
