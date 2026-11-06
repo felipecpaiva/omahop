@@ -31,6 +31,8 @@ Lua/QML contract are built so that later features add values and views without r
 
 | S6 | Load order: does the guarded load of `omahop.lua` run before or after the user's own `bindings.lua`? `hl.unbind("ALT + TAB")` removes every bind on that chord. Is a "do not take Alt+Tab" escape hatch needed? | Order documented, setting decided |
 | S7 | Competitor traps: floating focus without raise, ghost windows, Alt scan codes 64 and 108, bind lifecycle on monitor hotplug (see `competitive-analysis.md`) | Each has a test or a documented answer |
+| S8 | Raise on Hyprland 0.56.2: does a focus dispatch raise a floating window, a maximized one, a fullscreen one? Which of `bring_to_top`, `alter_zorder`, lowering others works? (core issues 16241, 16973, 17724; PR 16412) | Table of cases and the working call in `research/` |
+| S9 | Cross-check Alt release: our polling versus the submap release bind `release, submap_universal, transparent, non_consuming`, both Alt keys | One method chosen, tested |
 
 ## Phase 1: switcher core, list style (no thumbnails)
 

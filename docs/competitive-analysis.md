@@ -60,3 +60,29 @@ self-claims. I spot-checked the switchers matrix rows F4, F10, F12, F13, F14, F1
 5. **Letter hints and profiles stay in v0.4.** Nobody has hints; profiles exist only in luwojtaszek.
 
 Roadmap and spikes changed accordingly (see `ROADMAP.md`).
+
+## Addendum: Omarchy community search (code and people)
+
+Files: [research/community-code.md](research/community-code.md), [research/community-voices.md](research/community-voices.md).
+Reddit was blocked and Hacker News showed nothing, so demand outside GitHub is UNVERIFIED. I spot-checked: core PR #16219 is open, and the repos `sparkrussell/omarchy-alt-tab-switcher` (8 stars, MIT) and `timurguseynov/omarchy-x-mode` (9 stars) exist.
+
+**Answer to "did someone already build it?" Yes, in pieces, and more than we first counted.**
+
+- Six more Alt+Tab plugins with live previews were missed by the first survey: sparkrussell, jburchel, jakubkozera, manateelazycat, rmacy (Mission Control 3.0.0), devmobasa. Closest duplicate of the switcher: `sparkrussell/omarchy-alt-tab-switcher` (Lua owns the keys, Quickshell draws with ScreencopyView, the same split as our plan).
+- Closest duplicate of the "Mac on floating" idea: `timurguseynov/omarchy-x-mode` (floating, titlebars, snaps, dock, Command-Tab). It switches by app icon with no thumbnails and needs a C++ hyprbars plugin.
+- Core has BOTH headline features as open PRs: #16548 (Alt+Tab with live thumbnails) and #16219 (dock hover live previews, plus a competing text-list version in #16479). No maintainer has replied on either, only bots. Merging either makes the matching omahop feature redundant. This is the top kill risk.
+- Omarchy 4.5.0 (2026-11-05) already ships floating workspaces, a dock and Super+M minimize. The maintainer frames it as a traditional desktop mode with a dock (seen as a search snippet only).
+- No maintainer has rejected a switcher or previews. The only unexplained "no" is the removal of minimize and edge snapping from the first floating PR (#14482), which later returned in 4.5.
+- Plugins are unsandboxed; every update needs re-verification or shows "Update unverified"; a 4.0.3 regression for third-party overlays (#10907) is still open; the dock is core QML that plugins cannot extend (#16609).
+- The ecosystem is large: `quantavil/awesome-omarchy-plugins` indexes 2,600+ plugins. Use it for duplicate checks before every release.
+
+**Real gap nobody fills: raising a floating window.** Core issues #16241, #16973, #17724 show Hyprland leaves a fullscreen or maximized floating window unraised after Alt+Tab, and clicks pass through to it. Core PR #16412 proposes lowering other windows below the target. No community switcher handles it. x-mode contradicts itself on whether a focus dispatch raises a floating window, so we test on Hyprland 0.56.2 (spike S8) before trusting any claim.
+
+**Techniques seen in public code (ideas, mind licences):**
+- Alt release: a submap plus a global release bind, `release, submap_universal, transparent, non_consuming`. One plugin also binds Meta_L and Meta_R across mod-mask combinations. A claim that "release never fires, use a 3 s timeout" looks wrong. We use our own polling (omagnet `super_down`) and cross-check with this bind in spike S1.
+- Per-class MRU kept by the plugin so cycling does not scramble order (x-mode). Focus by stable window id (rmacy). Same-app cycle (offGustavo). Quick-tap show delay (jburchel).
+- Hyprland truncates socket2 events at 1024 bytes (issue #17078, E2BIG on long titles): never depend on full titles from events.
+
+**Techniques to avoid:** grim region screenshots for previews (wrong content for occluded floating windows); a C++ Hyprland plugin that hooks internals (breaks on version bumps, hyprdrive).
+
+**Updated verdict.** The plain "Alt+Tab with previews" space is taken, and core may take it officially. What stays ours: floating-correct raise and focus, scope and window-set settings, stock fallback, the settings app, and per-app cycling. Before building the switcher core, read PRs #16548 and #16219 in full and decide whether to offer our parts to them as PRs (decision D12, Felipe's call: commenting on upstream is outward-facing and I will not do it unasked).
