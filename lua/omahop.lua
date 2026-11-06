@@ -9,7 +9,7 @@ local Config, Scope, Windows, Mru, Session = mod("config"), mod("scope"), mod("w
 local M = {}
 _G.omahop = M
 
-M.tick_ms = 25
+M.tick_ms = 16 -- key polling interval: shorter means Alt release is noticed sooner (a tick costs about 8 microseconds, measured)
 M.inject_key = "F24" -- see docs/research/spikes.md L1: without it, an app under the overlay sees a bare Alt tap and opens its menu bar
 -- Chords active only while a session is open; ALT is held for the whole session. (Unbinding them at the end would also drop a
 -- user's own bind on the same chord: shortcut, none exist in the stock set; upgrade by reading the bind list if one appears.)
@@ -135,12 +135,15 @@ function M.write_state()
       lines[#lines + 1] = table.concat({ "w", e.address, clean(e.class), e.minimized and 1 or 0, clean(e.title) }, "\t")
     end
   end
+  local content = table.concat(lines, "\n") .. "\n"
+  -- Only write when something changed: the tick calls this every 16 ms, and every write makes the overlay re-read and redraw (measured: 133 writes in 3 s before this).
+  if content == M.last_state then return end
   local tmp = M.state_path .. ".tmp"
   local f = io.open(tmp, "w")
   if not f then return end
-  f:write(table.concat(lines, "\n"), "\n")
+  f:write(content)
   f:close()
-  os.rename(tmp, M.state_path)
+  if os.rename(tmp, M.state_path) then M.last_state = content end
 end
 
 -- Bring a window to the front the way the dock does: a minimized one moves to the workspace in front of the user first.
@@ -259,6 +262,7 @@ function M.setup()
   for _, p in ipairs(problems) do log("config: " .. p) end
   M.session = Session.new(cfg)
   M.entries = {}
+  M.last_state = nil
   M.write_state()
   if _G.omahop_takeover == false or cfg.takeover == false then return M end
   seed_order()

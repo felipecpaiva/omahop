@@ -17,11 +17,32 @@ Item {
 
   readonly property string statePath: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/omahop/state"
   property var st: State.parse("")
+  // The list model is replaced only when the windows themselves change, not on every selection change: replacing it rebuilds every row and reloads every icon.
+  property var entries: []
+  property string entriesKey: ""
+  property var resolved: ({})
+
+  function apply(text) {
+    var next = State.parse(text)
+    var key = next.entries.map(function (e) { return e.address + "|" + e.title + "|" + e.minimized }).join("\n")
+    if (key !== root.entriesKey) {
+      root.entriesKey = key
+      root.entries = next.entries
+    }
+    root.st = next
+  }
 
   // DesktopEntries is lazy: the first read is empty, so it is touched at load.
   Component.onCompleted: { var touch = DesktopEntries.applications.values.length }
 
   function resolve(appId) {
+    if (root.resolved[appId] !== undefined) return root.resolved[appId]
+    var result = lookup(appId)
+    root.resolved[appId] = result
+    return result
+  }
+
+  function lookup(appId) {
     var entry = DesktopEntries.heuristicLookup(appId)
     var icon = entry && entry.icon ? entry.icon : appId
     var library = root.shell ? root.shell.appLibrary : null
@@ -36,8 +57,8 @@ Item {
     path: root.statePath
     watchChanges: true
     onFileChanged: reload()
-    onLoaded: root.st = State.parse(text())
-    onLoadFailed: root.st = State.parse("")
+    onLoaded: root.apply(text())
+    onLoadFailed: root.apply("")
   }
 
   OverlayWindow {
@@ -50,7 +71,7 @@ Item {
     ListStyle {
       anchors.centerIn: parent
       visible: window.contentRevealed
-      entries: root.st.entries
+      entries: root.entries
       selected: root.st.selected
       screenHeight: window.height
       resolve: root.resolve

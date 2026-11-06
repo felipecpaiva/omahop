@@ -11,3 +11,6 @@ Traps found so far. The long list from the sister project is in omagnet `docs/go
 - `hl.dsp.send_shortcut` and `hl.dsp.pass` inside a bind handler make Hyprland call the bind a second time at the key release. Use `send_key_state` (docs/research/spikes.md).
 - A live test that checks "previous window" must start from a known recently-used order (`Spare.reset_order`); earlier steps change it.
 - `hl.is_key_down` takes the xkb names `Tab`, `Alt_L`, `Alt_R` (`TAB`, `ALT_L` return nil).
+- The shell does not hot-reload a plugin's QML: after editing it, run `omarchy-shell -q shell rescanPlugins`. That opens the theme picker; close it without key presses with `omarchy-shell image-selector cancel <any-done-file-path>`.
+- A ListView resets `currentIndex` to 0 whenever its model is replaced; drive the highlight from your own `selected` value.
+- Writing the state file every tick makes the overlay redraw every tick: write only on change.
