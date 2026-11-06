@@ -98,3 +98,8 @@ Manual step left: upload `branding/social/github-social-preview.png` as the repo
 
 Branch `v0.2` merged into `main` (fast-forward), manifest version 0.2.0, release notes `docs/releases/v0.2.0.md` with the logo card, four feature GIFs and three pictures (image links point at `main`). Gate before merging: all non-live checks green; the last full live run (24 key checks, panel clicks, cards screenshots) was before the brand work, which touched no code.
 Not done by me: the multi-monitor and unplug hand checks (need a second monitor), the GitHub release pages for v0.1.0 and v0.2.0 (blocked by the safety check, commands in the report).
+
+## v0.3 started (2026-11-06 night, branch v0.3)
+
+Felipe went away for a couple of hours and asked for the remaining releases one by one (v0.3, v0.4, v1.0), each ending in a tag and a release. D8 resolved on evidence: the stock dock cannot be hooked or rebuilt from outside, so hover previews are omahop's own opt-in peek strip. Advisor rules added to `v0.3-plan.md`.
+Resume line: branch v0.3, next is batch 8 (pointer on the switcher, quick actions, Lua entry points). All tests green at the start.
