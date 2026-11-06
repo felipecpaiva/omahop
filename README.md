@@ -11,7 +11,7 @@
 
 Jump to any window fast on Omarchy's floating workspaces. Hold Alt, press Tab: a list of your windows (icon, app name, title) appears in your Omarchy theme. Let go of Alt to switch.
 
-**Status: v0.3.0 released.** A list or cards switcher, type to search, mouse and quick actions, an optional peek strip, and a settings window. More in later releases (see `docs/ROADMAP.md`).
+**Status: v0.4.0 released.** A list or cards switcher, type to search, mouse and quick actions, an optional peek strip, a same-app shortcut, app rules, quick jump keys and a settings window. More in later releases (see `docs/ROADMAP.md`).
 
 ## See it
 
@@ -29,6 +29,10 @@ Jump to any window fast on Omarchy's floating workspaces. Hold Alt, press Tab: a
 
 ![Alt + Delete closes the picked window](branding/demo/quick.gif)
 
+![Alt + backtick: only the windows of this app](branding/demo/sameapp.gif)
+
+![Number keys jump straight to a window](branding/demo/hints.gif)
+
 ## What it does
 
 - Quick Alt+Tab flips between your last two windows with no overlay. Hold Alt and the list shows after a short delay (default 100 ms).
@@ -42,6 +46,13 @@ Jump to any window fast on Omarchy's floating workspaces. Hold Alt, press Tab: a
 - **App rules:** never list windows by title fragment, list some apps first, and step aside (stock Alt+Tab) for fullscreen apps or named apps such as games and remote desktops.
 - **Quick jump keys:** number keys (`Alt + 1` to `9`) or letters you map to apps jump straight to a window; any other key still types into the search.
 - Adds nothing to the bar, the dock or the desktop unless you turn the peek strip on.
+
+## Requirements and what it touches
+
+- Omarchy 4.5 or newer (the Hyprland Lua configuration and the Quickshell shell it ships). Nothing else to install: no network, no root, no packages.
+- It reads the list of windows (class, title, workspace, monitor) from Hyprland, and takes screenshots of windows through Wayland's screen-capture protocol only to draw thumbnails (nothing is saved or sent anywhere).
+- It writes small state files under `$XDG_RUNTIME_DIR/omahop` (gone at logout), its settings at `~/.config/omahop/config.toml`, and a launcher entry `~/.local/share/applications/omahop.desktop` (only one that carries its own marker is ever replaced or removed). It never edits your `hyprland.lua` or any Omarchy file.
+- Keys it takes: Alt+Tab and Alt+Shift+Tab (where it is active), the same-app chord, and Alt plus letters, digits, Delete, Escape, Return and the arrows only while the list is up, and never a chord you already use.
 
 ## Install
 
