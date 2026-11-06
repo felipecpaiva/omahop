@@ -5,30 +5,54 @@ local C = {}
 
 C.schema = 1
 
--- One table describes every setting: default, and for text settings the allowed values. The settings app reads the same shape,
--- so a new value is added here once (flexibility rule). Sections are "top" (no section) and "windows" and "keys".
+-- One table describes every setting: default, allowed values, and the text the settings panel shows (label, help, names for each value, unit).
+-- The panel reads a generated copy of this table (spec.json, made by tools/gen-spec.lua, and run-all fails if the committed file drifts), so a new
+-- setting is added here once. `reload = true` marks a setting that needs a Hyprland reload to apply; `hidden = true` keeps an unfinished setting out of the panel.
 C.spec = {
   top = {
-    schema = { default = C.schema },
-    takeover = { default = true }, -- false leaves the user's own Alt+Tab bind alone
-    scope = { default = "floating", values = { "floating", "all" } }, -- where omahop takes over Alt+Tab
-    style = { default = "list", values = { "list", "cards" } },
-    reveal_delay_ms = { default = 100, min = 0, max = 1000 }, -- a quick tap flips windows with no overlay
-    thumbnails = { default = "snapshot", values = { "live", "snapshot", "off" } }, -- used by the cards style
-    border = { default = "auto", values = { "auto", "on", "off" } }, -- the card's outline: auto follows Hyprland's general:border_size (0 means none)
+    schema = { default = C.schema, hidden = true },
+    takeover = { default = true, group = "general", reload = true, label = "Take over Alt+Tab",
+      help = "Turn off to leave Alt+Tab alone, for example if you set your own Alt+Tab bind. Applies after a Hyprland reload." },
+    scope = { default = "floating", values = { "floating", "all" }, group = "general", label = "Where it takes over Alt+Tab",
+      names = { floating = "Floating workspaces only", all = "All workspaces" },
+      help = "On other workspaces Alt+Tab stays exactly as Omarchy has it." },
+    style = { default = "list", values = { "list", "cards" }, group = "look", label = "Style", hidden = true,
+      names = { list = "List", cards = "Cards with thumbnails" } },
+    reveal_delay_ms = { default = 100, min = 0, max = 1000, group = "look", label = "Delay before the list shows", unit = "ms",
+      help = "A quick tap flips between your last two windows with no list. 0 shows the list at once." },
+    thumbnails = { default = "snapshot", values = { "live", "snapshot", "off" }, group = "look", label = "Thumbnails", hidden = true,
+      names = { live = "Live", snapshot = "Snapshot when it opens", off = "Off (icons only)" } },
+    border = { default = "auto", values = { "auto", "on", "off" }, group = "look", label = "Outline",
+      names = { auto = "Follow Hyprland's window border", on = "Always", off = "Never" },
+      help = "Auto draws no outline when you turned window borders off." },
   },
   windows = {
-    workspaces = { default = "floating", values = { "current", "floating", "all" } },
-    monitors = { default = "active", values = { "active", "all" } },
-    minimized = { default = "back", values = { "back", "hide" } },
-    specials = { default = "hide", values = { "hide", "show" } },
-    ignore = { default = "" }, -- window classes, comma separated
+    workspaces = { default = "floating", values = { "current", "floating", "all" }, group = "windows", label = "Windows from",
+      names = { current = "This workspace", floating = "Floating workspaces", all = "All workspaces" } },
+    monitors = { default = "active", values = { "active", "all" }, group = "windows", label = "On",
+      names = { active = "The monitor with focus", all = "All monitors" } },
+    minimized = { default = "back", values = { "back", "hide" }, group = "windows", label = "Minimized windows",
+      names = { back = "Listed last", hide = "Not listed" } },
+    specials = { default = "hide", values = { "hide", "show" }, group = "windows", label = "Scratchpad windows",
+      names = { hide = "Not listed", show = "Listed" } },
+    ignore = { default = "", group = "windows", label = "Never list these apps",
+      help = "Window classes, comma separated (for example: pavucontrol, steam). Case does not matter." },
   },
   keys = {
-    repeat_delay_ms = { default = 250, min = 50, max = 2000 }, -- hold Tab: wait this long, then repeat
-    repeat_ms = { default = 40, min = 10, max = 1000 },
+    repeat_delay_ms = { default = 250, min = 50, max = 2000, group = "keys", label = "Hold Tab: wait before repeating", unit = "ms" },
+    repeat_ms = { default = 40, min = 10, max = 1000, group = "keys", label = "Hold Tab: repeat every", unit = "ms" },
   },
 }
+
+-- The order the panel shows things in: groups, then the settings of each, as "section.key".
+C.groups = {
+  { id = "general", title = "General" },
+  { id = "windows", title = "Windows in the list" },
+  { id = "look", title = "Look" },
+  { id = "keys", title = "Keys" },
+}
+C.order = { "top.takeover", "top.scope", "windows.workspaces", "windows.monitors", "windows.minimized", "windows.specials", "windows.ignore",
+  "top.style", "top.thumbnails", "top.reveal_delay_ms", "top.border", "keys.repeat_delay_ms", "keys.repeat_ms" }
 
 local function contains(list, v)
   for _, x in ipairs(list) do if x == v then return true end end
@@ -51,11 +75,22 @@ local function value(raw)
   return nil -- not a value we know: the line is reported and ignored
 end
 
+-- Drop a trailing comment: a '#' preceded by whitespace and outside a double quoted string (so "steam, #hash" survives).
+local function strip_comment(line)
+  local in_string = false
+  for i = 1, #line do
+    local c = line:sub(i, i)
+    if c == '"' then in_string = not in_string
+    elseif c == "#" and not in_string and i > 1 and line:sub(i - 1, i - 1):match("%s") then return line:sub(1, i - 1) end
+  end
+  return line
+end
+
 -- Parse text into { top = {...}, windows = {...}, ... } and a list of unreadable lines (never raises).
 function C.parse(text)
   local t, bad, section = { top = {} }, {}, "top"
   for line in (text or ""):gmatch("[^\r\n]+") do
-    local l = line:gsub("%s+#.*$", ""):gsub("^%s+", ""):gsub("%s+$", "")
+    local l = strip_comment(line):gsub("^%s+", ""):gsub("%s+$", "")
     if l ~= "" and l:sub(1, 1) ~= "#" then
       local name = l:match("^%[([%w_]+)%]$")
       if name then

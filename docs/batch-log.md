@@ -38,3 +38,11 @@ Felipe removed window borders (`general:border_size = 0`); the list card still d
 ## v0.1.0 tagged (2026-11-06)
 
 Felipe tried it on his machine (look fine, performance fine after the state-write fix and `reveal_delay_ms = 0`, outline now follows his Hyprland border setting) and asked for the tag. Next goal: v0.2 (cards with thumbnails, search, settings app, multi-monitor overlay), see `docs/ROADMAP.md`.
+
+## Batch 3 (2026-11-06, branch v0.2): live config and the config writer
+
+Built: the spec table in `lua/config.lua` now carries labels, help, names per value, units, groups and order (one definition); `tools/gen-spec.lua` writes `spec.json` for the settings panel and `--check` fails the run when the committed file drifts;
+`omahop.lua` re-reads the config file when a session is about to start (text compare, nothing parsed when unchanged), so edits apply to the next Alt+Tab without a reload (`takeover` still needs one: it decides whether the binds exist);
+`ConfigIO.js` edits one line at a time and keeps comments, order, unknown keys and sections byte for byte (`set`, `unset`, `get`, `parse`), Node-tested including a cross-check that Lua and JavaScript parse the same text the same way.
+Bug found by that cross-check: the Lua parser cut a line at ` #` even inside quotes (`ignore = "steam, #hash"` was dropped); fixed with a quote-aware comment strip in both languages.
+Verified: all unit tests, `run-all.sh` with the live part (18 checks) on this branch.

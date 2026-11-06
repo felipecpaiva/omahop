@@ -8,6 +8,8 @@ lua -e 'assert(_VERSION == "Lua 5.5", "run these tests with Lua 5.5, like Hyprla
 for t in config scope windows mru session glue; do lua "lua/test_$t.lua"; done
 bash tests/scrub.sh
 node tests/state.test.mjs
+node tests/config_io.test.mjs
+lua tools/gen-spec.lua --check
 command -v omarchy >/dev/null && omarchy plugin validate . >/dev/null && echo "plugin validates"
 # Linters: run when installed, otherwise say so (a skip is a visible debt, see docs/engineering-standards.md)
 for tool in luacheck stylua shellcheck ruff; do

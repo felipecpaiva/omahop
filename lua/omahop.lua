@@ -227,7 +227,23 @@ function M.stock(delta)
   end
 end
 
+-- Re-read the config file when a session is about to start, so edits (and the settings panel) apply to the next Alt+Tab with no reload.
+-- A read of a small file costs microseconds and nothing is parsed when the text has not changed. `takeover` is the exception: it decides
+-- whether the binds exist at all, so it only applies at load (the panel offers a reload for it).
+function M.reload_config()
+  local text = read_file(M.config_path) or ""
+  if text == M.config_text then return end
+  M.config_text = text
+  local parsed, bad = Config.parse(text)
+  local cfg, problems = Config.merge(parsed)
+  for _, line in ipairs(bad) do problems[#problems + 1] = "unreadable line: " .. line end
+  for _, p in ipairs(problems) do log("config: " .. p) end
+  M.cfg = cfg
+  M.session = Session.new(cfg)
+end
+
 function M.on_tab(delta)
+  if not (M.session and M.session:is_open()) then M.reload_config() end
   if not Scope.active(M.cfg.scope, M.workspace_is_floating()) then return M.stock(delta) end
   inject()
   local now = M.now()
@@ -257,10 +273,9 @@ function M.setup()
   M.gen = M.gen + 1
   bind_session_keys(false)
   os.execute("mkdir -p '" .. state_dir .. "'")
-  local cfg, problems = Config.load(M.config_path)
-  M.cfg = cfg
-  for _, p in ipairs(problems) do log("config: " .. p) end
-  M.session = Session.new(cfg)
+  M.config_text = nil
+  M.reload_config()
+  local cfg = M.cfg
   M.entries = {}
   M.last_state = nil
   M.write_state()

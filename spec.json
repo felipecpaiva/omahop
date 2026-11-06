@@ -1,0 +1,194 @@
+{
+  "groups": [{
+    "id": "general",
+    "settings": [{
+      "default": true,
+      "help": "Turn off to leave Alt+Tab alone, for example if you set your own Alt+Tab bind. Applies after a Hyprland reload.",
+      "hidden": false,
+      "id": "top.takeover",
+      "key": "takeover",
+      "label": "Take over Alt+Tab",
+      "reload": true,
+      "section": "top",
+      "type": "bool"
+    }, {
+      "default": "floating",
+      "help": "On other workspaces Alt+Tab stays exactly as Omarchy has it.",
+      "hidden": false,
+      "id": "top.scope",
+      "key": "scope",
+      "label": "Where it takes over Alt+Tab",
+      "names": {
+        "all": "All workspaces",
+        "floating": "Floating workspaces only"
+      },
+      "reload": false,
+      "section": "top",
+      "type": "enum",
+      "values": ["floating", "all"]
+    }],
+    "title": "General"
+  }, {
+    "id": "windows",
+    "settings": [{
+      "default": "floating",
+      "hidden": false,
+      "id": "windows.workspaces",
+      "key": "workspaces",
+      "label": "Windows from",
+      "names": {
+        "all": "All workspaces",
+        "current": "This workspace",
+        "floating": "Floating workspaces"
+      },
+      "reload": false,
+      "section": "windows",
+      "type": "enum",
+      "values": ["current", "floating", "all"]
+    }, {
+      "default": "active",
+      "hidden": false,
+      "id": "windows.monitors",
+      "key": "monitors",
+      "label": "On",
+      "names": {
+        "active": "The monitor with focus",
+        "all": "All monitors"
+      },
+      "reload": false,
+      "section": "windows",
+      "type": "enum",
+      "values": ["active", "all"]
+    }, {
+      "default": "back",
+      "hidden": false,
+      "id": "windows.minimized",
+      "key": "minimized",
+      "label": "Minimized windows",
+      "names": {
+        "back": "Listed last",
+        "hide": "Not listed"
+      },
+      "reload": false,
+      "section": "windows",
+      "type": "enum",
+      "values": ["back", "hide"]
+    }, {
+      "default": "hide",
+      "hidden": false,
+      "id": "windows.specials",
+      "key": "specials",
+      "label": "Scratchpad windows",
+      "names": {
+        "hide": "Not listed",
+        "show": "Listed"
+      },
+      "reload": false,
+      "section": "windows",
+      "type": "enum",
+      "values": ["hide", "show"]
+    }, {
+      "default": "",
+      "help": "Window classes, comma separated (for example: pavucontrol, steam). Case does not matter.",
+      "hidden": false,
+      "id": "windows.ignore",
+      "key": "ignore",
+      "label": "Never list these apps",
+      "reload": false,
+      "section": "windows",
+      "type": "text"
+    }],
+    "title": "Windows in the list"
+  }, {
+    "id": "look",
+    "settings": [{
+      "default": "list",
+      "hidden": true,
+      "id": "top.style",
+      "key": "style",
+      "label": "Style",
+      "names": {
+        "cards": "Cards with thumbnails",
+        "list": "List"
+      },
+      "reload": false,
+      "section": "top",
+      "type": "enum",
+      "values": ["list", "cards"]
+    }, {
+      "default": "snapshot",
+      "hidden": true,
+      "id": "top.thumbnails",
+      "key": "thumbnails",
+      "label": "Thumbnails",
+      "names": {
+        "live": "Live",
+        "off": "Off (icons only)",
+        "snapshot": "Snapshot when it opens"
+      },
+      "reload": false,
+      "section": "top",
+      "type": "enum",
+      "values": ["live", "snapshot", "off"]
+    }, {
+      "default": 100,
+      "help": "A quick tap flips between your last two windows with no list. 0 shows the list at once.",
+      "hidden": false,
+      "id": "top.reveal_delay_ms",
+      "key": "reveal_delay_ms",
+      "label": "Delay before the list shows",
+      "max": 1000,
+      "min": 0,
+      "reload": false,
+      "section": "top",
+      "type": "int",
+      "unit": "ms"
+    }, {
+      "default": "auto",
+      "help": "Auto draws no outline when you turned window borders off.",
+      "hidden": false,
+      "id": "top.border",
+      "key": "border",
+      "label": "Outline",
+      "names": {
+        "auto": "Follow Hyprland's window border",
+        "off": "Never",
+        "on": "Always"
+      },
+      "reload": false,
+      "section": "top",
+      "type": "enum",
+      "values": ["auto", "on", "off"]
+    }],
+    "title": "Look"
+  }, {
+    "id": "keys",
+    "settings": [{
+      "default": 250,
+      "hidden": false,
+      "id": "keys.repeat_delay_ms",
+      "key": "repeat_delay_ms",
+      "label": "Hold Tab: wait before repeating",
+      "max": 2000,
+      "min": 50,
+      "reload": false,
+      "section": "keys",
+      "type": "int",
+      "unit": "ms"
+    }, {
+      "default": 40,
+      "hidden": false,
+      "id": "keys.repeat_ms",
+      "key": "repeat_ms",
+      "label": "Hold Tab: repeat every",
+      "max": 1000,
+      "min": 10,
+      "reload": false,
+      "section": "keys",
+      "type": "int",
+      "unit": "ms"
+    }],
+    "title": "Keys"
+  }],
+  "schema": 1
+}

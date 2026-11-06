@@ -115,6 +115,18 @@ assert(names() == "cycle_next,alter_zorder", "stock Shift+Alt+Tab, got " .. name
 windows = { a }; active = a; reset(); binds["ALT + TAB"]()
 assert(not M.session:is_open() and names() == "send_key_state,send_key_state", "one window: no session")
 
+-- live config: an edit to the file applies to the next Alt+Tab, with no reload
+local cfgpath = TESTDIR .. "/cfg/omahop/config.toml"
+local cf = io.open(cfgpath, "w"); cf:write('[windows]\nworkspaces = "all"\n'); cf:close()
+windows = { a, t }; active = a; key_state.Alt_L = true; key_state.Tab = true; reset()
+M.session:key(clock, "escape"); advance(25, 2)
+binds["ALT + TAB"]()
+assert(#M.entries == 2, "file edit applied without a reload: tiling window listed from a floating workspace, got " .. #M.entries)
+M.session:key(clock, "escape"); M.apply({})
+cf = io.open(cfgpath, "w"); cf:write('[windows]\nworkspaces = "current"\n'); cf:close()
+reset(); binds["ALT + TAB"]()
+assert(M.cfg.windows.workspaces == "current" and not M.session:is_open(), "second edit applied (one window left in view: nothing to switch to)")
+
 -- takeover off: no binds at all
 for k in pairs(binds) do binds[k] = nil end
 _G.omahop_takeover = false
