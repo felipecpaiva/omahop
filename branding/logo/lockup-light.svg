@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 419 160" height="160"><g transform="scale(0.31250)">
+  <rect x="104" y="270" width="120" height="120" rx="24" fill="#1a1812"/>
+  <rect x="288" y="270" width="120" height="120" rx="24" fill="#9a6b00"/>
+  <path d="M 164 218 C 184 126 318 126 348 218" fill="none" stroke="#1a1812" stroke-width="48" stroke-linecap="round"/>
+  <line x1="114" y1="170" x2="132" y2="152" stroke="#6a634f" stroke-width="9" stroke-linecap="round"/>
+  <line x1="114" y1="189" x2="132" y2="171" stroke="#6a634f" stroke-width="9" stroke-linecap="round"/>
+  <line x1="114" y1="208" x2="132" y2="190" stroke="#6a634f" stroke-width="9" stroke-linecap="round"/>
+</g><g transform="translate(200 44.0) scale(0.72000) translate(8.0 22.0)" fill="none" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"><path transform="translate(0 0)" d="M 20 3 A 17 17 0 1 1 19.99 3 Z" stroke="#9a6b00" fill="none"/><path transform="translate(44 0)" d="M 4 40 V 4 M 4 24 A 14 14 0 0 1 32 24 V 40 M 32 24 A 14 14 0 0 1 60 24 V 40" stroke="#1a1812" fill="none"/><path transform="translate(112 0)" d="M 20 6 A 16 16 0 1 0 20.01 6 Z M 36 6 V 40" stroke="#1a1812" fill="none"/><path transform="translate(156 0)" d="M 4 -10 V 40 M 4 24 A 16 16 0 0 1 36 24 V 40" stroke="#1a1812" fill="none"/><path transform="translate(200 0)" d="M 20 3 A 17 17 0 1 1 19.99 3 Z" stroke="#1a1812" fill="none"/><path transform="translate(244 0)" d="M 20 6 A 16 16 0 1 0 20.01 6 Z M 4 6 V 62" stroke="#1a1812" fill="none"/></g></svg>

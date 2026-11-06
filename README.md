@@ -1,3 +1,12 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="branding/social/banner-dark.png">
+    <img alt="omahop: fast window switching for Omarchy floating workspaces" src="branding/social/banner-light.png" width="800">
+  </picture>
+</p>
+
+<p align="center"><img src="branding/demo/switch.gif" alt="A quick Alt+Tab, holding Alt for the list, and Shift+Tab" width="720"></p>
+
 # omahop
 
 Jump to any window fast on Omarchy's floating workspaces. Hold Alt, press Tab: a list of your windows (icon, app name, title) appears in your Omarchy theme. Let go of Alt to switch.

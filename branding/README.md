@@ -30,3 +30,9 @@ Felipe picked `v2-tilehop` (two tiles and a leaping arc) and asked for a colour 
 | `explorations/v2-tilehop-citrus/` | Golden yellow: ground `#1a1812`, main `#fff5d6`, accent `#ffc83d` |
 
 Compare them on `board-v2-tilehop.png` (`python3 tools/board.py v2-tilehop-`). Once one is chosen, the full kit is built from it.
+
+## Chosen: v2-tilehop in Citrus (full kit built)
+
+Felipe chose the yellow variation. `tools/kit.py` builds the whole kit from one palette: `logo/` (icon, `icon-small` without ticks for 48 px and below, glyphs for dark and light, stencils, PNG sizes, favicon, wordmark and lockups), `social/` (GitHub social preview, cards, banners, avatar), the marketplace `preview.png` at the repo root, and `brand-sheet.png` (palette with computed contrast, type, spacing, do and do not).
+The wordmark is vector strokes with the letters of the name only (o m a h p), the first `o` in citrus. Palette: ground `#1a1812`, cream `#fff5d6`, citrus `#ffc83d`, ticks `#7c7560`; on light backgrounds ink `#1a1812`, citrus deep `#9a6b00`.
+To do by hand (needs the GitHub web page): upload `social/github-social-preview.png` as the repository's social preview.

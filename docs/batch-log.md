@@ -88,3 +88,8 @@ GIFs: `branding/tools/demo.py` (adapted from omagnet's recorder, `gifkit.py` cop
 
 Felipe liked v2-tilehop and wants a colour scheme of its own, not omagnet's violet. `branding/tools/recolor.py` made three palettes from the same vector (Tide blue, Coral rose red, Citrus golden yellow), contrast computed (all above the bar), PNGs exported, board `branding/board-v2-tilehop.png`.
 Honest note: the arch can read as headphones at small sizes; the ticks blur at 16 px (omagnet has an `icon-small` without ticks for that, to be made with the full kit).
+
+## Brand kit built: v2-tilehop in Citrus (2026-11-06)
+
+Felipe picked the yellow variation. `branding/tools/kit.py` (own script, structure learned from omagnet's logo.py, kit.py, social.py and sheet.py, palette parameterised) writes the logo set, the small icon without ticks, wordmark with the letters h and p added in the same stroke style, lockups, eight social images, the marketplace preview (lockup beside the real settings window, cropped to the card) and the brand sheet (all 8 colour pairs computed). README has the banner (dark and light) and the switch GIF at the top.
+Manual step left: upload `branding/social/github-social-preview.png` as the repository social preview on GitHub.
