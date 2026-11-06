@@ -18,3 +18,15 @@ omahop is not affiliated with or endorsed by Omarchy.
 ## Feature GIFs
 
 `demo/` holds the captioned GIFs and MP4s for the README and the releases (switch, cards, search, settings), made by `tools/demo.py` on a spare workspace with real key and mouse events and demo windows with public content only. `tools/highlight.py` makes the still pictures in `highlights/`.
+
+## Chosen shape and colour variations (round three)
+
+Felipe picked `v2-tilehop` (two tiles and a leaping arc) and asked for a colour scheme different from omagnet's, in three variations. `tools/recolor.py` makes them from the concept's SVGs: the same shapes with a new palette, contrast checked (all pairs pass), each with its icon, glyphs, stencil, PNG exports and notes.
+
+| Folder | Palette |
+|---|---|
+| `explorations/v2-tilehop-tide/` | Blue: ground `#0f1b24`, main `#e4f4fb`, accent `#38bdf8` |
+| `explorations/v2-tilehop-coral/` | Rose red: ground `#1c1316`, main `#ffe8ec`, accent `#ff6b81` |
+| `explorations/v2-tilehop-citrus/` | Golden yellow: ground `#1a1812`, main `#fff5d6`, accent `#ffc83d` |
+
+Compare them on `board-v2-tilehop.png` (`python3 tools/board.py v2-tilehop-`). Once one is chosen, the full kit is built from it.

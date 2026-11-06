@@ -83,3 +83,8 @@ Left for Felipe before the tag: hand checks (`docs/validation-checklist.md`, v0.
 Felipe rejected the first logo concepts (orange, unrelated to omagnet). The brief now has a "Family" section: omagnet's graphite tile, white-lilac mark, electric violet for the one element that moved, the three grey motion ticks, rounded geometry and the violet-o wordmark are kept, only the idea differs.
 Three new concepts from Codex in that family (`v1-stackhop`, `v2-tilehop`, `v3-ohop`), board rebuilt. My read: v1 is the clearest (windows, one hopping out), v3 the closest to omagnet in feel and the cleanest at 16 px, v2 reads like headphones at small sizes. Felipe picks.
 GIFs: `branding/tools/demo.py` (adapted from omagnet's recorder, `gifkit.py` copied) records switch, cards, search and settings on the spare workspace. Bugs found while recording: top-level config keys written after the `[windows]` header are read as window settings and ignored (cards and search scenes showed the list); a Nautilus background service hands new windows to itself so the demo window never appeared on the spare workspace (replaced by a third terminal). Frames checked on contact sheets: only demo windows, wallpaper and the overlay.
+
+## Logo: v2-tilehop chosen, three colour variations (2026-11-06)
+
+Felipe liked v2-tilehop and wants a colour scheme of its own, not omagnet's violet. `branding/tools/recolor.py` made three palettes from the same vector (Tide blue, Coral rose red, Citrus golden yellow), contrast computed (all above the bar), PNGs exported, board `branding/board-v2-tilehop.png`.
+Honest note: the arch can read as headphones at small sizes; the ticks blur at 16 px (omagnet has an `icon-small` without ticks for that, to be made with the full kit).

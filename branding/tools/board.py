@@ -5,7 +5,8 @@ import base64, os, subprocess, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 EXP = os.path.join(ROOT, "explorations")
-names = sorted(d for d in os.listdir(EXP) if os.path.isdir(os.path.join(EXP, d)))
+prefix = sys.argv[1] if len(sys.argv) > 1 else ""   # e.g. v2-tilehop- to compare only the colour variations
+names = sorted(d for d in os.listdir(EXP) if os.path.isdir(os.path.join(EXP, d)) and d.startswith(prefix) and (not prefix or d != prefix.rstrip("-")))
 
 
 def uri(path):
@@ -15,7 +16,8 @@ def uri(path):
 
 def cell(name):
     d = os.path.join(EXP, name)
-    icon, concept = uri(os.path.join(d, "icon.svg")), uri(os.path.join(d, "concept.png"))
+    big = os.path.join(d, "concept.png") if os.path.exists(os.path.join(d, "concept.png")) else os.path.join(d, "icon-512.png")
+    icon, concept = uri(os.path.join(d, "icon.svg")), uri(big)
     mono = os.path.join(d, "icon-mono.svg")
     stencil = f'<img src="{uri(mono)}" width="64">' if os.path.exists(mono) else ""
     sizes = lambda bg: "".join(f'<img src="{icon}" width="{s}" height="{s}">' for s in (128, 64, 32, 16))
@@ -32,8 +34,9 @@ main{{display:flex;gap:24px}} section{{width:340px}} h2{{margin:0 0 8px;font-siz
 .dark{{background:#101216}} .light{{background:#f1f2f4}}
 .light img[src*="svg"]{{}}
 </style><h1 style="margin:0 0 16px;font-size:18px">omahop concepts</h1><main>{''.join(cell(n) for n in names)}</main>"""
-out_html = os.path.join(ROOT, "board.html")
+tag = ("-" + prefix.strip("-")) if prefix else ""
+out_html = os.path.join(ROOT, f"board{tag}.html")
 open(out_html, "w").write(html)
-png = os.path.join(ROOT, "board.png")
+png = os.path.join(ROOT, f"board{tag}.png")
 subprocess.run(["chromium", "--headless=new", "--no-sandbox", "--hide-scrollbars", "--window-size=1120,1010", f"--screenshot={png}", "file://" + out_html], capture_output=True)
 print("wrote", png, os.path.exists(png))
