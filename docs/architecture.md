@@ -6,6 +6,8 @@ Evidence lives in `docs/research/`. Feature lists are in `docs/dockdoor-referenc
 
 Competitors, community search and positioning: [competitive-analysis.md](competitive-analysis.md).
 
+Principle: learn from others, do not copy ([lessons-from-others.md](lessons-from-others.md)).
+
 Standing rules for all work: [engineering-standards.md](engineering-standards.md) (flexibility, scalability, code standards per language).
 
 ## What it is
@@ -56,7 +58,7 @@ The settings app exposes it. Design consequences:
    - settings panel -> ~/.config/omahop/config.toml
 ```
 
-Why Lua owns the keys and QML only draws: the overlay must never take keyboard focus (focus changes would change the
+Status: the split below is the working plan, not final (decision D5 is open and settled by spikes S1, S3, S9, see `lessons-from-others.md`). Why Lua owns the keys and QML only draws, in the working plan: the overlay must never take keyboard focus (focus changes would change the
 window list order and fight the switch), and omagnet already proved the hold/release poll. The in-flight core PR
 (omacom/omarchy#16548) and the marketplace plugin `omarchy-altswitch` split the work the same way (UNVERIFIED for the second).
 
