@@ -1,7 +1,8 @@
 # Icon packs
 
-An icon pack gives apps in the switcher, the cards and the peek strip your own icons. Step 1 (this version): packs are folders you make by
-hand or copy from someone (a git clone works). There is no import, export or editor yet; those come later (`research/packs-spike.md`).
+An icon pack gives apps in the switcher, the cards and the peek strip your own icons. Packs are folders you make by hand, copy from someone
+(a git clone works), or receive as one zip and install with the importer (step 2, see [Share a pack as one zip](#share-a-pack-as-one-zip)).
+There is no editor yet; it comes later (`research/packs-spike.md`).
 
 Off by default: nothing changes until you set `icon_pack`.
 
@@ -94,6 +95,59 @@ cp -r docs/examples/packs/omahop-sample ~/.config/omahop/packs/
 
 then set Icon pack to `omahop-sample`.
 
+## Share a pack as one zip
+
+The commands live in the plugin folder, `~/.config/omarchy/plugins/io.github.felipecpaiva.omahop/` (below as `$OMAHOP`). No new widget: the
+settings window keeps only the Icon pack field, whose help text points here. A file picker may come later.
+
+To send a pack:
+
+```bash
+bash $OMAHOP/tools/pack-export.sh my-pack            # writes ~/my-pack.omahop-pack.zip
+bash $OMAHOP/tools/pack-export.sh my-pack out.zip    # or a path of your choice; an existing file is kept unless --force
+```
+
+Then send the zip any way you like (chat, mail, a release on a git host). omahop uploads nothing.
+
+To receive one:
+
+```bash
+bash $OMAHOP/tools/pack-import.sh ~/Downloads/my-pack.omahop-pack.zip
+```
+
+The importer checks the zip, shows the pack name, author, licence, icon count and the files it will add, and asks before installing. `--yes`
+skips the question, `--replace` replaces an installed pack of the same name (without it an installed pack is never touched). It installs into
+`~/.config/omahop/packs/<folder>/`, where the folder is the pack.toml `name` in lower case with every run of other characters turned into one
+`-` (`"omahop sample"` becomes `omahop-sample`), then says what to type in Icon pack. Importing never sets Icon pack by itself.
+
+What export does: the pack must pass every rule pack-index uses, strictly (a file pack-index would skip, such as a stray `.DS_Store`, stops
+the export and is named, so you share no junk). The zip holds `pack.toml` and `icons/` only (not `LICENSE` or other files, so put the licence
+in pack.toml); a link inside `icons/` becomes a plain copy. Entries are sorted and carry one fixed time, owner and mode, so the same pack always
+gives the same zip, byte for byte.
+
+What import refuses, and why. The whole zip is refused at the first problem and nothing is left behind:
+
+| Refused | Why |
+|---|---|
+| Not a zip (checked by its first bytes), larger than 50 MB, or unreadable | Only the format export writes is read |
+| A name starting with `/`, or with a `..` part | It would write outside the pack (zip slip) |
+| A link, device or other special entry | A link can point anywhere on your disk |
+| A hidden name (a part starting with a dot) | Nothing in a pack should be invisible |
+| Any folder but `icons/`, any file but `pack.toml` and `icons/<app>.png` or `.svg` | A pack is data only, so it cannot smuggle a script beside the icons |
+| Two names that differ only in case | They collide on some disks and in omahop's case-blind lookup |
+| More than 2002 entries (2000 icons, pack.toml, the folder) | Bounds the work |
+| A file over its limit (PNG 2 MB, SVG 256 KB, pack.toml 16 KB), more than 100 MB in all, or more than 100 times the zip's own size | Zip bombs: a tiny zip that unpacks to gigabytes |
+| No pack.toml, or one that breaks the [pack.toml](#packtoml) rules, or whose name has no letter or digit | The pack must say what it is and who made it |
+| Any icon that pack-index would skip (see [What is refused](#what-is-refused)) | The same rules as a pack you copy by hand, applied to every file |
+
+All of this is decided from the zip's listing before anything is unpacked. Then the importer unpacks each allowed entry itself, by its checked
+name, with a byte cap (so a listing that lies about sizes gets no further), into a fresh folder under `~/.cache/omahop/`, runs the pack-index
+rules on it, and only after your yes copies it next to the packs and renames it into place in one step. Nothing from the zip is ever run, and
+no root is needed. It needs `bsdtar`, which every Arch system has (pacman depends on it).
+
+**Safety note.** A pack is only images and one text file, and the importer holds it to that. Still, never unzip a pack from a stranger by
+hand: `unzip` and file managers follow paths and links in the archive. Use the importer, which checks everything first.
+
 ## Sharing and licences
 
 App logos are trademarks and often copyrighted art. A pack author needs the right to share every icon in it: original art, or art under a
@@ -103,8 +157,9 @@ A pack folder can live in its own git repository; others clone it into `~/.confi
 
 ## How it works
 
-`tools/pack-index.sh <name>` lists the pack's good icon files, one path per line; `Service.qml` runs it when `icon_pack` changes (a separate scan
+The rules live once, in `tools/pack-lib.sh`, sourced by the indexer, the exporter and the importer. `tools/pack-index.sh <name>` lists the pack's good icon files, one path per line; `Service.qml` runs it when `icon_pack` changes (a separate scan
 from the slow system one in `tools/icon-index.sh`) and passes the result to `IconResolve.resolve` as a layer before the system index. The
 resolver takes a list of layers, so a later per-app override folder can sit in front of the pack without changing it. Tests:
-`tests/icon_resolve.test.mjs` (pack wins, misses fall through, case, names that look like paths) and `tests/pack_index.test.sh` (the sample
-pack, then links out, traversal names, huge and wrong-type files, hostile SVGs, and bad pack.toml files).
+`tests/icon_resolve.test.mjs` (pack wins, misses fall through, case, names that look like paths), `tests/pack_index.test.sh` (the sample
+pack, then links out, traversal names, huge and wrong-type files, hostile SVGs, and bad pack.toml files) and `tests/pack_zip.test.sh` (hostile
+zips built in the test, an export and import round trip in a temporary HOME, and a mutation check on the zip-slip and link rules).

@@ -88,6 +88,14 @@ Automated checks (`tests/run-all.sh`) cover logic and the keyboard path with a v
 - [ ] Delete `license` from the sample's pack.toml, set the pack again: the usual icons show and the shell log has a line `omahop icon pack omahop-sample: pack not used: pack.toml needs license`.
 - [ ] Icon pack `../x` or a name that does not exist: usual icons, one note in the log, nothing else happens.
 
+## v1.4 part C (icon packs, step 2: zip import and export)
+
+- [ ] With `omahop-sample` installed, `bash tools/pack-export.sh omahop-sample` (from the plugin folder) writes `~/omahop-sample.omahop-pack.zip`; running it again says the file exists; `--force` replaces it and `sha256sum` is the same both times.
+- [ ] On a clean HOME (a new user, or `HOME=$(mktemp -d) XDG_CONFIG_HOME= XDG_CACHE_HOME=`): `bash tools/pack-import.sh ~/omahop-sample.omahop-pack.zip` shows name, author, licence, 2 icons and the file list, asks, and after `y` the pack is in `~/.config/omahop/packs/omahop-sample/`; answering `n` leaves nothing.
+- [ ] Import the same zip again: refused as already installed; with `--replace` it installs. Set Icon pack to `omahop-sample`: kitty and firefox show the sample icons.
+- [ ] A hostile zip: `python3 -c 'import zipfile; z=zipfile.ZipFile("/tmp/evil.zip","w"); z.writestr("pack.toml","name = \"x\""); z.writestr(zipfile.ZipInfo("../evil.png"), "x")'` then `bash tools/pack-import.sh /tmp/evil.zip`: refused with "a path that leads out of the pack", nothing new in `~/.config/omahop/packs/`, `~/.cache/omahop/` or the folder above the zip.
+- [ ] The Icon pack help text in the settings window names both commands.
+
 ## v1.1b (keep the list open while searching)
 
 - [ ] Settings, "Keep the list open after typing" = 5: Alt+Tab, type two letters, release Alt: the list stays, a thin line under the search runs down; type more (a capital, an accent such as `ç`), Return picks.

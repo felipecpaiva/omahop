@@ -60,7 +60,7 @@ C.spec = {
     icon_theme = { default = "", group = "look", label = "Icon theme",
       help = "Type the folder name of an installed icon theme, such as Papirus, to prefer its icons. Empty uses whichever installed theme the scan finds first. An app the theme has no icon for still gets one from the others. " },
     icon_pack = { default = "", group = "look", label = "Icon pack",
-      help = "Type the folder name of an icon pack in ~/.config/omahop/packs, such as omahop-sample. Its icons come first; an app the pack has no icon for keeps its usual one. Empty uses no pack. A pack you made yourself or copied from someone: see docs/icon-packs.md for the format. Applies at once." },
+      help = "Type the folder name of an icon pack in ~/.config/omahop/packs, such as omahop-sample. Its icons come first; an app the pack has no icon for keeps its usual one. Empty uses no pack. A pack you made yourself or copied from someone: see docs/icon-packs.md for the format. Applies at once. To share a pack as one zip or install one, run tools/pack-export.sh <name> or tools/pack-import.sh <file.zip> from the plugin folder (~/.config/omarchy/plugins/io.github.felipecpaiva.omahop)." },
     border = { default = "auto", values = { "auto", "on", "off" }, group = "look", label = "Outline",
       names = { auto = "Follow Hyprland's window border", on = "Always", off = "Never" },
       help = "Auto draws no outline when you turned window borders off." },
