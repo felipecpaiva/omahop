@@ -45,6 +45,7 @@ ColumnLayout {
   property string filter: ""
   property var ctx: ({})            // the arguments of the running action
   property var lastPick: ({})       // {op, args} of the last picker run, for the typed path when the picker cannot open
+  property string scannedFolder: ""  // the folder the icon scan in flight lists
   property int runId: 0
   property int doneId: 0
 
@@ -106,8 +107,14 @@ ColumnLayout {
     page.packIndex = IconResolve.parseIndex("")
     page.meta = ({})
     if (page.folder === "") return
-    if (!iconsProc.running) iconsProc.running = true
+    page.scanIcons()
     metaFile.reload()
+  }
+
+  function scanIcons() {
+    if (iconsProc.running || page.folder === "") return
+    page.scannedFolder = page.folder
+    iconsProc.running = true
   }
 
   function pickedPath(path) {
@@ -134,9 +141,14 @@ ColumnLayout {
   }
   Process {
     id: iconsProc
-    command: ["bash", page.indexTool, page.folder]
+    command: ["bash", page.indexTool, page.scannedFolder]
+    onRunningChanged: if (!running && page.folder !== page.scannedFolder) page.scanIcons()
     stdout: StdioCollector {
-      onStreamFinished: { page.packFiles = Editor.lines(text); page.packIndex = IconResolve.parseIndex(text) }
+      onStreamFinished: {
+        if (page.scannedFolder !== page.folder) return
+        page.packFiles = Editor.lines(text)
+        page.packIndex = IconResolve.parseIndex(text)
+      }
     }
   }
   FileView {

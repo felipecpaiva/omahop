@@ -107,7 +107,7 @@ ColumnLayout {
 
   Button {
     visible: !!row.setting.editor
-    text: "Make or edit icon packs"
+    text: row.setting.editor_label || ""
     bordered: true
     foreground: row.foreground
     accent: row.accent

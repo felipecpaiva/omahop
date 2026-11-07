@@ -66,8 +66,8 @@ function parseImportSummary(text) {
 }
 
 // ---- commands: argument arrays for Process, never a shell line. A value that could be misread is refused before anything runs.
-const PICK_TITLE = { pickImage: "Choose an icon image", pickZip: "Choose an icon pack zip" }
-const PICK_EXTENSIONS = { pickImage: "png svg", pickZip: "zip" }
+// The file chooser runs through pack-edit.sh pick, so a missing chooser is exit 2 like a failed one, never a process that cannot start.
+const PICK_KIND = { pickImage: "image", pickZip: "zip" }
 
 function plain(v) { return typeof v === "string" && v.indexOf("\0") === -1 && v.indexOf("\n") === -1 }
 function folderOk(v) { return plain(v) && v !== "" && v.charAt(0) !== "-" }
@@ -107,7 +107,7 @@ function command(tools, op, a) {
         return { argv: ["bash", tools.importer, a.path, "--yes"].concat(a.replace ? ["--replace"] : []) }
       case "pickImage":
       case "pickZip":
-        return { argv: ["omarchy", "file", "select", "--title", PICK_TITLE[op], "--extensions", PICK_EXTENSIONS[op]] }
+        return { argv: edit.concat(["pick", PICK_KIND[op]]) }
       default: return { error: "unknown action " + op }
     }
   } catch (e) {

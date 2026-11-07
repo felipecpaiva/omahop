@@ -54,7 +54,8 @@ assert.deepEqual(P.command(tools, "export", { folder: "p", replace: true }).argv
 assert.deepEqual(P.command(tools, "export", { folder: "p" }).argv, ["bash", "/t/pack-export.sh", "p"])
 assert.deepEqual(P.command(tools, "importCheck", { path: "/d/p.zip" }).argv, ["bash", "/t/pack-import.sh", "/d/p.zip", "--dry-run"])
 assert.deepEqual(P.command(tools, "importInstall", { path: "/d/p.zip", replace: true }).argv, ["bash", "/t/pack-import.sh", "/d/p.zip", "--yes", "--replace"])
-assert.deepEqual(P.command(tools, "pickImage", {}).argv, ["omarchy", "file", "select", "--title", "Choose an icon image", "--extensions", "png svg"])
+assert.deepEqual(P.command(tools, "pickImage", {}).argv, ["bash", "/t/pack-edit.sh", "pick", "image"])
+assert.deepEqual(P.command(tools, "pickZip", {}).argv, ["bash", "/t/pack-edit.sh", "pick", "zip"])
 assert.deepEqual(P.command(tools, "init", { name: "N", author: "A", license: "L", description: "" }).argv, ["bash", "/t/pack-edit.sh", "init", "N", "A", "L", ""])
 for (const [op, args] of [
   ["export", { folder: "--force" }], ["export", { folder: "" }], ["add", { folder: "p", appId: "x", path: "-rf.png" }],

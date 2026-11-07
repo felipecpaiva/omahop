@@ -63,7 +63,7 @@ C.spec = {
       help = "Pairs of key and action, comma separated, for example: q=close, m=minimize. While the list is up and nothing is typed yet, that key acts on the selected window and the selection moves to the next row; once you have typed a letter, every key types. Actions: close, minimize. Empty (the default) turns it off. A key a hint already uses is left to the hint." },
     icon_theme = { default = "", group = "look", label = "Icon theme",
       help = "Type the folder name of an installed icon theme, such as Papirus, to prefer its icons. Empty uses whichever installed theme the scan finds first. An app the theme has no icon for still gets one from the others. " },
-    icon_pack = { default = "", group = "look", label = "Icon pack", editor = "packs",
+    icon_pack = { default = "", group = "look", label = "Icon pack", editor = "packs", editor_label = "Make or edit icon packs",
       help = "Type the folder name of an icon pack in ~/.config/omahop/packs, such as omahop-sample. Its icons come first; an app the pack has no icon for keeps its usual one. Empty uses no pack. Applies at once. Make or edit packs and share them as one zip with the button below; the format is in docs/icon-packs.md." },
     border = { default = "auto", values = { "auto", "on", "off" }, group = "look", label = "Outline",
       names = { auto = "Follow Hyprland's window border", on = "Always", off = "Never" },

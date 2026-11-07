@@ -6,17 +6,23 @@
 #   pack-edit.sh meta <folder> <name> <author> <license> [description]   rewrites those keys of pack.toml, keeps every other line
 #   pack-edit.sh add <folder> <app id> </full/path/to/image>       copies a PNG or SVG in as icons/<stem>.png|svg; prints the file name
 #   pack-edit.sh remove <folder> <icon file>                       deletes that icon (a link itself, never its target)
+#   pack-edit.sh pick image|zip                                    Omarchy's file chooser for a PNG or SVG, or a zip: prints the path;
+#                                                                  exit 1 nothing picked, 2 the chooser failed or is not installed
 # Arguments are positional only, so no value is ever read as a flag. Every rule comes from pack-lib.sh (the ones export and import use);
 # writes go only under packs/<folder>/, through hidden temporary names in that folder and one rename. Any refusal exits 1 with the reason.
 set -euo pipefail
+caller_lc_all=${LC_ALL-}   # given back to the file chooser
 export LC_ALL=C   # byte rules for names and lower case, like the importer
 # shellcheck source=tools/pack-lib.sh
 source "$(dirname "${BASH_SOURCE[0]}")/pack-lib.sh"
 
 readonly META_KEYS=(name author license description)
+readonly EXIT_CHOOSER_FAILED=2   # omarchy-file-select's code for a chooser that did not run
+declare -rA PICK_TITLE=([image]="Choose an icon image" [zip]="Choose an icon pack zip")
+declare -rA PICK_EXTENSIONS=([image]="png svg" [zip]="zip")
 
 die() { printf 'omahop pack edit: %s\n' "$1" >&2; exit 1; }
-usage() { die "usage: pack-edit.sh list | stem <app id> | init <name> <author> <license> [description] | meta <folder> <name> <author> <license> [description] | add <folder> <app id> <image> | remove <folder> <icon file>"; }
+usage() { die "usage: pack-edit.sh list | stem <app id> | init <name> <author> <license> [description] | meta <folder> <name> <author> <license> [description] | add <folder> <app id> <image> | remove <folder> <icon file> | pick image|zip"; }
 
 packs_dir() { dirname -- "$(pack_dir x)"; }
 
@@ -93,6 +99,16 @@ cmd_list() {
 cmd_stem() {
   (( $# == 1 )) || usage
   icon_stem "$1" || die "$(pack_shown "$1") cannot be an icon file name (letters, digits and . _ + - only)"
+}
+
+cmd_pick() {
+  (( $# == 1 )) && [[ -n ${PICK_TITLE[$1]:-} ]] || usage
+  if ! command -v omarchy > /dev/null; then
+    printf 'omahop pack edit: the Omarchy file chooser (omarchy file select) is not installed\n' >&2
+    exit "$EXIT_CHOOSER_FAILED"
+  fi
+  if [[ -n $caller_lc_all ]]; then export LC_ALL=$caller_lc_all; else unset LC_ALL; fi
+  exec omarchy file select --title "${PICK_TITLE[$1]}" --extensions "${PICK_EXTENSIONS[$1]}"
 }
 
 cmd_init() {
@@ -187,5 +203,6 @@ case $command in
   meta) cmd_meta "$@" ;;
   add) cmd_add "$@" ;;
   remove) cmd_remove "$@" ;;
+  pick) cmd_pick "$@" ;;
   *) usage ;;
 esac

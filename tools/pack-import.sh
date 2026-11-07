@@ -128,7 +128,9 @@ printf 'Pack:     %s\n' "$(printable "${PACK_META[name]}")"
 printf 'Author:   %s\n' "$(printable "${PACK_META[author]}")"
 printf 'License:  %s\n' "$(printable "${PACK_META[license]}")"
 printf 'Icons:    %d\n' "$icon_count"
-printf 'Install:  %s%s\n' "$target" "$( (( exists )) && echo " (replaces the installed one)" )"
+note=""
+(( ! exists )) || note=$( (( replace )) && echo " (replaces the installed one)" || echo " (a pack of this name is installed; --replace replaces it)" )
+printf 'Install:  %s%s\n' "$target" "$note"
 printf 'Installed already: %s\n' "$( (( exists )) && echo yes || echo no )"
 printf 'Files:\n'
 printf '  %s\n' "${files[@]}"

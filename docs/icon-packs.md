@@ -115,8 +115,8 @@ Open the settings window, find **Icon pack** (group Look) and press **Make or ed
 - **Import a zip** opens the chooser for a `.zip`, checks it (every rule in the table below), shows name, author, licence, icon count and
   where it goes, and installs only after **Install** (or **Replace**, when a pack of that name is installed).
 
-Every result and every refusal is shown under the pack buttons, with the reason the check gave. The switcher picks up the change at once for the
-chosen Icon pack (the editor tells it to rescan); a picture replaced under the same file name may still show the old one until
+Every result and every refusal is shown under the pack buttons, with the reason the check gave. The editor tells the switcher to rescan the
+chosen Icon pack, so a change should show at the next Alt+Tab (not yet checked in a live session; if not, set Icon pack empty and back); a picture replaced under the same file name may still show the old one until
 `omarchy restart shell`. A pack folder that is a link to a folder kept elsewhere (a git clone) can be exported, not edited: edit it where it lives.
 
 The editor writes nothing itself. Every change runs `tools/pack-edit.sh`, which also works by hand:

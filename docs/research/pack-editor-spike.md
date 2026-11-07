@@ -31,7 +31,8 @@ One more page of the one settings window, not a second window and nothing in the
 4. **Apps.** A filter field and a list (a `ListView`, so hundreds of installed apps cost only the visible rows): open windows first, then
    installed desktop entries by name, then pack icons that match no listed app (so they can still be removed). Each row shows the icon in
    use (the pack's, else the system's), the app name and its id, `Choose image` and, when the pack has one, `Remove`.
-5. **Choose image.** Runs `omarchy file select`. While the chooser is open the settings window hides (it is an overlay layer with the
+5. **Choose image.** Runs `omarchy file select` through `pack-edit.sh pick image` (exit 2 when the command is missing, so a missing chooser
+   looks like a failed one and never like a process that could not start). While the chooser is open the settings window hides (it is an overlay layer with the
    keyboard, the chooser is a normal window that would open under it) and comes back when the chooser ends. Exit 1 does nothing; exit 2 or a
    missing command shows a path field (`Image file`) with an `Add` button instead. Either way the path goes to `pack-edit.sh add`.
 6. **Export** writes `~/<folder>.omahop-pack.zip` with `pack-export.sh`. If the file exists the page says so and offers `Replace`.
@@ -51,6 +52,7 @@ All writes go through one new script, `tools/pack-edit.sh`, positional arguments
 | `meta <folder> <name> <author> <license> [description]` | rewrites those four keys, keeps every other line |
 | `add <folder> <app id> <image>` | copies the image in as `icons/<stem>.png` or `.svg`, prints the file name |
 | `remove <folder> <icon file>` | deletes that one icon (a link itself, never its target) |
+| `pick image\|zip` | runs Omarchy's file chooser for that type; exit 2 when it is not installed |
 
 Rules, all from `pack-lib.sh`, none rewritten in QML or JS:
 

@@ -113,6 +113,18 @@ mkdir -p "$packs/broken/icons" && mv "$packs/broken.toml.tmp" "$packs/broken/pac
 refused "cannot be edited until it is fixed" meta broken "X" "You" "MIT"
 bash "$here/tools/pack-export.sh" my-pack > /dev/null || fail "an edited pack exports"
 
+# ---- pick: without omarchy it is exit 2 (the page then offers a typed path); with it, the chooser gets the title and the types
+bin=$tmp/src/bin
+mkdir -p "$bin"
+ln -s "$(command -v dirname)" "$bin/dirname"
+code=0
+PATH=$bin "$BASH" "$edit" pick image > /dev/null 2>&1 || code=$?
+(( code == 2 )) || fail "pick without omarchy exits 2, got $code"
+printf '#!/bin/sh\nprintf "%%s|" "$@"\n' > "$bin/omarchy"
+chmod +x "$bin/omarchy"
+[[ $(PATH=$bin:$PATH bash "$edit" pick zip) == "file|select|--title|Choose an icon pack zip|--extensions|zip|" ]] || fail "pick zip arguments"
+refused "usage" pick ../etc
+
 # ---- the shell stem and PackEditor.js iconStem agree
 ids=("firefox" "com.Mitchellh.Ghostty" "Steam App 440" $'a \t b' "../x" "a/b" "-x" ".x" "a:b" "café" '$(x)' "UPPER+lower_1.2" "$(printf 'a%.0s' {1..200})" "$(printf 'a%.0s' {1..201})")
 for id in "${ids[@]}"; do

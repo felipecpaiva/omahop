@@ -232,6 +232,7 @@
     }, {
       "default": "",
       "editor": "packs",
+      "editor_label": "Make or edit icon packs",
       "help": "Type the folder name of an icon pack in ~/.config/omahop/packs, such as omahop-sample. Its icons come first; an app the pack has no icon for keeps its usual one. Empty uses no pack. Applies at once. Make or edit packs and share them as one zip with the button below; the format is in docs/icon-packs.md.",
       "hidden": false,
       "id": "top.icon_pack",
