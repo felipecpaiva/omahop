@@ -6,8 +6,9 @@
 const GENERIC = "application-x-executable"
 
 function parseIndex(text) {
-  const index = {}
-  const lower = {}
+  // No prototype, so an app id such as "constructor" is a miss, not an inherited function.
+  const index = Object.create(null)
+  const lower = Object.create(null)
   for (const line of String(text).split("\n")) {
     const path = line.trim()
     if (path === "") continue
@@ -46,6 +47,25 @@ function pick(index, names) {
   return ""
 }
 
-function resolve(index, appId, entryIcon) {
+// A pack's file for an app, or "". A pack index holds only files from the pack folder (tools/pack-index.sh), so a pack is asked by
+// name only: the app id forms first (what the user named the file after), then the desktop entry's icon name. Never an absolute path or URL.
+function packPick(pack, appId, entryIcon) {
+  if (!pack) return ""
+  const names = candidates(appId, "")
+  const icon = String(entryIcon || "")
+  if (icon !== "" && icon.charAt(0) !== "/" && icon.indexOf("file://") !== 0) names.push(icon)
+  for (const name of names) {
+    const hit = pack.exact[name] || pack.lower[name.toLowerCase()]
+    if (hit) return hit
+  }
+  return ""
+}
+
+// layers: pack indexes in priority order (optional). The first pack that has the app wins, then the system index as before.
+function resolve(index, appId, entryIcon, layers) {
+  for (const pack of layers || []) {
+    const hit = packPick(pack, appId, entryIcon)
+    if (hit) return hit
+  }
   return pick(index, candidates(appId, entryIcon)) || index.exact[GENERIC] || ""
 }
