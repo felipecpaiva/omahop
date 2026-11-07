@@ -5,7 +5,7 @@ set -e
 cd "$(dirname "$0")/.."
 # Hyprland embeds Lua 5.5; 5.4 accepts code that 5.5 rejects, so a pass on 5.4 proves little.
 lua -e 'assert(_VERSION == "Lua 5.5", "run these tests with Lua 5.5, like Hyprland (found " .. _VERSION .. ")")'
-for t in config modifier scope windows monitors mru session search rules hints action_keys glue; do lua "lua/test_$t.lua"; done
+for t in config modifier scope windows monitors mru session search rules hints action_keys tabs glue; do lua "lua/test_$t.lua"; done
 bash tests/scrub.sh
 node tests/state.test.mjs
 node tests/linger.test.mjs
@@ -14,6 +14,7 @@ node tests/peek_model.test.mjs
 node tests/icon_resolve.test.mjs
 bash tests/icon_index.test.sh
 bash tests/pack_index.test.sh
+bash tests/tabs_helpers.test.sh
 lua tools/gen-spec.lua --check
 command -v omarchy >/dev/null && omarchy plugin validate . >/dev/null && echo "plugin validates"
 # Linters: run when installed, otherwise say so (a skip is a visible debt, see docs/engineering-standards.md)

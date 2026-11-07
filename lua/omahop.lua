@@ -5,6 +5,7 @@
 local here = debug.getinfo(1, "S").source:match("^@(.*)/") or "."
 local function mod(name) return dofile(here .. "/" .. name .. ".lua") end
 local Config, Scope, Windows, Mru, Session, Search, Rules, Hints, Modifier, ActionKeys = mod("config"), mod("scope"), mod("windows"), mod("mru"), mod("session"), mod("search"), mod("rules"), mod("hints"), mod("modifier"), mod("action_keys")
+local Tabs = mod("tabs")
 
 local M = {}
 _G.omahop = M
@@ -24,6 +25,9 @@ local state_dir = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/omahop"
 M.state_path = state_dir .. "/state"
 local config_home = os.getenv("XDG_CONFIG_HOME") or ((os.getenv("HOME") or "") .. "/.config")
 M.config_path = config_home .. "/omahop/config.toml"
+M.tabs_activate_cmd = here .. "/../tools/omahop-tabs-activate" -- detached helpers for browser tabs (setting browser_tabs)
+M.tabs_files_cmd = here .. "/../tools/omahop-tabs-files"
+M.tabs_flag = state_dir .. "/tabs.enabled"
 local layouts_dir = (os.getenv("XDG_STATE_HOME") or ((os.getenv("HOME") or "") .. "/.local/state")) .. "/omarchy/workspace-layouts"
 
 M.order = {}
@@ -86,6 +90,7 @@ local function describe(w, floating_of, monitor_of)
     floating_workspace = ws_id ~= nil and floating_of(ws_id) or false,
     mapped = w.mapped ~= false and w.hidden ~= true,
     focus_history = w.focus_history_id or 1e9,
+    pid = math.tointeger(w.pid),
   }
 end
 
@@ -152,9 +157,13 @@ function M.write_state()
   if open then
     -- hint labels (a number or a letter on a row) only while nothing is typed and Alt is held: once there is a query, or while lingering, every key types
     local labels = (M.query == "" and not lingering) and Hints.labels(M.entries, M.cfg.hints, Hints.parse_keys(M.cfg.hint_keys)) or {}
+    local clean = function(v) return (tostring(v):gsub("[%c]", " ")) end
     for i, e in ipairs(M.entries) do
-      local clean = function(v) return (tostring(v):gsub("[%c]", " ")) end
-      lines[#lines + 1] = table.concat({ "w", e.address, clean(e.class), e.minimized and 1 or 0, labels[i] or "", clean(e.title) }, "\t")
+      if e.tab then -- a browser tab row: only what the overlay draws (the title and the site), never the address
+        lines[#lines + 1] = table.concat({ "t", e.address, clean(e.class), e.minimized and 1 or 0, e.tab.active and 1 or 0, clean(e.tab.host), clean(e.title) }, "\t")
+      else
+        lines[#lines + 1] = table.concat({ "w", e.address, clean(e.class), e.minimized and 1 or 0, labels[i] or "", clean(e.title) }, "\t")
+      end
     end
   end
   local content = table.concat(lines, "\n") .. "\n"
@@ -173,6 +182,7 @@ end
 function M.activate(entry)
   local w = hl.get_window("address:" .. entry.address)
   if not w then return end
+  if entry.tab then M.request_tab(entry.tab) end -- the tab first, then the window (spike section 4: Hyprland owns focus)
   if entry.minimized then
     local ws = hl.get_active_workspace()
     if not ws or ws.id < 1 then return end -- a named workspace: leave it, as the dock does
@@ -180,6 +190,86 @@ function M.activate(entry)
   end
   hl.dispatch(hl.dsp.focus({ window = w }))
   hl.dispatch(hl.dsp.window.alter_zorder({ mode = "top", window = w }))
+end
+
+-- ---- browser tabs (setting browser_tabs, off by default; docs/file-contract.md) ----
+-- Off: no file is read and none is made. On: the flag file tells the omahop-tabs helper to write tab files; they are read once per
+-- session, at the first typed letter (tab rows only show with a search), never on a timer. Titles and addresses are never logged.
+
+local function sq(s) return "'" .. tostring(s):gsub("'", "'\\''") .. "'" end
+
+-- Ask the browser to show a tab: a detached helper writes to the helper's FIFO. Never opened from here: a FIFO open for writing blocks
+-- until a reader exists, and a blocked call here freezes the desktop (docs/gotchas.md).
+function M.request_tab(tab)
+  local pid, id = math.tointeger(tab and tab.hostpid), math.tointeger(tab and tab.id)
+  if not (pid and id and pid > 0 and id >= 0) then return end
+  hl.exec_cmd(("%s %d %d"):format(sq(M.tabs_activate_cmd), pid, id))
+end
+
+-- Make the flag and ignore files match the setting (detached helper, only when the setting or the list changed). When off and no flag
+-- exists, nothing runs at all.
+function M.sync_tabs_files()
+  local names, bad = Tabs.ignore_list(M.cfg.browser_tabs_ignore)
+  local key = M.cfg.browser_tabs and ("on " .. table.concat(names, " ")) or "off"
+  if key == M.tabs_files_key then return end
+  M.tabs_files_key = key
+  if M.cfg.browser_tabs then
+    for _, b in ipairs(bad) do log("config: browser_tabs_ignore: skipped a name that is not a site name: " .. b) end
+    hl.exec_cmd(("%s %s on %s"):format(sq(M.tabs_files_cmd), sq(state_dir), table.concat(names, " ")))
+  else
+    local f = io.open(M.tabs_flag, "r")
+    if f then f:close(); hl.exec_cmd(("%s %s off"):format(sq(M.tabs_files_cmd), sq(state_dir))) end
+  end
+end
+
+-- A process's parent pid from /proc, or nil when it is gone.
+function M.parent_pid(pid)
+  local text = read_file("/proc/" .. math.tointeger(pid) .. "/stat")
+  return text and math.tointeger(tonumber(text:match(".*%) %S+ (%d+)")))
+end
+
+-- The tab files in the runtime folder, "<name> <mtime>" per line. Lua cannot list a folder, so `find` does it (not hyprctl: no deadlock).
+function M.list_tab_files()
+  local ok, text = pcall(function()
+    local p = io.popen(("find %s -maxdepth 1 -type f -name 'tabs.*.json' -printf '%%f %%T@\\n' 2>/dev/null"):format(sq(state_dir)))
+    if not p then return "" end
+    local t = p:read("a"); p:close()
+    return t
+  end)
+  return ok and text or ""
+end
+
+local function read_tab_file(name)
+  local f = io.open(state_dir .. "/" .. name, "r")
+  if not f then return nil end
+  local size = f:seek("end")
+  local text = size and size <= Tabs.limits.bytes and f:seek("set") and f:read("a") or nil
+  f:close()
+  return text
+end
+
+-- Tab rows for this session: fresh, well-formed files only, matched against every Hyprland window, ignored sites left out.
+function M.load_tab_rows()
+  if not M.cfg.browser_tabs then return {} end
+  local parents, snaps = {}, {}
+  local function alive(pid) parents[pid] = parents[pid] or M.parent_pid(pid); return parents[pid] ~= nil end
+  for _, file in ipairs(Tabs.listing(M.list_tab_files())) do
+    local fresh, why = Tabs.fresh(file, os.time(), alive)
+    local snap
+    if fresh then snap, why = Tabs.parse(read_tab_file(file.name)) end
+    if snap then
+      snap.hostpid, snap.pids = file.pid, { [snap.pid] = true, [parents[file.pid]] = true }
+      snaps[#snaps + 1] = snap
+    else
+      log("tabs: skipped " .. file.name .. ": " .. tostring(why)) -- the reason never holds a title or an address (lua/tabs.lua)
+    end
+  end
+  if #snaps == 0 then return {} end
+  local hwins = {}
+  for _, w in ipairs(hl.get_windows()) do
+    hwins[#hwins + 1] = { address = w.address, class = w.class or "", title = w.title or "", pid = math.tointeger(w.pid), focus_history = w.focus_history_id or 1e9 }
+  end
+  return Tabs.rows(snaps, hwins, (Tabs.ignore_list(M.cfg.browser_tabs_ignore)))
 end
 
 -- The chords in use, from a snapshot of `hyprctl binds` that a detached command wrote to a file (hyprctl must never be called from here directly:
@@ -222,6 +312,10 @@ function M.refilter()
       local class, name = line:match("^(.-)\t(.*)$")
       if class then M.names[class] = name end
     end
+  end
+  if M.query ~= "" and not M.tabs_loaded then -- tab rows show only with a search: read the tab files once, at the first letter
+    M.tabs_loaded = true
+    M.all_entries = Tabs.interleave(M.all_entries, M.load_tab_rows())
   end
   M.entries = Search.filter(M.all_entries, M.query, M.names, { fuzzy = M.cfg.search_fuzzy })
   M.session:resize(#M.entries, #M.entries > 0 and 1 or 0)
@@ -310,7 +404,7 @@ end
 function M.close_selected()
   if not (M.session and M.session:is_open()) then return end
   local e = M.entries[M.session:selected()]
-  if e then M.close_window(e.address) end
+  if e and not e.tab then M.close_window(e.address) end -- a tab row never closes its whole browser window
 end
 
 -- What an action key can do to the selected window; the names here are the only ones action_keys accepts. Both reuse the pointer's paths (never a synchronous hyprctl).
@@ -320,7 +414,7 @@ M.actions = { close = function(address) M.close_window(address) end, minimize = 
 function M.act(name)
   local e = M.entries[M.session:selected()]
   local run = M.actions[name]
-  if not (e and run) then return end
+  if not (e and run) or e.tab then return end
   run(e.address)
   M.drop_entry(e.address)
 end
@@ -491,6 +585,7 @@ function M.reload_config()
   for _, line in ipairs(bad) do problems[#problems + 1] = "unreadable line: " .. line end
   for _, p in ipairs(problems) do log("config: " .. p) end
   M.cfg = cfg
+  M.sync_tabs_files()
   local known = {}
   for name in pairs(M.actions) do known[name] = true end
   local keys, key_problems = ActionKeys.resolve(cfg.action_keys, known, cfg.hints, Hints.parse_keys(cfg.hint_keys))
@@ -519,7 +614,7 @@ function M.on_tab(delta, profile)
   M.entries = M.build_entries()
   local focused = hl.get_active_window()
   if profile == "same_app" then M.entries = M.same_app(M.entries, focused) end
-  M.all_entries, M.query, M.names = M.entries, "", nil
+  M.all_entries, M.query, M.names, M.tabs_loaded = M.entries, "", nil, false
   local first = Mru.first_pick(M.entries, focused and focused.address, delta)
   if #M.entries < 2 then M.entries = {}; return end -- nothing to switch to
   M.gen = M.gen + 1
@@ -539,8 +634,8 @@ end
 function M.setup()
   M.gen = M.gen + 1
   bind_session_keys(false)
-  os.execute("mkdir -p '" .. state_dir .. "'")
-  M.config_text = nil
+  os.execute("mkdir -p '" .. state_dir .. "' && chmod 700 '" .. state_dir .. "'") -- private: the state file can carry window and tab titles
+  M.config_text, M.tabs_files_key = nil, nil
   M.reload_config()
   local cfg = M.cfg
   M.mod = Modifier.get(cfg.modifier)
