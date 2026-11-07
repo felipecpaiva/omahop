@@ -11,7 +11,7 @@
 
 Jump to any window fast on Omarchy's floating workspaces. Hold Alt, press Tab: a list of your windows (icon, app name, title) appears in your Omarchy theme. Let go of Alt to switch.
 
-**Status: v1.0.0 release candidate (v1.0.0-rc.3).** A list or cards switcher, type to search, mouse and quick actions, an optional peek strip, a same-app shortcut, app rules, quick jump keys and a settings window. More in later releases (see `docs/ROADMAP.md`).
+**Status: v1.0.0 release candidate (v1.0.0-rc.4).** A list or cards switcher, type to search, mouse and quick actions, an optional peek strip, a same-app shortcut, app rules, quick jump keys and a settings window. More in later releases (see `docs/ROADMAP.md`).
 
 ## See it
 
@@ -113,7 +113,7 @@ The full model and every combination: `docs/settings.md`.
 
 ## Develop
 
-`bash tests/run-all.sh --no-live` runs the unit, glue and scrub checks (Lua 5.5, Node). `bash tests/run-all.sh` adds the live test that drives the real keyboard through `/dev/uinput` on a spare workspace (keep your hands off the keyboard and mouse for about ten minutes). With a second monitor connected, `tests/live_monitors.py` also checks the monitor setting and picking a window across monitors (it skips itself with one monitor). Design, decisions, research and the roadmap are in `docs/`, start at `docs/architecture.md`.
+`bash tests/run-all.sh --no-live` runs the unit, glue and scrub checks (Lua 5.5, Node). `bash tests/run-all.sh` adds the live test that drives the real keyboard through `/dev/uinput` on a spare workspace (keep your hands off the keyboard and mouse for about ten minutes). `lua/test_monitors.lua` models 1 to 6 monitors (every focus, every setting, unplugging) with no hardware, and `tests/live_monitors.py` checks every monitor you have attached, from each one in turn (it skips itself with one monitor). Design, decisions, research and the roadmap are in `docs/`, start at `docs/architecture.md`.
 
 Rules for all code: `docs/engineering-standards.md`. Sister project: [omagnet](https://github.com/felipecpaiva/omagnet) (window snapping for floating workspaces).
 
