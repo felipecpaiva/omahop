@@ -101,7 +101,7 @@ Columns: id, item, source, status, evidence, then for PARTLY and NOT BUILT: valu
 | B40 | Per-app rules: hide, ignore, group | PARTLY | ignore and pass-through built; no group rule | low | S | See B17 |
 | B41 | Title exclusions | BUILT | `windows.ignore_titles`, `live_rules.py:47` | | | |
 | B42 | Hide-all exclusions | NOT BUILT | no hide-all feature (B54) | low | S | n/a |
-| B43 | Status glyphs (audio, hidden, minimized) | PARTLY | minimized rows dim (`ListRow.qml:24`); no audio glyph | medium | M | Audio-playing marker via `Quickshell.Services.Pipewire` (installed). New glyph: opt-in, default off. Risk: matching a stream to a window by pid, wrong for browsers |
+| B43 | Status glyphs (audio, hidden, minimized) | PARTLY | minimized rows dim (`ListRow.qml:24`); audio marker built in v1.5 (`audio_marker`, D21, pactl snapshot instead of the PipeWire service) | medium | M | Audio-playing marker via `Quickshell.Services.Pipewire` (installed). New glyph: opt-in, default off. Risk: matching a stream to a window by pid, wrong for browsers |
 | B44 | Unread badges | NOT BUILT | none | low | M | Notification to window mapping is guesswork; new glyph |
 | B45 | Handoff tile | OUT OF SCOPE | Apple only | | | |
 | B46 | Hover action bar | PARTLY | close and minimize (`actions` setting, `ActionButton.qml`, `live_pointer.py:78`); no maximize, hide, quit, force quit | low | S | Maximize or quit buttons add clutter |

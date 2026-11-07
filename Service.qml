@@ -46,14 +46,15 @@ Item {
   Connections {
     target: root
     function onStChanged() {
-      if (root.st.open && !root.wasOpen) { root.refreshBorder(); Hyprland.refreshToplevels(); root.sampleAudio() }
+      if (root.st.open && !root.wasOpen) { root.refreshBorder(); Hyprland.refreshToplevels() }
+      if (root.st.open && root.st.revealed && root.audioSample === null) root.sampleAudio() // once per shown list; a quick tap shows none and samples nothing
       if (!root.st.open) root.audioSample = null // a closed list forgets the sample, so the next one never flashes a stale speaker
       root.wasOpen = root.st.open
     }
   }
   property bool wasOpen: false
 
-  // ---- audio marker (setting audio_marker, off by default, D21): one pactl sample when the list opens, nothing while it is closed.
+  // ---- audio marker (setting audio_marker, off by default, D21): one pactl sample when the list shows, nothing while it is closed or on a quick tap.
   // The sample's text holds media titles: it is parsed in memory (AudioMarker.js keeps pids and app names only) and never logged or written.
   readonly property bool audioMarker: configReader.value("top", "audio_marker") === true
   property var audioSample: null

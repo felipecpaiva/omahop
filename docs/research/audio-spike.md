@@ -76,7 +76,8 @@ script. The process table holds only numbers.
 
 - Setting off (the default): no process, no PipeWire object, nothing imported beyond what is already there.
 - Setting on, switcher closed: nothing runs.
-- Setting on, switcher opens: one `bash` running `pactl` and `ps` (about 8 ms together, off the UI thread), then a pure JS
+- Setting on, quick tap (no list shown): nothing runs.
+- Setting on, the list shows: one `bash` running `pactl` and `ps` (about 8 ms together, off the UI thread), then a pure JS
   match over the windows (constant work per stream, bounded parent walk). The result is dropped when the list closes.
 
 ## Testable without sound

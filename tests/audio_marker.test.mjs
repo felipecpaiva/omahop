@@ -50,7 +50,7 @@ assert.equal(marked["5b"], true)
 // a player with no window, started from a terminal: the terminal is marked
 assert.equal(marked.b1, true)
 // a stream whose tree owns no window and whose names match no class: nothing
-assert.equal(Object.values(marked).every((v) => v === true), true)
+assert.equal(marked.d1, undefined)
 
 // ---- nearest owner wins: a player with its own window does not also mark the terminal it was started from
 {
