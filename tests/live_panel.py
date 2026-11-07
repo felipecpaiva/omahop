@@ -20,7 +20,7 @@ def ev(lua):
 
 
 # Screen y of the "Where it takes over Alt+Tab" buttons in the settings window; it moves down when a setting above it gets longer help text (re-measure with a grim screenshot of the panel)
-SCOPE_Y = 436
+SCOPE_Y = 538
 
 
 def move(x, y):
