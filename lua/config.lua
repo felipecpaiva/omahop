@@ -48,6 +48,10 @@ C.spec = {
       help = "When the focused window is fullscreen (a game, a remote desktop, a virtual machine), Alt+Tab is left to it and works as Omarchy has it." },
     passthrough = { default = "", group = "rules", label = "Step aside for these apps",
       help = "Window classes, comma separated, for which Alt+Tab is always left alone, whatever their state." },
+    browser_tabs = { default = false, group = "tabs", label = "Search browser tabs",
+      help = "Off by default. When on, a search also finds the tabs of your browser windows, not only the tab each window shows, and Return opens that tab. Needs the omahop-tabs browser extension and its helper. Private: tab titles and addresses stay on this computer in a temporary folder that is emptied when you log out or turn this off; omahop never logs them." },
+    browser_tabs_ignore = { default = "", group = "tabs", label = "Never list tabs from these sites",
+      help = "Site names, comma separated, for example: bank.example.com, mail.example.org. A name also covers its subdomains. Empty (the default) hides nothing. Those tabs are never written by the helper and never shown." },
     same_app_key = { default = "ALT + GRAVE", group = "shortcuts", reload = true, label = "Same-app shortcut",
       help = "A second shortcut that lists only the windows of the app you are in, like Cmd+backtick on a Mac. It must start with the key to hold (for example ALT + GRAVE, or CTRL + GRAVE when that key is Ctrl). Leave it empty to turn it off. Applies after a Hyprland reload; a chord you already use is never taken." },
     hints = { default = "off", values = { "off", "numbers", "apps" }, group = "shortcuts", label = "Quick jump keys",
@@ -96,10 +100,12 @@ C.groups = {
   { id = "peek", title = "Peek strip" },
   { id = "rules", title = "App rules" },
   { id = "shortcuts", title = "Shortcuts" },
+  { id = "tabs", title = "Browser tabs" },
 }
 C.order = { "top.takeover", "top.modifier", "top.scope", "top.search", "top.search_fuzzy", "top.search_linger_seconds", "windows.workspaces", "windows.monitors", "windows.minimized", "windows.specials", "windows.ignore",
   "top.style", "top.thumbnails", "top.thumbnail_exclude", "top.reveal_delay_ms", "top.border", "top.icon_theme", "top.icon_pack", "top.actions", "keys.repeat_delay_ms", "keys.repeat_ms", "top.peek", "top.peek_position",
-  "windows.ignore_titles", "windows.first", "top.passthrough_fullscreen", "top.passthrough", "top.same_app_key", "top.hints", "top.hint_keys", "top.action_keys" }
+  "windows.ignore_titles", "windows.first", "top.passthrough_fullscreen", "top.passthrough", "top.same_app_key", "top.hints", "top.hint_keys", "top.action_keys",
+  "top.browser_tabs", "top.browser_tabs_ignore" }
 
 local function contains(list, v)
   for _, x in ipairs(list) do if x == v then return true end end
