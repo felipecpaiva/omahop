@@ -112,3 +112,19 @@ Automated checks (`tests/run-all.sh`) cover logic and the keyboard path with a v
 - [ ] Close or minimize every window but one: the last action ends the session cleanly, no overlay left.
 - [ ] `hints = "numbers"` with `action_keys = "3=close"`: `3` jumps, does not close; the log (`omarchy-debug` or the plugin log) has a `config: action_keys:` line naming the clash.
 - [ ] A typo such as `q=quit` or `delete=close`: the log reports it, the rest still work.
+
+## v1.4 (browser tabs, omahop side)
+
+Run `python3 tests/live_tabs.py` first (virtual keyboard, a fake tab file and a stand-in helper FIFO; no browser). Then by hand, with the `omahop-tabs` extension and helper installed in a temporary Chromium profile and data or example.com pages only:
+
+- [ ] Live check 1 (spike section 10, the pid link): the helper's parent pid (the file's `pid` field) equals the browser window's `pid` in `hyprctl clients -j`. If not, omahop falls back to the browser's class; note which.
+- [ ] Live check 2 (title and class per browser): for Chromium and Chrome (and Brave or Edge if installed) list `class`, the title suffix after ` - `, and `pid`. Confirm the classes in `Tabs.classes` (`lua/tabs.lua`).
+- [ ] Live check 3 (focus semantics): two browser windows on two workspaces, Return on a tab of the window that is not focused: the right tab shows and its window comes to the front, no visible flash of the wrong tab. If there is a flash, note it (the spike's ack wait would fix it).
+- [ ] Setting off (the default): `ls $XDG_RUNTIME_DIR/omahop` shows no `tabs.enabled`, `tabs.ignore` or `tabs.*.json`.
+- [ ] Turn it on in the settings window: `tabs.enabled` and `tabs.ignore` appear at once (mode 600, folder 700); turn it off: they and the tab files go at once.
+- [ ] Alt+Tab with nothing typed: no tab rows, Tab cycles windows as before. Type part of a hidden tab's title: its row appears under its browser window, in both the list and the cards style.
+- [ ] Two windows whose shown tabs have the same title: Return on a tab of each goes to the right window (or note which goes wrong).
+- [ ] `browser_tabs_ignore = "example.org"`: tabs of example.org and its subdomains never show; `*.example.org` hides subdomains only.
+- [ ] Delete and the quit and minimize keys on a tab row do nothing (they never close the whole browser window).
+- [ ] The omahop log (`$XDG_RUNTIME_DIR/omahop/log`) holds no tab title or address after a session with tabs.
+- [ ] Quit the browser: its tab file goes; the next search shows no rows for it.

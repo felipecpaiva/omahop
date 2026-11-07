@@ -596,6 +596,129 @@ do
   assert(M.mod.bind == "ALT" and binds["ALT + TAB"], "default again")
 end
 
+-- v1.4 browser tabs (browser_tabs): off reads and makes nothing; on makes the flag and ignore file; tab rows appear with a search;
+-- Return asks the helper for the tab (detached) before focusing; Lua never opens a FIFO; bad files are skipped and nothing private is logged
+do
+  local run = TESTDIR .. "/run/omahop"
+  local function setcfg(text) local f = io.open(TESTDIR .. "/cfg/omahop/config.toml", "w"); f:write(text); f:close() end
+  local function snapshot() local f = io.open(run .. "/binds.txt", "w"); f:write("bind\n\tmodmask: 8\n\tkey: TAB\n\n"); f:close(); M.used = nil end
+  local function put(name, text) local f = io.open(run .. "/" .. name, "w"); f:write(text); f:close() end
+  local function exists(path) local f = io.open(path, "r"); if f then f:close() end return f ~= nil end
+  local function mode(path) local p = io.popen("stat -c %a '" .. path .. "' 2>/dev/null"); local m = p:read("l"); p:close(); return m end
+  local function logtext() local f = io.open(run .. "/log"); local s = f and f:read("a") or ""; if f then f:close() end return s end
+  -- every path omahop opens, and one ordered list of what it asks Hyprland to do
+  local real_open, opened = io.open, {}
+  io.open = function(path, ...) opened[#opened + 1] = tostring(path); return real_open(path, ...) end
+  local events = {}
+  local real_exec, real_dispatch = hl.exec_cmd, hl.dispatch
+  hl.exec_cmd = function(cmd) events[#events + 1] = "exec " .. cmd; real_exec(cmd) end
+  hl.dispatch = function(d) events[#events + 1] = "dispatch " .. d.name; real_dispatch(d) end
+  local function tab_files_read()
+    for _, p in ipairs(opened) do if p:find("/tabs%.%d+%.json$") or p:find("tabs%.ignore$") then return true end end
+    return false
+  end
+  local function ran(word) for _, e in ipairs(events) do if e:find(word, 1, true) then return e end end end
+  -- this test's own pid stands in for the helper (alive, a real parent in /proc); the browser window carries a made-up pid named in the file
+  local selfstat = real_open("/proc/self/stat"):read("a")
+  local hostpid = math.tointeger(tonumber(selfstat:match("^(%d+)")))
+  local browser_pid = 777001
+  windows = {}
+  local wk = win("0xa6", "app-k", 1, { focus_history_id = 0, title = "shell", tags = { "omarchy-floating-workspace" } })
+  win("0xb6", "chromium", 1, { focus_history_id = 1, title = "Alpha page - Chromium", pid = browser_pid, tags = { "omarchy-floating-workspace" } })
+  key_state.Alt_L = true; key_state.Tab = true
+  local function open_session()
+    if M.session:is_open() then M.session:key(clock, "cancel"); M.apply({}) end
+    active = wk; reset(); events = {}; opened = {}; binds["ALT + TAB"]()
+  end
+  local function type_word(w) for c in w:gmatch(".") do binds["ALT + " .. c:upper()]() end end
+  local good = ('{"schema": 1, "browser": "chromium", "pid": %d, "caller": "chrome-extension://abc/", "profile": "Default", "windows": [{"id": 1, "focused": true, "type": "normal", "tabs": ['
+    .. '{"id": 10, "active": true, "title": "Alpha page", "url": "https://alpha.example.com/"},'
+    .. '{"id": 11, "active": false, "title": "Hidden notes", "url": "https://notes.example.com/private/path?token=abc"},'
+    .. '{"id": 12, "active": false, "title": "Hidden bank", "url": "https://www.bank.example.com/acct"}]}]}'):format(browser_pid)
+
+  -- off (the default): no flag, no helper run, no tab file read even with files present and a search typed
+  setcfg('[windows]\nworkspaces = "current"\n'); snapshot()
+  put("tabs." .. hostpid .. ".json", good)
+  open_session(); type_word("hidden")
+  assert(not exists(run .. "/tabs.enabled") and not ran("omahop-tabs"), "off: no flag and no helper")
+  assert(not tab_files_read(), "off: no tab file is read")
+  assert(#M.entries == 0 and not read_state():find("\nt\t"), "off: no tab rows")
+
+  -- on: the flag and the ignore file, made by the detached helper (run here for real to check the modes)
+  setcfg('browser_tabs = true\nbrowser_tabs_ignore = "bank.example.com, *.corp.example, bad name"\n[windows]\nworkspaces = "current"\n')
+  open_session()
+  local cmd = ran("omahop-tabs-files")
+  assert(cmd and cmd:find(" on 'bank.example.com' '%*.corp.example'$"), "on: the helper gets only valid site names, quoted: " .. tostring(cmd))
+  assert(logtext():find("browser_tabs_ignore: skipped a name that is not a site name: bad name", 1, true), "a bad site name is logged")
+  os.execute(cmd:sub(6) .. " >/dev/null 2>&1")
+  assert(mode(run) == "700" and mode(run .. "/tabs.enabled") == "600" and mode(run .. "/tabs.ignore") == "600", "on: folder 700, flag and ignore file 600")
+  assert(not tab_files_read(), "on: nothing is read when the list opens (only at the first letter)")
+  -- hostile and stale files next to the good one: all skipped, none of their text logged
+  put("tabs.1.json", '{"schema": 1, "browser": "chromium", "pid": 1, "windows": [{"id": 1, "title": "SECRET-TITLE-1", "url": "https://secret.example.com/"')
+  put("tabs.999999999.json", (good:gsub("Alpha page", "Stale page")))
+  local ppid = math.tointeger(tonumber(selfstat:match("^%d+ %b() %S+ (%d+)")))
+  put("tabs." .. ppid .. ".json", (good:gsub('"schema": 1', '"schema": 2'):gsub("Hidden notes", "SECRET-TITLE-2")))
+  os.execute(("ln -sf /etc/hostname '%s/tabs.4.json'"):format(run))
+  put("tabs.x.json", good)
+  M.session:key(clock, "cancel"); M.apply({}); open_session()
+  local before = #M.entries
+  assert(before == 2 and not M.entries[1].tab and not M.entries[2].tab, "no query: windows only")
+  type_word("hidden")
+  assert(#M.entries == 1 and M.entries[1].tab and M.entries[1].title == "Hidden notes" and M.entries[1].address == "0xb6", "a hidden tab is found by its title, under its window")
+  local st = read_state()
+  assert(st:find("\nt\t0xb6\tchromium\t0\t0\tnotes.example.com\tHidden notes\n", 1, true), "state line for the tab: window, class, minimized, active, site, title: " .. st)
+  assert(not st:find("https://", 1, true) and not st:find("private/path", 1, true) and not st:find("token", 1, true), "the state file carries the site, never the address")
+  M.query = "bank"; M.refilter()
+  assert(#M.entries == 0, "an ignored site is dropped by omahop too")
+  M.query = "stale"; M.refilter()
+  assert(#M.entries == 0, "a file whose helper is gone is skipped")
+  M.query = "notes"; M.refilter()
+  assert(#M.entries == 1 and M.entries[1].tab.id == 11, "search matches the site")
+  for _, p in ipairs(opened) do assert(not p:find("tabs%.4%.json$") and not p:find("tabs%.x%.json$"), "links and odd names are never opened: " .. p) end
+  local lt = logtext()
+  assert(not lt:find("SECRET") and not lt:find("Hidden") and not lt:find("example.com", 1, true) and not lt:find("Stale page"), "no title or address in the log: " .. lt)
+  assert(lt:find("tabs: skipped tabs.1.json", 1, true) and lt:find("tabs: skipped tabs.999999999.json: host gone", 1, true), "skipped files are logged by name and reason")
+  -- quick actions never close a whole browser window from a tab row
+  events = {}; binds["ALT + DELETE"]()
+  assert(not ran("dispatch close"), "Delete on a tab row closes nothing")
+  M.act("close")
+  assert(not ran("dispatch close") and #M.entries == 1, "an action key on a tab row does nothing")
+  -- Return: the tab request (detached helper, validated ids) first, then focus and raise of the browser window
+  events = {}; binds["ALT + RETURN"]()
+  local want = ("exec '%s' %d 11"):format(M.tabs_activate_cmd, hostpid)
+  assert(events[1] == want and events[2] == "dispatch focus" and events[3] == "dispatch alter_zorder", "request first, then focus: " .. table.concat(events, " | "))
+  assert(dispatched[#dispatched - 1].args.window.address == "0xb6", "the matched browser window is focused")
+  -- the tab request path: integers only, never a FIFO opened here
+  events = {}
+  M.request_tab({ hostpid = "1;touch x", id = 2 }); M.request_tab({ hostpid = 5, id = -1 }); M.request_tab({ hostpid = 5.5, id = 1 }); M.request_tab(nil)
+  assert(#events == 0, "bad ids never reach the helper")
+  for _, p in ipairs(opened) do assert(not p:find("%.activate$") and not p:find("fifo"), "the glue never opens a FIFO: " .. p) end
+  -- a window closing takes its tab rows with it
+  open_session(); type_word("notes")
+  M.on_window_closed("0xb6")
+  assert(not M.session:is_open() or #M.entries == 0, "tab rows leave with their window")
+  windows[#windows + 1] = nil
+
+  -- off again: everything removed (helper run for real), and nothing read after
+  setcfg('[windows]\nworkspaces = "current"\n')
+  win("0xb6", "chromium", 1, { focus_history_id = 1, title = "Alpha page - Chromium", pid = browser_pid, tags = { "omarchy-floating-workspace" } })
+  open_session()
+  cmd = ran("omahop-tabs-files")
+  assert(cmd and cmd:find(" off$"), "off: the helper removes the files: " .. tostring(cmd))
+  os.execute(cmd:sub(6) .. " >/dev/null 2>&1")
+  assert(not exists(run .. "/tabs.enabled") and not exists(run .. "/tabs.ignore") and not exists(run .. "/tabs." .. hostpid .. ".json") and not exists(run .. "/tabs.1.json"), "off: flag, ignore and tab files gone")
+  opened = {}; type_word("al")
+  assert(not tab_files_read(), "off again: nothing read")
+  -- off with no flag left: the helper is not even started
+  M.session:key(clock, "cancel"); M.apply({})
+  setcfg('[windows]\nworkspaces = "current"\nsearch = true\n'); open_session()
+  assert(not ran("omahop-tabs"), "off and no flag: no helper run")
+  M.session:key(clock, "cancel"); M.apply({})
+  io.open, hl.exec_cmd, hl.dispatch = real_open, real_exec, real_dispatch
+  os.execute(("rm -f '%s'/tabs.*"):format(run))
+  setcfg('[windows]\nworkspaces = "all"\n')
+end
+
 -- never a bare key: every chord bound in this whole run carries one of the modifiers
 local Modifier = dofile(here .. "/modifier.lua")
 for chord in pairs(ever_bound) do

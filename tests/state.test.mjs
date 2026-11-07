@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs"
 import assert from "node:assert/strict"
 const src = readFileSync(new URL("../State.js", import.meta.url), "utf8").replace(".pragma library", "")
-const State = new Function(src + "; return { thumbnailExcludeSet, isThumbnailExcluded, parse, visibleRows, borderWidth, normalizeAddress, visibleCards }")()
+const State = new Function(src + "; return { thumbnailExcludeSet, isThumbnailExcluded, parse, visibleRows, borderWidth, normalizeAddress, visibleCards, listHeight, tabCaption }")()
 
 const text = "version=1\nopen=1\nrevealed=1\nselected=2\nstyle=list\nthumbnails=snapshot\nw\t0xa\tkitty\t0\t1\tfirst title\nw\t0xb\tgoogle-chrome\t1\t\tsecond\ttitle with a tab\n"
 const s = State.parse(text)
@@ -68,3 +68,22 @@ assert.equal(State.parse("open=0\nseq=9\ngrab=1\nlinger_ms=3000\n").grab, false,
 assert.equal(State.parse("open=0\nseq=9\n").seq, 9, "seq is read when closed too (a restarted shell continues from it)")
 assert.equal(State.parse("open=1\nrevealed=1\nselected=5\ngrab=1\nw\t0xa\tk\t0\t\tt\n").grab, false, "a stale file never grabs")
 console.log("state linger ok")
+
+// browser tab rows (v1.4): parsed with their site and active flag, counted in the selection, sized as compact rows
+{
+  const st = State.parse("open=1\nrevealed=1\nselected=2\nquery=notes\nw\t0xa\tchromium\t0\t\tAlpha - Chromium\nt\t0xa\tchromium\t0\t1\tnotes.example.com\tTeam = notes\tpart two\nt\t0xa\tchromium\t1\t0\t\t\n")
+  assert.equal(st.open, true, "a tab row can be the selected one")
+  assert.equal(st.entries.length, 3)
+  assert.deepEqual(st.entries[1], { address: "0xa", appId: "chromium", minimized: false, hint: "", tab: true, active: true, host: "notes.example.com", title: "Team = notes\tpart two" })
+  assert.equal(st.query, "notes", "a title with = is never read as a key")
+  assert.equal(st.entries[2].host, ""); assert.equal(st.entries[2].title, ""); assert.equal(st.entries[2].minimized, true)
+  assert.equal(State.parse("open=1\nrevealed=1\nselected=1\nt\t0xa\tc\t0\t1\n").entries.length, 0, "a short tab line is dropped")
+  assert.equal(State.listHeight(st.entries, 46, 30, 9), 46 + 30 + 30)
+  assert.equal(State.listHeight(st.entries, 46, 30, 2), 46 + 30, "only maxRows rows count")
+  assert.equal(State.listHeight([], 46, 30, 9), 0)
+  assert.equal(State.tabCaption(st.entries[1], "shown"), "notes.example.com  ·  shown")
+  assert.equal(State.tabCaption({ host: "a.example", active: false }, "shown"), "a.example")
+  assert.equal(State.tabCaption({ host: "", active: true }, "shown"), "shown")
+  assert.equal(State.tabCaption(null, "shown"), "")
+  console.log("state tabs ok")
+}

@@ -50,7 +50,7 @@ Item {
 
   function apply(text) {
     var next = State.parse(text)
-    var key = next.entries.map(function (e) { return e.address + "|" + e.title + "|" + e.minimized }).join("\n")
+    var key = next.entries.map(function (e) { return e.address + "|" + e.title + "|" + e.minimized + "|" + (e.tab ? "t" + e.active + e.host : "") }).join("\n")
     if (key !== root.entriesKey) {
       root.entriesKey = key
       root.entries = next.entries
@@ -74,6 +74,7 @@ Item {
   readonly property string removeScript: 'grep -q "$2" "$1" 2>/dev/null && rm -f "$1"\n'
   property bool desktopInstalled: false
   Component.onDestruction: {
+    if (root.tabFilesOn) Quickshell.execDetached(["bash", Paths.fromUrl(Qt.resolvedUrl("tools/omahop-tabs-files")), root.runtimeDir, "off"])
     if (!root.desktopInstalled) return
     Quickshell.execDetached(["sh", "-c", root.removeScript, "sh", root.desktopDest, root.desktopMarker])
   }
@@ -224,6 +225,22 @@ Item {
 
   // ---- the peek strip: only loaded when the setting is on (off by default, so nothing is added to the desktop unless asked)
   ConfigReader { id: configReader }
+
+  // ---- browser tabs (setting browser_tabs, off by default): the flag and ignore files follow the setting at once, from the settings window too.
+  // The Lua side does the same at a Hyprland reload and at the next Alt+Tab; the helper is idempotent. Off with nothing on: nothing runs.
+  readonly property bool browserTabs: configReader.value("top", "browser_tabs") === true
+  readonly property string browserTabsIgnore: String(configReader.value("top", "browser_tabs_ignore") || "")
+  readonly property string runtimeDir: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/omahop"
+  property bool tabFilesOn: false
+  function syncTabFiles() {
+    if (!root.browserTabs && !root.tabFilesOn) return
+    root.tabFilesOn = root.browserTabs
+    // the raw items; tools/omahop-tabs-files keeps only valid names (no shell: arguments go straight to bash)
+    var sites = root.browserTabs ? root.browserTabsIgnore.split(",").map(function (x) { return x.trim() }).filter(function (x) { return x !== "" }) : []
+    Quickshell.execDetached(["bash", Paths.fromUrl(Qt.resolvedUrl("tools/omahop-tabs-files")), root.runtimeDir, root.browserTabs ? "on" : "off"].concat(sites))
+  }
+  onBrowserTabsChanged: root.syncTabFiles()
+  onBrowserTabsIgnoreChanged: if (root.browserTabs) root.syncTabFiles()
 
   // The stock dock's and the bar's edges (from the shell's own config), so the strip can default to a free edge. Empty if unknown (Omarchy's defaults apply: dock bottom, bar top).
   property string dockPosition: ""

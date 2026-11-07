@@ -33,11 +33,12 @@ BorderSurface {
   property var resolve: function (appId) { return { icon: "", name: appId } }
 
   readonly property int rowHeight: Style.space(46)
+  readonly property int tabHeight: Style.space(32)   // a browser tab row (TabRow), compact under its window
   readonly property int rows: State.visibleRows(card.screenHeight, card.rowHeight, 9)
   readonly property int pad: Style.space(10)
 
   width: Style.space(560) + borderLeft + borderRight + 2 * pad
-  height: Math.min(card.entries.length, card.rows) * card.rowHeight + 2 * pad + borderTop + borderBottom
+  height: State.listHeight(card.entries, card.rowHeight, card.tabHeight, card.rows) + 2 * pad + borderTop + borderBottom
   color: Util.alpha(Color.background, 0.97)
   borderSpec: card.outline > 0 ? Border.surfaceSpec("popups", "border", Color.popups.border, card.outline) : Border.none()
   radius: Style.cornerRadius
@@ -61,22 +62,45 @@ BorderSurface {
       function onSelectedChanged() { Qt.callLater(view.follow) }
     }
 
-    delegate: ListRow {
+    delegate: Item {
+      id: slot
       required property var modelData
       required property int index
       width: view.width
-      height: card.rowHeight
-      readonly property var info: card.resolve(modelData.appId)
-      iconSource: info.icon
-      appName: info.name
-      title: modelData.title
-      minimized: modelData.minimized
-      selected: index === card.selected - 1
-      actions: card.actions
-      hint: modelData.hint || ""
-      onPicked: card.picked(index + 1)
-      onCloseRequested: card.closeRequested(modelData.address)
-      onMinimizeRequested: card.minimizeRequested(modelData.address)
+      height: slot.modelData.tab ? card.tabHeight : card.rowHeight
+      readonly property var info: card.resolve(slot.modelData.appId)
+      readonly property bool isSelected: slot.index === card.selected - 1
+
+      Loader {
+        anchors.fill: parent
+        sourceComponent: slot.modelData.tab ? tabRow : windowRow
+      }
+      Component {
+        id: windowRow
+        ListRow {
+          iconSource: slot.info.icon
+          appName: slot.info.name
+          title: slot.modelData.title
+          minimized: slot.modelData.minimized
+          selected: slot.isSelected
+          actions: card.actions
+          hint: slot.modelData.hint || ""
+          onPicked: card.picked(slot.index + 1)
+          onCloseRequested: card.closeRequested(slot.modelData.address)
+          onMinimizeRequested: card.minimizeRequested(slot.modelData.address)
+        }
+      }
+      Component {
+        id: tabRow
+        TabRow {
+          iconSource: slot.info.icon
+          title: slot.modelData.title
+          caption: State.tabCaption(slot.modelData, qsTr("shown"))
+          active: slot.modelData.active === true
+          selected: slot.isSelected
+          onPicked: card.picked(slot.index + 1)
+        }
+      }
     }
   }
 }

@@ -8,6 +8,8 @@ assert(d.scope == "floating" and d.takeover == true and d.style == "list" and d.
 assert(d.windows.workspaces == "floating" and d.windows.monitors == "active" and d.windows.minimized == "back", "window defaults")
 assert(d.keys.repeat_delay_ms == 250 and d.keys.repeat_ms == 40, "key defaults")
 assert(d.border == "auto" and C.merge({ top = { border = "off" } }).border == "off" and C.merge({ top = { border = "thick" } }).border == "auto", "border setting: auto default, off accepted, bad value falls back")
+assert(d.browser_tabs == false and d.browser_tabs_ignore == "", "browser tabs are off by default with an empty ignore list")
+assert(C.merge({ top = { browser_tabs = "yes" } }).browser_tabs == false, "browser_tabs: a non-boolean falls back to off")
 
 -- parse: values, sections, comments, trailing comments, unreadable lines
 local t, bad = C.parse([[

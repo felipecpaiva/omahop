@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Ask the omahop-tabs helper to show one browser tab: writes "<tabId>" to the FIFO the helper with that pid listens on.
+#   omahop-tabs-activate <hostpid> <tabId>
+# Started detached by lua/omahop.lua (hl.exec_cmd); the Hyprland glue never opens a FIFO itself (an open for writing blocks until a reader
+# exists, which would freeze the desktop). Here the open is non-blocking (no reader: it fails at once) and bounded by a timeout, so this
+# can never hang. No reader, no FIFO or bad arguments: it exits quietly. It prints nothing and logs nothing.
+set -euo pipefail
+
+readonly max_digits=10   # a pid or a tab id; anything longer is not one
+readonly open_timeout=1  # seconds, a belt on top of the non-blocking open
+
+is_id() { [[ $1 =~ ^[0-9]+$ ]] && (( ${#1} <= max_digits )); }
+
+{ [ $# -eq 2 ] && is_id "$1" && is_id "$2"; } || exit 2
+fifo="${XDG_RUNTIME_DIR:?}/omahop/tabs.$1.activate"
+{ [ -p "$fifo" ] && [ -O "$fifo" ]; } || exit 0
+# dd opens with O_NONBLOCK (oflag=nonblock): with no reader the open fails with ENXIO instead of waiting.
+printf '%s\n' "$2" | timeout "$open_timeout" dd of="$fifo" oflag=nonblock conv=notrunc status=none 2>/dev/null || true

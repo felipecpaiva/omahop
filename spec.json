@@ -411,6 +411,30 @@
       "type": "text"
     }],
     "title": "Shortcuts"
+  }, {
+    "id": "tabs",
+    "settings": [{
+      "default": false,
+      "help": "Off by default. When on, a search also finds the tabs of your browser windows, not only the tab each window shows, and Return opens that tab. Needs the omahop-tabs browser extension and its helper. Private: tab titles and addresses stay on this computer in a temporary folder that is emptied when you log out or turn this off; omahop never logs them.",
+      "hidden": false,
+      "id": "top.browser_tabs",
+      "key": "browser_tabs",
+      "label": "Search browser tabs",
+      "reload": false,
+      "section": "top",
+      "type": "bool"
+    }, {
+      "default": "",
+      "help": "Site names, comma separated, for example: bank.example.com, mail.example.org. A name also covers its subdomains; * and ? are wildcards that must match the whole site name (*.corp.example). Empty (the default) hides nothing. Those tabs are never written by the helper and never shown.",
+      "hidden": false,
+      "id": "top.browser_tabs_ignore",
+      "key": "browser_tabs_ignore",
+      "label": "Never list tabs from these sites",
+      "reload": false,
+      "section": "top",
+      "type": "text"
+    }],
+    "title": "Browser tabs"
   }],
   "schema": 1
 }

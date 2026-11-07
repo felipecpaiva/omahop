@@ -68,6 +68,19 @@ Status: the split below is decided on evidence (D5, `research/spikes.md`). Why L
 window list order and fight the switch), and omagnet already proved the hold/release poll. Exception (D15, off by default): with `search_linger_seconds` on and a search typed, the overlay holds the keyboard from the first typed letter until the list closes; Lua writes `open=0` first and focuses the picked window from a short timer, because a focus call is ignored while a layer holds the keyboard. State file keys for it: `seq`, `grab`, `linger_ms`, `linger_rev`. The in-flight core PR
 (omacom/omarchy#16548) and the marketplace plugin `omarchy-altswitch` split the work the same way (UNVERIFIED for the second).
 
+## Browser tabs (v1.4, setting `browser_tabs`, off by default; D17)
+
+```
+ browser extension -> omahop-tabs helper -> $XDG_RUNTIME_DIR/omahop/tabs.<hostpid>.json   (separate repository, only while tabs.enabled exists)
+ lua/omahop.lua: at the first typed letter of a session, `find` lists the folder, each fresh file is read and checked (lua/tabs.lua, lua/json.lua),
+                 browser windows are matched to Hyprland windows (pid, then title and focus), and tab rows join the list after their window
+ state file:     t <address> <class> <minimized> <active> <site> <title>   (QML draws TabRow in the list, an icon-only CardItem in cards)
+ Return on a tab row: hl.exec_cmd(tools/omahop-tabs-activate <hostpid> <tabId>)  -> FIFO tabs.<hostpid>.activate (non-blocking), then focus and raise
+ setting on/off:  tools/omahop-tabs-files <dir> on|off   (from Lua at load and config change, from Service.qml at once and at unload)
+```
+
+Off: no file is read and none is made. Idle cost is zero: no watcher, no timer, nothing read on a quick Alt+Tab. The file contract as consumed: [file-contract.md](file-contract.md).
+
 ## Window list
 
 Full settings model and combinations: [settings.md](settings.md). The text below is the default.

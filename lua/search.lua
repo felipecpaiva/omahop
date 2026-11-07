@@ -4,6 +4,8 @@
 -- with the first word comes before one that only contains it somewhere (typing "fi" finds Files before a document called "profile").
 -- Accents are folded (acao finds ação). With fuzzy on, a single-word query also matches initials (gc: Google Chrome) and letters in order
 -- inside one word (chrm: chrome, 3+ letters); those matches come last, in the recently-used order.
+-- Browser tab rows (entries with `tab`, setting browser_tabs) show only while a query is typed; they match on their title and their
+-- `search_extra` (the site and path of the address), never on the browser's class, so typing the browser's name does not list every tab.
 local Search = {}
 
 -- UTF-8 letters to their base letter (Latin-1 and Latin Extended-A, both cases). Anything not listed stays as it is.
@@ -53,12 +55,16 @@ end
 -- opts.fuzzy: false turns fuzzy matching off (default on). entries: windows with class and title. names: optional { [class] = "Display Name" } from the overlay. Returns a new list (same entry tables).
 function Search.filter(entries, query, names, opts)
   local q = words(query)
-  if #q == 0 then return entries end
+  if #q == 0 then
+    local out = {}
+    for _, e in ipairs(entries) do if not e.tab then out[#out + 1] = e end end
+    return #out == #entries and entries or out
+  end
   local fuzzy = not (opts and opts.fuzzy == false) and #q == 1
   local out = {}
   for i, e in ipairs(entries) do
-    local app = normalize((names and names[e.class]) or "") .. " " .. normalize(e.class)
-    local hay = app .. " " .. normalize(e.title)
+    local app = e.tab and "" or (normalize((names and names[e.class]) or "") .. " " .. normalize(e.class))
+    local hay = app .. " " .. normalize(e.title) .. " " .. normalize(e.search_extra)
     local ok = true
     for _, w in ipairs(q) do
       if not hay:find(w, 1, true) then ok = false; break end
