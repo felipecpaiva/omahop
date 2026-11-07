@@ -29,7 +29,7 @@ Columns: id, item, source, status, evidence, then for PARTLY and NOT BUILT: valu
 | C4 | First Tab picks the previous window | Contexts | BUILT | `mru.lua:44` first_pick, `live.py:47` | | | |
 | C5 | MRU order | Contexts | BUILT | `omahop.lua:472` (window.active), `mru.lua:24`, `test_mru.lua`; seed from Hyprland history `omahop.lua:449` | | | |
 | C6 | Same-app list (Cmd+backtick) | Contexts | BUILT | `same_app_key = "ALT + GRAVE"`, `omahop.lua:370`, `tests/live_sameapp.py:50` | | | |
-| C7 | Several switchers with own settings | Contexts | PARTLY | one extra (same-app) only; generic profiles deferred in `v0.4-plan.md`, `settings.md` "Later: profiles" | high | L | Needs a settings window design for N profiles (a repeating group), or it breaks "one window" rule. Risk: bind lifecycle (L8) per profile |
+| C7 | Several switchers with own settings | Contexts | PARTLY | one extra (same-app); named profiles switched by the `profile` setting built in v1.5 (D19, `settings.md` "Profiles"); a profile bound to its own shortcut is not built | high | L | Needs a settings window design for N profiles (a repeating group), or it breaks "one window" rule. Risk: bind lifecycle (L8) per profile |
 | C8 | Sort by importance (minimized, hidden, special) | Contexts | BUILT | `windows.minimized` back/hide, `windows.specials` hide/show, `mru.lua:24` minimized last | | | |
 | C9 | Filter by workspace and monitor | Contexts | BUILT | `windows.workspaces` current/floating/all, `windows.monitors`, `windows.lua:17`, `test_windows.lua`, `test_monitors.lua` (193 checks) | | | |
 | C10 | Group by Space | Contexts | NOT BUILT | list is flat MRU (`omahop.lua:113`) | low | S | A section header is a new widget; MRU is the point of the product. Skip |
@@ -95,7 +95,7 @@ Columns: id, item, source, status, evidence, then for PARTLY and NOT BUILT: valu
 | B34 | Search browser tabs | NOT BUILT | roadmap "browser tab search" | | | Context only |
 | B35 | Direct app hotkeys | OUT OF SCOPE | Omarchy 4.5 binds already focus-or-launch (`applications.lua:22`, `omarchy-launch-or-focus`) | | | |
 | B36 | Scoped shortcuts | PARTLY | same-app only | high | L | Same item as C7 |
-| B37 | Per-shortcut overrides | NOT BUILT | `settings.md` says the flat table was made so profiles can wrap it | high | L | Same item as C7 |
+| B37 | Per-shortcut overrides | PARTLY | v1.5 named profiles (`[profiles.<name>]`, D19) give the override layer; binding one to its own chord is not built | high | L | Same item as C7 |
 | B38 | Exclude current app per shortcut | NOT BUILT | first_pick skips the focused window only (`mru.lua:44`) | low | S | Part of profiles |
 | B39 | Pinned apps first | BUILT | `windows.first`, `rules.lua:24`, `live_rules.py:52` | | | |
 | B40 | Per-app rules: hide, ignore, group | PARTLY | ignore and pass-through built; no group rule | low | S | See B17 |
@@ -151,7 +151,7 @@ Columns: id, item, source, status, evidence, then for PARTLY and NOT BUILT: valu
 | F20 | Follows Omarchy theme | BUILT | C26, `ListRow.qml:30` | | | |
 | F21 | Settings GUI | BUILT | `SettingsPanel.qml`, `live_panel.py:47` | | | |
 | F22 | Config file | BUILT | B60 | | | |
-| F23 | Profiles | PARTLY | C7 | high | L | See C7 |
+| F23 | Profiles | PARTLY | C7 (named profiles built in v1.5, per-shortcut not) | high | L | See C7 |
 | F24 | Letter or number hints | BUILT | B29, C15 | | | |
 | F25 | Per-app ignore and rules | BUILT | C23, C24, B39 | | | |
 | F26 | Media or other widgets | REJECTED BY RULE | "no new widgets by default" (D11) | | | |

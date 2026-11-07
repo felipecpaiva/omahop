@@ -128,3 +128,17 @@ Run `python3 tests/live_tabs.py` first (virtual keyboard, a fake tab file and a 
 - [ ] Delete and the quit and minimize keys on a tab row do nothing (they never close the whole browser window).
 - [ ] The omahop log (`$XDG_RUNTIME_DIR/omahop/log`) holds no tab title or address after a session with tabs.
 - [ ] Quit the browser: its tab file goes; the next search shows no rows for it.
+
+## v1.5 (named profiles)
+
+Keep a copy of `~/.config/omahop/config.toml`, then add a `[profiles.work]` table with `style = "cards"` and a `[profiles.work.windows]` table with `ignore = "<a class you have open>"`:
+
+- [ ] Settings window, General: a Profile row shows None and work; None is marked.
+- [ ] Pick work: the file gets `profile = "work"` above the first table (never inside a profile table), and the next Alt+Tab shows cards and leaves out the ignored app, with no Hyprland reload.
+- [ ] With work picked, the Style row and the "Never list these apps" row each show the caption "Profile work sets this to ..."; the Style buttons still mark the base value. Other rows have no caption.
+- [ ] Change the Style row while work is picked: the base line changes in the file, the `[profiles.work]` line does not, and the caption stays.
+- [ ] Pick None (or use the reset link): the next Alt+Tab uses the base settings again and the captions go.
+- [ ] Add `takeover = false` and `style = "huge"` to `[profiles.work]`: Alt+Tab still works with the base style; the omahop log (`$XDG_RUNTIME_DIR/omahop/log`) has `config: profiles.work.style = huge` and `config: profiles.work.takeover: not overridable in a profile, ignored`.
+- [ ] `profile = "ghost"` by hand: the log has `config: profile = ghost: no such profile, using the base settings`, the switcher uses the base, and no Profile button is marked.
+- [ ] Peek strip: a profile with `peek = "always"` over a base with `peek = "off"` shows the strip at once when the profile is picked and hides it when None is picked (the overlay's live reader follows the profile).
+- [ ] A bad value the overlay reads live (`peek = "sometimes"` in the base): the strip stays off (the default) instead of acting on the raw value.

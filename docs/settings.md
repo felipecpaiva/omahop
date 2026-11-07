@@ -55,11 +55,43 @@ Edge rules:
 
 `thumbnail_exclude` (top level, group Look) is a comma separated list of window classes, case-insensitive, whole classes only. A listed window is never captured: cards and the peek popup show its app icon, in every `thumbnails` mode, and no capture object is created for it. The list style has no pictures and ignores it. Only the overlay reads it (live, through `ConfigReader`, parsed by `State.thumbnailExcludeSet`); the Lua side and the state file do not carry it.
 
-## Later: profiles (idea from BetterCmdTab, B-ids in its reference)
+## Profiles (v1.5, D19, design in `research/profiles-spike.md`)
 
-A profile is a named set of the settings above bound to its own shortcut, for example `Alt+Tab` = floating, active monitor,
-and `Alt+Backtick` = all windows, all monitors. The settings model is a flat table now so that profiles can wrap it later
-without a schema change: `profiles.<name>.windows.*` overrides the global values.
+A profile is a named set of settings that replaces some of the base ones. It lives in the same file as a
+`[profiles.<name>]` table (top-level keys) plus `[profiles.<name>.windows]` and `[profiles.<name>.keys]` for the nested
+sections. The top-level setting `profile` chooses one; empty (the default) uses the base settings as they are.
+
+```toml
+profile = "work"           # "" = none
+
+[profiles.work]
+style = "cards"
+thumbnails = "snapshot"
+
+[profiles.work.windows]
+ignore = "steam, discord"
+
+[profiles.gaming]
+style = "list"
+passthrough_fullscreen = true
+```
+
+| Rule | Detail |
+|---|---|
+| Name | Letters, digits and underscores (`[A-Za-z0-9_]+`); a table name with anything else is an unreadable line |
+| Layering | For each setting: the profile's value if it is valid, else the base value, else the default. A bad profile value keeps the base value and is logged (`config: profiles.work.style = 5`) |
+| Not overridable | `takeover`, `modifier`, `same_app_key` (read only at load), `browser_tabs`, `browser_tabs_ignore` (privacy: one place decides), `profile` (no chains). A profile key naming one is logged as `not overridable in a profile, ignored`. The rule is spec metadata (`reload`, `hidden`, `base_only`; `C.overridable`), written to `spec.json` as `overridable` |
+| Unknown profile | `profile = "ghost"` with no such table: logged, the base settings are used |
+| Unknown keys | Ignored inside a profile, as in the base; so is the hidden `schema` |
+| When it applies | The next Alt+Tab (Lua reads the file at each session start); the overlay's live readers (peek strip, icons, thumbnail exclusions) at once |
+| Settings window | One row, General > Profile: None plus the profiles in the file. Rows keep showing and editing the base value; a row the active profile replaces gets a caption, "Profile work sets this to Cards with thumbnails." Writing a profile's values is done in the file for now |
+
+One rule, two implementations: `C.resolve` in `lua/config.lua` (the switcher) and `ConfigIO.resolve` in `ConfigIO.js`
+(the overlay's `ConfigReader` and the settings window). `tests/config_io.test.mjs` runs both on the fixtures in
+`tests/fixtures/profiles/` and compares every value and every log line.
+
+Later (not built): choosing a profile automatically by workspace, monitor count or app; per-shortcut profiles (a profile
+bound to its own chord, the older BetterCmdTab idea); editing a profile's values in the settings window.
 
 ## Config file
 

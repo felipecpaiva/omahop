@@ -86,6 +86,7 @@ The settings window: open **omahop** from the launcher (Super+Space), or run `om
 
 ```toml
 schema = 1
+profile = ""             # a named set of settings from a [profiles.<name>] table below ("" = none); see "Profiles"
 takeover = true          # false: leave Alt+Tab alone
 modifier = "alt"         # the key you hold: "alt" or "ctrl" (needs a Hyprland reload; see "Choosing the key to hold")
 search = true            # type letters while the list is up to filter it
@@ -122,6 +123,25 @@ repeat_ms = 40
 ```
 
 The full model and every combination: `docs/settings.md`.
+
+### Profiles
+
+A profile is a named set of settings you switch in one step, for example cards for work and the plain list for games. Write it in the same file and choose it with `profile`, or in the settings window (General, Profile):
+
+```toml
+profile = "work"
+
+[profiles.work]
+style = "cards"
+
+[profiles.work.windows]
+ignore = "steam, discord"
+
+[profiles.gaming]
+passthrough_fullscreen = true
+```
+
+A profile replaces only the keys it names; everything else keeps your base value. A bad value in a profile keeps the base value and is logged. A profile never changes `takeover`, `modifier`, `same_app_key` or the browser tabs settings. The settings window shows which rows the chosen profile replaces; a profile's own values are written in the file. Details: `docs/settings.md`, "Profiles".
 
 ### Choosing the key to hold
 
