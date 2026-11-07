@@ -83,6 +83,7 @@ Item {
     var touch = DesktopEntries.applications.values.length
     root.refreshBorder()
     root.scanIcons()
+    root.scanPack()
     if (root.desktopSource !== "") {
       root.desktopInstalled = true
       Quickshell.execDetached(["sh", "-c", root.installScript, "sh", root.desktopSource, root.desktopDest, root.desktopMarker])
@@ -115,6 +116,33 @@ Item {
     }
   }
 
+  // The hand-made icon pack (setting icon_pack, "" = none): a folder under ~/.config/omahop/packs, listed and checked by tools/pack-index.sh,
+  // which writes why it refused a file or the pack to stderr (shown in the shell log). Its icons come before the system index. A separate scan, so
+  // changing the pack never reruns the slow system scan; rescanned the same way as the theme.
+  readonly property string iconPack: String(configReader.value("top", "icon_pack") || "")
+  property string scannedPack: ""
+  property var packIndex: IconResolve.parseIndex("")
+  onIconPackChanged: root.scanPack()
+  function scanPack() {
+    if (packScan.running) return
+    root.scannedPack = root.iconPack
+    packScan.running = true
+  }
+  Process {
+    id: packScan
+    command: ["bash", Paths.fromUrl(Qt.resolvedUrl("tools/pack-index.sh")), root.scannedPack]
+    onRunningChanged: if (!running && root.iconPack !== root.scannedPack) root.scanPack()
+    stdout: StdioCollector {
+      onStreamFinished: {
+        root.packIndex = IconResolve.parseIndex(text)
+        root.resolved = ({})
+      }
+    }
+    stderr: StdioCollector {
+      onStreamFinished: if (text.trim() !== "") console.warn(text.trim())
+    }
+  }
+
   function resolve(appId) {
     if (root.resolved[appId] !== undefined) return root.resolved[appId]
     var result = lookup(appId)
@@ -137,7 +165,7 @@ Item {
 
   function lookup(appId) {
     var entry = DesktopEntries.heuristicLookup(appId)
-    var path = IconResolve.resolve(root.iconIndex, appId, entry && entry.icon ? entry.icon : "")
+    var path = IconResolve.resolve(root.iconIndex, appId, entry && entry.icon ? entry.icon : "", [root.packIndex])
     // Nothing in any icon folder, not even a generic one: the themed name, which the image provider may still know.
     var source = path !== "" ? "file://" + path : Quickshell.iconPath(entry && entry.icon ? entry.icon : appId)
     return { icon: source, name: entry && entry.name ? entry.name : appId }

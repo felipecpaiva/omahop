@@ -215,6 +215,16 @@
       "section": "top",
       "type": "text"
     }, {
+      "default": "",
+      "help": "Type the folder name of an icon pack in ~/.config/omahop/packs, such as omahop-sample. Its icons come first; an app the pack has no icon for keeps its usual one. Empty uses no pack. A pack you made yourself or copied from someone: see docs/icon-packs.md for the format. Applies at once.",
+      "hidden": false,
+      "id": "top.icon_pack",
+      "key": "icon_pack",
+      "label": "Icon pack",
+      "reload": false,
+      "section": "top",
+      "type": "text"
+    }, {
       "default": true,
       "help": "Show close and minimize buttons on the row or card under the pointer. Delete (with Alt held) closes the picked window either way.",
       "hidden": false,

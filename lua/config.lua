@@ -53,6 +53,8 @@ C.spec = {
       help = "Pairs of letter and app class, comma separated, for example: c=google-chrome, t=kitty. Used when Quick jump keys is App letters." },
     icon_theme = { default = "", group = "look", label = "Icon theme",
       help = "Type the folder name of an installed icon theme, such as Papirus, to prefer its icons. Empty uses whichever installed theme the scan finds first. An app the theme has no icon for still gets one from the others. Applies after a shell restart." },
+    icon_pack = { default = "", group = "look", label = "Icon pack",
+      help = "Type the folder name of an icon pack in ~/.config/omahop/packs, such as omahop-sample. Its icons come first; an app the pack has no icon for keeps its usual one. Empty uses no pack. A pack you made yourself or copied from someone: see docs/icon-packs.md for the format. Applies at once." },
     border = { default = "auto", values = { "auto", "on", "off" }, group = "look", label = "Outline",
       names = { auto = "Follow Hyprland's window border", on = "Always", off = "Never" },
       help = "Auto draws no outline when you turned window borders off." },
@@ -90,7 +92,7 @@ C.groups = {
   { id = "shortcuts", title = "Shortcuts" },
 }
 C.order = { "top.takeover", "top.scope", "top.search", "top.search_fuzzy", "top.search_linger_seconds", "windows.workspaces", "windows.monitors", "windows.minimized", "windows.specials", "windows.ignore",
-  "top.style", "top.thumbnails", "top.thumbnail_exclude", "top.reveal_delay_ms", "top.border", "top.icon_theme", "top.actions", "keys.repeat_delay_ms", "keys.repeat_ms", "top.peek", "top.peek_position",
+  "top.style", "top.thumbnails", "top.thumbnail_exclude", "top.reveal_delay_ms", "top.border", "top.icon_theme", "top.icon_pack", "top.actions", "keys.repeat_delay_ms", "keys.repeat_ms", "top.peek", "top.peek_position",
   "windows.ignore_titles", "windows.first", "top.passthrough_fullscreen", "top.passthrough", "top.same_app_key", "top.hints", "top.hint_keys" }
 
 local function contains(list, v)
