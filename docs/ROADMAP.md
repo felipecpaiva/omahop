@@ -14,7 +14,7 @@ Every row must meet [engineering-standards.md](engineering-standards.md): flexib
 | v0.2 (RELEASED 2026-11-06, tag v0.2.0; plan in `v0.2-plan.md`) | Looks and settings app | Type-to-search in the list (moved up from v0.4, rivals have it), Phase 2 cards style with thumbnails (B1 to B3), `thumbnails` setting, Phase 3 settings panel (C1 to C3), multi-monitor overlay (B5) |
 | v0.3 (RELEASED 2026-11-06, tag v0.3.0; plan in `v0.3-plan.md`) | Pointer, quick actions, peek strip | Phase 4 hover previews (needs D8), minimized and special windows (B4), quick actions close and minimize (B6) |
 | v0.4 (RELEASED 2026-11-07, tag v0.4.0; plan in `v0.4-plan.md`) | Power features | Profiles, letter hints, per-app rules, ignore-when-fullscreen (BetterCmdTab ideas, see its reference) |
-| v1.0 (release candidate `v1.0.0-rc.1` 2026-11-07; plan in `v1.0-plan.md`) | Release polish | Requirements and privacy in the README, launch material in `docs/launch/`. `v1.0.0` after Felipe's hand checks; marketplace submission only with his go |
+| v1.0 (release candidate `v1.0.0-rc.2` 2026-11-07; plan in `v1.0-plan.md`) | Release polish | Requirements and privacy in the README, launch material in `docs/launch/`. `v1.0.0` after Felipe's hand checks; marketplace submission only with his go |
 
 Rule: v0.1 stays small on purpose. A feature not in the v0.1 row waits, but the settings model (`settings.md`) and the
 Lua/QML contract are built so that later features add values and views without rewriting the key handling.
@@ -69,3 +69,7 @@ E1 `tests/scrub.sh` clean, E2 offline and live suites green, E3 branding kit, E4
 - `tests/run-all.sh`: pure (MRU, scope, config), glue (fake `hl`), scrub, then live.
 - Scope test: on a tiling workspace, Alt+Tab result equals stock for every run.
 - Never create headless monitors in live tests.
+
+## After 1.0 (ideas, not scheduled)
+
+- **Icon packs** (Felipe, 2026-11-07): choose or build an icon pack in the settings window and override app icons. `IconResolve.js` is the one place icons are chosen, so a pack is one more layer in front of the system index. A pack is a folder with a small name-to-icon map (author, licence, version, preview) plus images. An editor in the settings window to make one (pick an app, pick an image), and export or import as one zip that holds data only: reject paths outside the pack and any file that is not an image or the map. Off by default, no new icons added.
