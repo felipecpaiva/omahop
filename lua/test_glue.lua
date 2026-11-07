@@ -371,6 +371,55 @@ do
   setcfg('[windows]\nworkspaces = "all"\n')
 end
 
+-- v1.3 action keys (action_keys): a mapped key acts on the selected row while the query is empty; otherwise it types
+do
+  local function setcfg(text) local f = io.open(TESTDIR .. "/cfg/omahop/config.toml", "w"); f:write(text); f:close() end
+  local function snapshot() local f = io.open(TESTDIR .. "/run/omahop/binds.txt", "w"); f:write("bind\n\tmodmask: 8\n\tkey: TAB\n\n"); f:close(); M.used = nil end
+  windows = {}
+  local wa = win("0xd1", "app-a", 1, { focus_history_id = 0, tags = { "omarchy-floating-workspace" } })
+  win("0xd2", "app-b", 1, { focus_history_id = 1, tags = { "omarchy-floating-workspace" } })
+  win("0xd3", "app-c", 1, { focus_history_id = 2, tags = { "omarchy-floating-workspace" } })
+  key_state.Alt_L = true; key_state.Tab = true
+  local function open_session(cfg)
+    if M.session:is_open() then M.session:key(clock, "cancel"); M.apply({}) end
+    setcfg(cfg .. '[windows]\nworkspaces = "current"\n')
+    snapshot(); active = wa; reset(); execd = {}; binds["ALT + TAB"]()
+    reset(); execd = {} -- the open itself injects a key
+  end
+  local function addrs() local t = {} for i, e in ipairs(M.entries) do t[i] = e.address end return table.concat(t, ",") end
+  -- off by default: q types
+  open_session("")
+  binds["ALT + Q"]()
+  assert(M.query == "q" and #dispatched == 0, "default (empty action_keys): q types into the search")
+  -- close on the selected row, query empty; the row leaves and the selection stays on the next one
+  open_session('action_keys = "q=close, m=minimize"\n')
+  assert(addrs() == "0xd1,0xd2,0xd3" and M.session:selected() == 2, "fixture: second row selected, got " .. addrs())
+  reset(); binds["ALT + Q"]()
+  assert(names() == "close" and dispatched[1].args.window.address == "0xd2", "q closes the selected window")
+  assert(M.query == "" and addrs() == "0xd1,0xd3" and M.session:selected() == 2 and M.entries[2].address == "0xd3", "list refreshed, selection on the next row")
+  -- minimize goes through the async script (exec_cmd), never a synchronous hyprctl
+  reset(); execd = {}; binds["ALT + M"]()
+  assert(#dispatched == 0 and execd[1] == "omarchy-hyprland-window-minimize 0xd3", "m runs the minimize script on the selected row")
+  assert(addrs() == "0xd1" and M.session:is_open() and M.session:selected() == 1, "minimized row left the list, selection clamped")
+  -- closing the last row empties the list and ends the session
+  reset(); binds["ALT + Q"]()
+  assert(not M.session:is_open() and dispatched[1].args.window.address == "0xd1", "an empty list closes the session")
+  -- once a letter is typed, the same key types
+  open_session('action_keys = "q=close, m=minimize"\n')
+  binds["ALT + B"]()
+  reset(); binds["ALT + Q"]()
+  assert(M.query == "bq" and #dispatched == 0 and M.session:is_open(), "with a query, q types and does not close")
+  -- a conflict with a hint key: the hint keeps the key, the action key is dropped
+  open_session('hints = "apps"\nhint_keys = "q=app-c"\naction_keys = "q=close, m=minimize"\n')
+  assert(M.action_map.q == nil and M.action_map.m == "minimize", "q is a hint key: only m stays an action key")
+  reset(); binds["ALT + Q"]()
+  assert(names() == "focus,alter_zorder" and dispatched[1].args.window.address == "0xd3", "the hint wins: q jumps to the app")
+  open_session('hints = "numbers"\naction_keys = "3=close, x=minimize"\n')
+  assert(M.action_map["3"] == nil and M.action_map.x == "minimize", "a number hint key is not an action key")
+  M.session:key(clock, "cancel"); M.apply({})
+  setcfg('[windows]\nworkspaces = "all"\n')
+end
+
 -- v1.1b linger (search_linger_seconds): Alt up with a search keeps the list open; the overlay sends the whole query with a sequence number
 do
   local function setcfg(text) local f = io.open(TESTDIR .. "/cfg/omahop/config.toml", "w"); f:write(text); f:close() end
