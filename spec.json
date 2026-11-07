@@ -374,6 +374,16 @@
       "reload": false,
       "section": "top",
       "type": "text"
+    }, {
+      "default": "",
+      "help": "Pairs of key and action, comma separated, for example: q=close, m=minimize. While the list is up and nothing is typed yet, that key acts on the selected window and the selection moves to the next row; once you have typed a letter, every key types. Actions: close, minimize. Empty (the default) turns it off. A key a hint already uses is left to the hint.",
+      "hidden": false,
+      "id": "top.action_keys",
+      "key": "action_keys",
+      "label": "Quit and minimize keys",
+      "reload": false,
+      "section": "top",
+      "type": "text"
     }],
     "title": "Shortcuts"
   }],
