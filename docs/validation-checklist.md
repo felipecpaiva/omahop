@@ -61,3 +61,10 @@ Automated checks (`tests/run-all.sh`) cover logic and the keyboard path with a v
 - [ ] Rules: a title fragment hides matching windows; "List these apps first" puts them first; fullscreen game or remote desktop: Alt+Tab is left to it with "Step aside for fullscreen apps" on; a named app too.
 - [ ] Quick jump keys: with numbers, `Alt + 3` picks the third row; with app letters (`c=google-chrome`) the letter jumps; a typed letter then a digit types; with hints off digits type.
 - [ ] The settings window shows the new groups (App rules, Shortcuts) and the changes apply.
+
+## v1.1a (search)
+
+- [ ] A window titled with an accent (for example "ação" or "Café"): Alt+Tab, type `acao` or `cafe`, it is listed.
+- [ ] Type `gc` with Google Chrome open: it is listed after any plain matches; `chrm` finds it too.
+- [ ] Settings, "Fuzzy search" off: `gc` and `chrm` find nothing; `acao` still finds "ação".
+- [ ] One letter, or an empty query, never brings in extra windows.

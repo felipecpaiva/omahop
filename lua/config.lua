@@ -18,6 +18,8 @@ C.spec = {
       help = "On other workspaces Alt+Tab stays exactly as Omarchy has it." },
     search = { default = true, group = "general", label = "Type to search",
       help = "While the list is up, typing letters filters it (hold Alt, press Tab, then type). Letters are only taken while Alt is held, and never replace a bind of your own." },
+    search_fuzzy = { default = true, group = "general", label = "Fuzzy search",
+      help = "Also match initials (gc finds Google Chrome) and letters in order inside a word (chrm finds chrome). These matches come after the plain ones." },
     style = { default = "list", values = { "list", "cards" }, group = "look", label = "Style",
       names = { list = "List", cards = "Cards with thumbnails" },
       help = "The list is plain and light. Cards show a picture of each window." },
@@ -81,7 +83,7 @@ C.groups = {
   { id = "rules", title = "App rules" },
   { id = "shortcuts", title = "Shortcuts" },
 }
-C.order = { "top.takeover", "top.scope", "top.search", "windows.workspaces", "windows.monitors", "windows.minimized", "windows.specials", "windows.ignore",
+C.order = { "top.takeover", "top.scope", "top.search", "top.search_fuzzy", "windows.workspaces", "windows.monitors", "windows.minimized", "windows.specials", "windows.ignore",
   "top.style", "top.thumbnails", "top.reveal_delay_ms", "top.border", "top.actions", "keys.repeat_delay_ms", "keys.repeat_ms", "top.peek", "top.peek_position",
   "windows.ignore_titles", "windows.first", "top.passthrough_fullscreen", "top.passthrough", "top.same_app_key", "top.hints", "top.hint_keys" }
 

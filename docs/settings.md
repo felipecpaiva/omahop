@@ -19,6 +19,7 @@ They are independent. Mixing them is allowed.
 | `windows.specials` | `hide`, `show` | `hide` | Scratchpad and console special workspaces |
 | `windows.ignore` | list of app id or title patterns | empty | Never listed |
 | `border` | auto, on, off | auto | The list card's outline. `auto` follows Hyprland's `general:border_size` (no outline when window borders are off); `on` and `off` force it |
+| `search_fuzzy` | on, off | on | Typed search also matches initials (`gc`: Google Chrome) and letters in order inside a word (`chrm`: chrome, 3+ letters), after the plain matches. Accents are always ignored (`acao` finds `ação`) |
 | `takeover` | on, off | on | Take over Alt+Tab at all. Off leaves a user's own Alt+Tab bind alone (a user can also set `_G.omahop_takeover = false` before omahop loads) |
 | `keys.repeat_delay_ms`, `keys.repeat_ms` | numbers | 250, 40 | Hold-Tab repeat, polled by omahop (no Hyprland `repeating` bind, so stock behaviour on tiling workspaces is untouched) |
 

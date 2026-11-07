@@ -207,7 +207,7 @@ function M.refilter()
       if class then M.names[class] = name end
     end
   end
-  M.entries = Search.filter(M.all_entries, M.query, M.names)
+  M.entries = Search.filter(M.all_entries, M.query, M.names, { fuzzy = M.cfg.search_fuzzy })
   M.session:resize(#M.entries, #M.entries > 0 and 1 or 0)
   M.write_state()
 end

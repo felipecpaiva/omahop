@@ -124,6 +124,12 @@ do
   binds["ALT + C"]()
   binds["ALT + ESCAPE"]()
   assert(M.query == "" and M.session:is_open() and #M.entries == 3, "first Escape clears the query and keeps the session")
+  -- fuzzy: "ac" is the initials of app-c's words, not a substring of anything; search_fuzzy = false drops it
+  binds["ALT + A"](); binds["ALT + C"]()
+  assert(#M.entries >= 1 and M.entries[1].class == "app-c", "search_fuzzy default: ac finds app-c by initials")
+  M.cfg.search_fuzzy = false; M.refilter()
+  assert(#M.entries == 0, "search_fuzzy = false: no fuzzy match")
+  M.cfg.search_fuzzy = true; binds["ALT + ESCAPE"]()
   binds["ALT + Z"]()
   assert(#M.entries == 0 and M.session:selected() == 0 and M.session:is_open(), "no match: empty list, session stays open")
   reset(); key_state.Alt_L = false; advance(25, 2)

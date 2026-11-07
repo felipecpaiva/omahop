@@ -36,6 +36,16 @@
       "reload": false,
       "section": "top",
       "type": "bool"
+    }, {
+      "default": true,
+      "help": "Also match initials (gc finds Google Chrome) and letters in order inside a word (chrm finds chrome). These matches come after the plain ones.",
+      "hidden": false,
+      "id": "top.search_fuzzy",
+      "key": "search_fuzzy",
+      "label": "Fuzzy search",
+      "reload": false,
+      "section": "top",
+      "type": "bool"
     }],
     "title": "General"
   }, {
