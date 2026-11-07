@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "omahop tabs spike",
+  "version": "0.0.1",
+  "description": "Throwaway spike: lists tabs to a local helper over native messaging.",
+  "minimum_chrome_version": "116",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmD1wfzqG7TtSqArwtcPEzKP1R7jACu/33kvCBAgeJYZMGqEWdC5HZJik3NvRwPRcmyoc6A/javvNV9vU4iWGIGlFkT64jlRc649UribjpmL2O2bYx7C4NTkFLuMVqJVmefsEaa/qBlVaBH6920in/R5CvQmR2OFw4FvtHnFqCiv4dTpcI0+PBL5nW6ctDTK/H94KJbW78X4ZAzhljHpTFpWA2MitiCuz6CT5fv7xs2fVDd6joURyG/HdmifwUg1gDqihd3VPztieCuYLslBycNrWjDeO2pWFkk+4oNgQJxooKnLut2+uExIk8v8H2OVjASwzrQZXMRmpeDtYZBicIQIDAQAB",
+  "permissions": [
+    "tabs",
+    "nativeMessaging"
+  ],
+  "background": {
+    "service_worker": "sw.js"
+  }
+}
