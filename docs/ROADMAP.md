@@ -16,7 +16,7 @@ Every row must meet [engineering-standards.md](engineering-standards.md): flexib
 | v0.4 (RELEASED 2026-11-07, tag v0.4.0; plan in `v0.4-plan.md`) | Power features | Profiles, letter hints, per-app rules, ignore-when-fullscreen (BetterCmdTab ideas, see its reference) |
 | v1.0 (RELEASED 2026-11-07, tag v1.0.0; plan in `v1.0-plan.md`) | Release polish | Requirements and privacy in the README, launch material in `docs/launch/`. submitted to the marketplace (issue 14254) |
 | v1.1 (RELEASED 2026-11-07, tag v1.1.0; plan in `v1.1-plan.md`) | Search and icons | accent and fuzzy search, `icon_theme`, `thumbnail_exclude` |
-| v1.1b (BUILT 2026-11-07 on branch `v1.1b`, not released; design in `research/linger-spike.md`) | Keep the list open while searching | `search_linger_seconds` (default 0): the overlay holds the keyboard while lingering, any character can be typed, Return picks, timeout and click outside cancel. Unit, glue, Node and live tests pass with one monitor; two monitors not measured |
+| v1.2 (RELEASED 2026-11-07, tag v1.2.0, was planned as v1.1b; design in `research/linger-spike.md`) | Keep the list open while searching | `search_linger_seconds` (default 0): the overlay holds the keyboard while lingering, any character can be typed, Return picks, timeout and click outside cancel. Unit, glue, Node and live tests pass with one monitor; two monitors not measured |
 
 Rule: v0.1 stays small on purpose. A feature not in the v0.1 row waits, but the settings model (`settings.md`) and the
 Lua/QML contract are built so that later features add values and views without rewriting the key handling.
