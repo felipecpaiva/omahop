@@ -240,6 +240,16 @@
       "section": "top",
       "type": "text"
     }, {
+      "default": false,
+      "help": "Off by default. When on, a small speaker shows next to the app name of a window whose app is playing sound (a call, music, a video), so you can find it. Checked once each time the list opens, with pactl; nothing runs while the list is closed, and song or video titles are never logged or saved. Paused or muted sound shows no speaker. A browser plays all its tabs through one process, so every window of that browser gets the speaker.",
+      "hidden": false,
+      "id": "top.audio_marker",
+      "key": "audio_marker",
+      "label": "Mark windows playing sound",
+      "reload": false,
+      "section": "top",
+      "type": "bool"
+    }, {
       "default": true,
       "help": "Show close and minimize buttons on the row or card under the pointer. Delete (with Alt held) closes the picked window either way.",
       "hidden": false,
