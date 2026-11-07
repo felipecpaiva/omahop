@@ -33,3 +33,4 @@ python3 tests/live_rules.py
 python3 tests/live_sameapp.py
 python3 tests/live_hints.py
 python3 tests/live_monitors.py
+python3 tests/live_linger.py
