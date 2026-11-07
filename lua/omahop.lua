@@ -268,7 +268,8 @@ end
 
 local function keys_down()
   local ok, tab = pcall(hl.is_key_down, "Tab")
-  return { mod = Modifier.held(M.mod, hl.is_key_down), tab = ok and tab or nil }
+  if not ok then tab = nil end
+  return { mod = Modifier.held(M.mod, hl.is_key_down), tab = tab }
 end
 
 -- Entry points for the overlay's pointer (called from QML through `hyprctl eval`, so every argument is validated: addresses are hex only, an index is an integer).
@@ -416,7 +417,7 @@ end
 
 local function bind_trigger_now()
   local chord, shifted = Modifier.chord(M.mod, M.trigger_key), Modifier.shift_chord(M.mod, M.trigger_key)
-  for _, c in ipairs({ chord, shifted }) do pcall(hl.unbind, c) end
+  if M.mod.replaces then for _, c in ipairs({ chord, shifted }) do pcall(hl.unbind, c) end end -- only Alt replaces a bind; the others bind only free chords
   hl.bind(chord, function() M.on_tab(1) end, {})
   hl.bind(shifted, function() M.on_tab(-1) end, {})
 end

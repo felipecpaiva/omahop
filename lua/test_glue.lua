@@ -14,7 +14,7 @@ local here = arg[0]:match("^(.*)/") or "."
 local TESTDIR = os.getenv("OMAHOP_TEST_DIR")
 
 -- ---- a fake hl ----
-local binds, dispatched, timers, key_state, handlers, execd, ever_bound, timer_opts = {}, {}, {}, {}, {}, {}, {}, {}
+local binds, dispatched, timers, key_state, handlers, execd, ever_bound, timer_opts, ever_unbound = {}, {}, {}, {}, {}, {}, {}, {}, {}
 local windows, active = {}, nil
 local clock = 1000
 local function win(addr, class, ws, extra)
@@ -36,7 +36,7 @@ hl = {
   get_window = function(sel) for _, w in ipairs(windows) do if "address:" .. w.address == sel then return w end end end,
   dispatch = function(d) dispatched[#dispatched + 1] = d end,
   bind = function(chord, fn) binds[chord] = fn; ever_bound[chord] = true end,
-  unbind = function(chord) binds[chord] = nil end,
+  unbind = function(chord) binds[chord] = nil; ever_unbound[chord] = true end,
   on = function(ev, fn) handlers[ev] = fn end,
   timer = function(fn, opts) timers[#timers + 1] = fn; timer_opts[#timer_opts + 1] = opts end,
   exec_cmd = function(cmd) execd[#execd + 1] = cmd end,
@@ -534,6 +534,8 @@ do
     os.remove(binds_path); load(); run_timers()
     assert(binds[B .. " + TAB"] == nil and logtext():find("no snapshot of the binds yet, " .. B .. " + TAB not bound", 1, true), case.name .. ": no snapshot, not bound")
   end
+  assert(not ever_unbound["SUPER + TAB"] and not ever_unbound["SUPER + SHIFT + TAB"] and not ever_unbound["CTRL + TAB"] and not ever_unbound["CTRL + SHIFT + TAB"],
+    "super and ctrl never unbind their Tab chord (it may belong to Omarchy or the user)")
   -- an unknown value falls back to Alt (bound at once) with a note; so does a wrong type
   for _, bad in ipairs({ '"hyper"', '"SUPER"', "3" }) do
     setcfg("modifier = " .. bad .. "\n" .. base); snapshot(); load()
