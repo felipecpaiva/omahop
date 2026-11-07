@@ -25,7 +25,7 @@ The marketplace is `omacom/omarchy-plugin-marketplace`. It reads `manifest.json`
 
 An Alt+Tab window switcher for Omarchy's floating workspaces. The plugin is the overlay and the settings window; the key handling is a Lua file loaded from `hyprland.lua` with one guarded line the user adds (the plugin does not edit that file). By default it only acts on floating workspaces; tiling workspaces keep Omarchy's own Alt+Tab. List or cards with window thumbnails, type to search, mouse and quick actions, an optional peek strip of running apps (off by default), a same-app shortcut, app rules, quick jump keys.
 Overlaps with core: pull requests 16548 (Alt+Tab with live thumbnails) and 16219 and 16479 (dock hover previews) are open; omahop differs by its floating-workspace scope, settings window, list style and search, and its own optional strip (a third-party plugin cannot extend the dock).
-Known limits: two monitors and unplugging a monitor are tested in code, not yet on real hardware; the Alt-menu fix is verified on a Qt app only.
+Known limits: two monitors are tested live (the window set per monitor and picking across monitors, 2026-11-07); unplugging a monitor is not yet checked on real hardware; the Alt-menu fix is verified on a Qt app only.
 
 ## Submit from the command line (when approved)
 

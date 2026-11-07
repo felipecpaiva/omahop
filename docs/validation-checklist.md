@@ -13,7 +13,7 @@ Automated checks (`tests/run-all.sh`) cover logic and the keyboard path with a v
 - [ ] A minimized window (Super+M) is listed last and comes back to your workspace when picked.
 - [ ] `scope = "all"` and `windows.workspaces = "all"` in `~/.config/omahop/config.toml`, then `hyprctl reload`: the switcher works on tiling workspaces too.
 - [ ] `takeover = false`: Alt+Tab is stock everywhere.
-- [ ] Two monitors: with `windows.monitors = "all"` the other monitor's windows are listed and picking one moves you there. (The overlay shows on the focused monitor.)
+- [x] Two monitors: with `windows.monitors = "all"` the other monitor's windows are listed and picking one moves you there. (Automated, `tests/live_monitors.py`, passed 2026-11-07 with a second monitor connected.) (The overlay shows on the focused monitor.)
 - [ ] The empty-state: only one window open, Alt+Tab does nothing visible.
 
 ## v0.2 (settings window)
