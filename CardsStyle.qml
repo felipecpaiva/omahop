@@ -73,13 +73,14 @@ BorderSurface {
       height: view.height
       readonly property var info: strip.resolve(modelData.appId)
       iconSource: info.icon
-      appName: info.name
+      // a browser tab (setting browser_tabs) is a card with the browser icon, its site as the caption, no picture and no buttons
+      appName: modelData.tab ? State.tabCaption(modelData, qsTr("shown")) : info.name
       title: modelData.title
       minimized: modelData.minimized
       thumbnails: strip.thumbnails
-      toplevel: strip.toplevelFor(modelData.address, modelData.appId)
+      toplevel: modelData.tab ? null : strip.toplevelFor(modelData.address, modelData.appId)
       selected: index === strip.selected - 1
-      actions: strip.actions
+      actions: strip.actions && !modelData.tab
       hint: modelData.hint || ""
       onPicked: strip.picked(index + 1)
       onCloseRequested: strip.closeRequested(modelData.address)
