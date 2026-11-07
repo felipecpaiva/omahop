@@ -82,6 +82,7 @@ scope = "floating"       # "floating": only on floating workspaces, "all": every
 reveal_delay_ms = 100    # a quick tap shows no overlay
 style = "list"           # "list" (plain) or "cards" (a picture of each window)
 thumbnails = "snapshot"  # cards only: "snapshot" (one picture when it opens), "live" (keeps updating, uses CPU), "off" (icons only)
+thumbnail_exclude = ""   # window classes never captured into a picture, comma separated (password manager, bank): they show the app icon
 actions = true           # close and minimize buttons on the hovered row or card
 same_app_key = "ALT + GRAVE"  # the same-app shortcut ("" turns it off, needs a Hyprland reload)
 hints = "off"            # quick jump keys: "off", "numbers", "apps" (with hint_keys = "c=google-chrome, t=kitty")

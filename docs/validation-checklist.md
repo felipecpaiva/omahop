@@ -68,3 +68,6 @@ Automated checks (`tests/run-all.sh`) cover logic and the keyboard path with a v
 - [ ] Type `gc` with Google Chrome open: it is listed after any plain matches; `chrm` finds it too.
 - [ ] Settings, "Fuzzy search" off: `gc` and `chrm` find nothing; `acao` still finds "ação".
 - [ ] One letter, or an empty query, never brings in extra windows.
+## v1.1a (thumbnail exclusions)
+
+- [ ] Settings, "Never take a picture of these apps" = `kitty`, cards style: the kitty card shows its app icon in the middle, other cards still show pictures; same in the peek strip's hover popup. Works with Snapshot and Live. Empty again: kitty shows a picture.

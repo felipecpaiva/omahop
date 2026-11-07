@@ -153,6 +153,16 @@
       "type": "enum",
       "values": ["live", "snapshot", "off"]
     }, {
+      "default": "",
+      "help": "Window classes, comma separated, that are never captured into a picture (a password manager, a bank, a private window). Cards and the peek strip show the app icon instead. Applies to Snapshot and Live alike.",
+      "hidden": false,
+      "id": "top.thumbnail_exclude",
+      "key": "thumbnail_exclude",
+      "label": "Never take a picture of these apps",
+      "reload": false,
+      "section": "top",
+      "type": "text"
+    }, {
       "default": 100,
       "help": "A quick tap flips between your last two windows with no list. 0 shows the list at once.",
       "hidden": false,

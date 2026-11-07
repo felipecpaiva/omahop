@@ -110,8 +110,11 @@ Item {
     return result
   }
 
-  // The Wayland toplevel to capture for a Hyprland window address, or null (a window with no toplevel, such as a Wine ghost, shows its icon instead).
-  function toplevelFor(address) {
+  // The Wayland toplevel to capture for a Hyprland window address, or null (a window with no toplevel, such as a Wine ghost, or an app in thumbnail_exclude, shows its icon instead).
+  // Classes from the live config that are never captured (State.thumbnailExcludeSet); the check is here so no capture object exists for them.
+  readonly property var thumbExcluded: State.thumbnailExcludeSet(configReader.value("top", "thumbnail_exclude"))
+  function toplevelFor(address, appId) {
+    if (State.isThumbnailExcluded(root.thumbExcluded, appId)) return null
     var key = State.normalizeAddress(address)
     var all = Hyprland.toplevels.values
     for (var i = 0; i < all.length; i++) {

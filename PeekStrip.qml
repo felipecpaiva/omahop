@@ -244,7 +244,7 @@ PanelWindow {
           title: modelData.title
           minimized: modelData.minimized
           thumbnails: win.thumbnails
-          toplevel: win.service.toplevelFor(modelData.address)
+          toplevel: win.service.toplevelFor(modelData.address, modelData.appId)
           actions: win.actions
           onPicked: win.service.focusWindow(modelData.address, modelData.minimized)
           onCloseRequested: win.service.closeWindow(modelData.address)

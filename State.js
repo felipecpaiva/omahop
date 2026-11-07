@@ -2,6 +2,21 @@
 // omahop state file parser. The Lua side (lua/omahop.lua write_state) writes it; the overlay reads it. Pure, so Node tests it (tests/state.test.mjs).
 // Format: "key=value" lines, then one tab-separated line per window: w <address> <class> <minimized 0|1> <hint> <title> (hint: a number or letter, empty for none).
 
+// The thumbnail_exclude setting ("kitty, 1Password") as a set of lower-case window classes. Whole classes only, never a substring match.
+function thumbnailExcludeSet(text) {
+  var set = {}, items = String(text || "").split(",")
+  for (var i = 0; i < items.length; i++) {
+    var name = items[i].trim().toLowerCase()
+    if (name !== "") set[name] = true
+  }
+  return set
+}
+
+function isThumbnailExcluded(excludeSet, appId) {
+  var name = String(appId || "").trim().toLowerCase()
+  return name !== "" && excludeSet[name] === true
+}
+
 function parse(text) {
   var st = { open: false, revealed: false, selected: 0, style: "list", thumbnails: "snapshot", border: "auto", actions: true, query: "", entries: [] }
   var lines = String(text || "").split("\n")

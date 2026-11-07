@@ -31,7 +31,7 @@ BorderSurface {
   property int outline: Math.max(1, Style.space(2))
   // The owner supplies these, so this file needs no desktop-entry or Hyprland knowledge.
   property var resolve: function (appId) { return { icon: "", name: appId } }
-  property var toplevelFor: function (address) { return null }
+  property var toplevelFor: function (address, appId) { return null }
 
   readonly property int cardWidth: Style.space(220)
   readonly property int cardHeight: Style.space(176)
@@ -77,7 +77,7 @@ BorderSurface {
       title: modelData.title
       minimized: modelData.minimized
       thumbnails: strip.thumbnails
-      toplevel: strip.toplevelFor(modelData.address)
+      toplevel: strip.toplevelFor(modelData.address, modelData.appId)
       selected: index === strip.selected - 1
       actions: strip.actions
       hint: modelData.hint || ""

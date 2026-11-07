@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs"
 import assert from "node:assert/strict"
 const src = readFileSync(new URL("../State.js", import.meta.url), "utf8").replace(".pragma library", "")
-const State = new Function(src + "; return { parse, visibleRows, borderWidth, normalizeAddress, visibleCards }")()
+const State = new Function(src + "; return { thumbnailExcludeSet, isThumbnailExcluded, parse, visibleRows, borderWidth, normalizeAddress, visibleCards }")()
 
 const text = "version=1\nopen=1\nrevealed=1\nselected=2\nstyle=list\nthumbnails=snapshot\nw\t0xa\tkitty\t0\t1\tfirst title\nw\t0xb\tgoogle-chrome\t1\t\tsecond\ttitle with a tab\n"
 const s = State.parse(text)
@@ -43,4 +43,18 @@ assert.equal(none.open, true); assert.equal(none.entries.length, 0)
 assert.equal(State.parse("open=1\nrevealed=1\nselected=0\n").open, false, "no query and nothing selected: hidden")
 assert.equal(State.parse("").query, "")
 assert.equal(State.parse("actions=1\n").actions, true); assert.equal(State.parse("actions=0\n").actions, false); assert.equal(State.parse("").actions, true, "buttons on by default")
+// thumbnail exclusions: whole classes, case-insensitive, spaces around commas ignored
+const ex = State.thumbnailExcludeSet(" Kitty ,1Password,, org.gnome.Nautilus , my-app ")
+assert.equal(State.isThumbnailExcluded(ex, "kitty"), true)
+assert.equal(State.isThumbnailExcluded(ex, "KITTY"), true)
+assert.equal(State.isThumbnailExcluded(ex, "1password"), true)
+assert.equal(State.isThumbnailExcluded(ex, "org.gnome.Nautilus"), true, "dots")
+assert.equal(State.isThumbnailExcluded(ex, "my-app"), true, "dashes")
+assert.equal(State.isThumbnailExcluded(ex, "kitty-terminal"), false, "a class that contains an excluded word is not a match")
+assert.equal(State.isThumbnailExcluded(ex, "org.gnome"), false)
+assert.equal(State.isThumbnailExcluded(ex, "my"), false)
+assert.equal(State.isThumbnailExcluded(State.thumbnailExcludeSet(""), "kitty"), false, "empty list excludes nothing")
+assert.equal(State.isThumbnailExcluded(State.thumbnailExcludeSet(undefined), ""), false)
+assert.equal(State.isThumbnailExcluded(ex, ""), false, "no class is never excluded")
+assert.equal(State.isThumbnailExcluded(ex, "constructor"), false, "inherited object keys are not classes")
 console.log("state ok")

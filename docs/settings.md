@@ -44,6 +44,10 @@ Edge rules:
 - Picking a window on another workspace or monitor focuses it and switches there. Same rule everywhere, no special cases.
 - If `scope = floating` and the current desktop is tiling, omahop is out of the picture: the stock bind runs, `windows.*` is not read.
 
+## Thumbnail exclusions
+
+`thumbnail_exclude` (top level, group Look) is a comma separated list of window classes, case-insensitive, whole classes only. A listed window is never captured: cards and the peek popup show its app icon, in every `thumbnails` mode, and no capture object is created for it. The list style has no pictures and ignores it. Only the overlay reads it (live, through `ConfigReader`, parsed by `State.thumbnailExcludeSet`); the Lua side and the state file do not carry it.
+
 ## Later: profiles (idea from BetterCmdTab, B-ids in its reference)
 
 A profile is a named set of the settings above bound to its own shortcut, for example `Alt+Tab` = floating, active monitor,

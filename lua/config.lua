@@ -28,6 +28,8 @@ C.spec = {
     thumbnails = { default = "snapshot", values = { "live", "snapshot", "off" }, group = "look", label = "Thumbnails (cards)",
       names = { live = "Live", snapshot = "Snapshot when it opens", off = "Off (icons only)" },
       help = "Snapshot takes one picture of each window when the cards open and costs almost nothing. Live keeps them updating and uses noticeable CPU with many windows." },
+    thumbnail_exclude = { default = "", group = "look", label = "Never take a picture of these apps",
+      help = "Window classes, comma separated, that are never captured into a picture (a password manager, a bank, a private window). Cards and the peek strip show the app icon instead. Applies to Snapshot and Live alike." },
     actions = { default = true, group = "look", label = "Close and minimize buttons",
       help = "Show close and minimize buttons on the row or card under the pointer. Delete (with Alt held) closes the picked window either way." },
     peek = { default = "off", values = { "off", "edge", "always" }, group = "peek", label = "Peek strip",
@@ -84,7 +86,7 @@ C.groups = {
   { id = "shortcuts", title = "Shortcuts" },
 }
 C.order = { "top.takeover", "top.scope", "top.search", "top.search_fuzzy", "windows.workspaces", "windows.monitors", "windows.minimized", "windows.specials", "windows.ignore",
-  "top.style", "top.thumbnails", "top.reveal_delay_ms", "top.border", "top.actions", "keys.repeat_delay_ms", "keys.repeat_ms", "top.peek", "top.peek_position",
+  "top.style", "top.thumbnails", "top.thumbnail_exclude", "top.reveal_delay_ms", "top.border", "top.actions", "keys.repeat_delay_ms", "keys.repeat_ms", "top.peek", "top.peek_position",
   "windows.ignore_titles", "windows.first", "top.passthrough_fullscreen", "top.passthrough", "top.same_app_key", "top.hints", "top.hint_keys" }
 
 local function contains(list, v)
