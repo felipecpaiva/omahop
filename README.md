@@ -11,7 +11,7 @@
 
 Jump to any window fast on Omarchy's floating workspaces. Hold Alt, press Tab: a list of your windows (icon, app name, title) appears in your Omarchy theme. Let go of Alt to switch.
 
-**Status: v1.0.0 release candidate (v1.0.0-rc.4).** A list or cards switcher, type to search, mouse and quick actions, an optional peek strip, a same-app shortcut, app rules, quick jump keys and a settings window. More in later releases (see `docs/ROADMAP.md`).
+**Status: v1.0.0 released.** A list or cards switcher, type to search, mouse and quick actions, an optional peek strip, a same-app shortcut, app rules, quick jump keys and a settings window. More in later releases (see `docs/ROADMAP.md`).
 
 ## See it
 

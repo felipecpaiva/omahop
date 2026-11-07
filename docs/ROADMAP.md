@@ -14,7 +14,7 @@ Every row must meet [engineering-standards.md](engineering-standards.md): flexib
 | v0.2 (RELEASED 2026-11-06, tag v0.2.0; plan in `v0.2-plan.md`) | Looks and settings app | Type-to-search in the list (moved up from v0.4, rivals have it), Phase 2 cards style with thumbnails (B1 to B3), `thumbnails` setting, Phase 3 settings panel (C1 to C3), multi-monitor overlay (B5) |
 | v0.3 (RELEASED 2026-11-06, tag v0.3.0; plan in `v0.3-plan.md`) | Pointer, quick actions, peek strip | Phase 4 hover previews (needs D8), minimized and special windows (B4), quick actions close and minimize (B6) |
 | v0.4 (RELEASED 2026-11-07, tag v0.4.0; plan in `v0.4-plan.md`) | Power features | Profiles, letter hints, per-app rules, ignore-when-fullscreen (BetterCmdTab ideas, see its reference) |
-| v1.0 (release candidate `v1.0.0-rc.4` 2026-11-07; plan in `v1.0-plan.md`) | Release polish | Requirements and privacy in the README, launch material in `docs/launch/`. `v1.0.0` after Felipe's hand checks; marketplace submission only with his go |
+| v1.0 (RELEASED 2026-11-07, tag v1.0.0; plan in `v1.0-plan.md`) | Release polish | Requirements and privacy in the README, launch material in `docs/launch/`. submitted to the marketplace (issue 14254) |
 
 Rule: v0.1 stays small on purpose. A feature not in the v0.1 row waits, but the settings model (`settings.md`) and the
 Lua/QML contract are built so that later features add values and views without rewriting the key handling.
@@ -73,3 +73,9 @@ E1 `tests/scrub.sh` clean, E2 offline and live suites green, E3 branding kit, E4
 ## After 1.0 (ideas, not scheduled)
 
 - **Icon packs** (Felipe, 2026-11-07): choose or build an icon pack in the settings window and override app icons. `IconResolve.js` is the one place icons are chosen, so a pack is one more layer in front of the system index. A pack is a folder with a small name-to-icon map (author, licence, version, preview) plus images. An editor in the settings window to make one (pick an app, pick an image), and export or import as one zip that holds data only: reject paths outside the pack and any file that is not an image or the map. Off by default, no new icons added.
+- **Keep the list open while you search** (Felipe, 2026-11-07). Today the list closes when Alt is released. After you type, you should be able to let go of every key and keep searching without holding Alt. Proposed setting: `search_linger_seconds` (0 = off, which is today's behaviour; a number of seconds keeps the list open after Alt is released once a query has started). Design notes:
+  - The countdown restarts on every key, so it only closes when you stop. Return picks the selected window, Escape cancels (first Escape clears the query), a click on a row picks it.
+  - When the time runs out the list cancels, it does not pick: a wrong pick is worse than a closed list.
+  - With Alt up, the typed keys must reach the list. Today the session binds only `ALT + key` chords. A linger session would also bind the bare letters, digits, Backspace, Return and Escape, again only while the list is open and only for chords that are free in the bind snapshot; the alternative is to give the overlay keyboard focus for those seconds. Pick one in a short spike before building (the bare-key binds would steal keys from the app for a few seconds, the focus route needs the layer-shell keyboard mode to work on every compositor setup).
+  - No new widget: the remaining time can show as a thin line under the search chip. It is a setting in the settings window under "Look" or "General", with the default stated.
+  - Tests: pure (timer logic, query rules), glue (fake `hl`), live (type, release all keys, wait less than the time, keep typing, press Return).

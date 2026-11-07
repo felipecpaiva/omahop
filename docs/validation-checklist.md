@@ -30,7 +30,7 @@ Automated checks (`tests/run-all.sh`) cover logic and the keyboard path with a v
 - [ ] A window on another floating workspace, a covered window and a minimized window each show their own picture (or the app icon if the app cannot be captured).
 - [ ] With many windows open (more than 7) the strip scrolls and the picked card stays in view.
 - [ ] Thumbnails = Live: the pictures update while the strip is up (try a terminal printing output); notice the CPU cost with many windows. Thumbnails = Off: icons only.
-- [ ] Unplug a monitor while windows are on it, then Alt+Tab: Hyprland must not crash (L6).
+- [x] Unplug a monitor while windows are on it, then Alt+Tab: Hyprland must not crash (L6). (Felipe, 2026-11-07: worked, no problem.)
 
 ## v0.2 (search)
 
@@ -49,7 +49,7 @@ Automated checks (`tests/run-all.sh`) cover logic and the keyboard path with a v
 - [ ] `Alt + Delete` closes the picked window.
 - [ ] Settings, Peek strip = "Show when the pointer touches the screen edge": nothing shows until the pointer hits the edge; the strip then appears, an app hover shows its windows, a click goes there; it hides when the pointer leaves.
 - [ ] Peek strip on the same edge as your dock or bar does not happen by default (auto picks a free edge); check with your layout, and try every explicit edge.
-- [ ] Two monitors: a strip on each screen, listing that screen's windows (minimized ones on every screen).
+- [x] Two monitors (Felipe, 2026-11-07): a strip on each screen, listing that screen's windows (minimized ones on every screen).
 - [ ] Peek = Off: no new thing anywhere on the desktop.
 - [ ] Your own mouse snapping (omagnet) and the Omarchy dock still work with the strip on.
 
