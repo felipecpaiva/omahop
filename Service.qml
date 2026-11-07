@@ -80,16 +80,42 @@ Item {
   Component.onCompleted: {
     var touch = DesktopEntries.applications.values.length
     root.refreshBorder()
+    iconScan.running = true
     if (root.desktopSource !== "") {
       root.desktopInstalled = true
       Quickshell.execDetached(["sh", "-c", root.installScript, "sh", root.desktopSource, root.desktopDest, root.desktopMarker])
     }
   }
 
+  // Icon name -> file path. The shell hands its app library only to menu plugins, so omahop indexes the XDG icon folders itself
+  // (tools/icon-index.sh). Nothing is cached before the scan ends, so no row keeps a missing icon.
+  property var iconIndex: ({})
+  property bool iconIndexReady: false
+  Process {
+    id: iconScan
+    command: ["bash", Paths.fromUrl(Qt.resolvedUrl("tools/icon-index.sh"))]
+    stdout: StdioCollector {
+      onStreamFinished: {
+        var index = {}
+        var lines = text.split("\n")
+        for (var i = 0; i < lines.length; i++) {
+          var path = lines[i].trim()
+          if (path.length === 0) continue
+          var file = path.slice(path.lastIndexOf("/") + 1)
+          var dot = file.lastIndexOf(".")
+          var name = dot > 0 ? file.slice(0, dot) : file
+          if (index[name] === undefined) index[name] = path
+        }
+        root.iconIndex = index
+        root.iconIndexReady = true
+      }
+    }
+  }
+
   function resolve(appId) {
     if (root.resolved[appId] !== undefined) return root.resolved[appId]
     var result = lookup(appId)
-    root.resolved[appId] = result
+    if (root.iconIndexReady) root.resolved[appId] = result
     return result
   }
 
@@ -107,7 +133,8 @@ Item {
     var entry = DesktopEntries.heuristicLookup(appId)
     var icon = entry && entry.icon ? entry.icon : appId
     var library = root.shell ? root.shell.appLibrary : null
-    var source = library ? library.iconSource(icon) : Quickshell.iconPath(icon)
+    var indexed = icon.charAt(0) === "/" ? icon : root.iconIndex[icon]
+    var source = library ? library.iconSource(icon) : (indexed ? "file://" + indexed : Quickshell.iconPath(icon))
     // No desktop entry and no icon of that name: a generic application icon, not the checkerboard of a missing image.
     if (!source || String(source) === "") source = Quickshell.iconPath("application-x-executable")
     return { icon: source, name: entry && entry.name ? entry.name : appId }
