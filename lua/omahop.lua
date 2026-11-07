@@ -4,18 +4,20 @@
 -- The overlay is a separate Quickshell service that watches the state file this module writes (see write_state).
 local here = debug.getinfo(1, "S").source:match("^@(.*)/") or "."
 local function mod(name) return dofile(here .. "/" .. name .. ".lua") end
-local Config, Scope, Windows, Mru, Session, Search, Rules, Hints = mod("config"), mod("scope"), mod("windows"), mod("mru"), mod("session"), mod("search"), mod("rules"), mod("hints")
+local Config, Scope, Windows, Mru, Session, Search, Rules, Hints, Modifier = mod("config"), mod("scope"), mod("windows"), mod("mru"), mod("session"), mod("search"), mod("rules"), mod("hints"), mod("modifier")
 
 local M = {}
 _G.omahop = M
 
-M.tick_ms = 16 -- key polling interval: shorter means Alt release is noticed sooner (a tick costs about 8 microseconds, measured)
+M.tick_ms = 16 -- key polling interval: shorter means the modifier's release is noticed sooner (a tick costs about 8 microseconds, measured)
 M.release_ms = 50 -- after the overlay lets go of the keyboard, wait this long before focusing: a focus call is ignored while it holds the keyboard (linger spike)
 M.query_max = 256 -- bytes of a search typed into the overlay (set_query); longer is refused
 M.inject_key = "F24" -- see docs/research/spikes.md L1: without it, an app under the overlay sees a bare Alt tap and opens its menu bar
--- Chords active only while a session is open; ALT is held for the whole session. (Unbinding them at the end would also drop a
+M.trigger_key = "TAB"
+-- Keys active only while a session is open, each with the modifier (setting `modifier`, held for the whole session). (Unbinding them at the end would also drop a
 -- user's own bind on the same chord: shortcut, none exist in the stock set; upgrade by reading the bind list if one appears.)
-M.session_keys = { ["ALT + DELETE"] = "delete", ["ALT + ESCAPE"] = "escape", ["ALT + RETURN"] = "return", ["ALT + LEFT"] = "left", ["ALT + RIGHT"] = "right", ["ALT + UP"] = "up", ["ALT + DOWN"] = "down" }
+M.session_keys = { DELETE = "delete", ESCAPE = "escape", RETURN = "return", LEFT = "left", RIGHT = "right", UP = "up", DOWN = "down" }
+M.mod = Modifier.get(Modifier.default) -- pinned in setup: the chords and the polled keys must stay the ones that were bound
 
 local state_dir = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/omahop"
 M.state_path = state_dir .. "/state"
@@ -202,7 +204,7 @@ local function load_used()
   return M.used
 end
 
--- Letters, digits, space and backspace, typed while Alt is held (modmask 8). Each maps to what it adds to the query.
+-- Letters, digits, space and backspace, typed while the modifier is held. Each maps to what it adds to the query.
 local function typing_keys()
   local t = {}
   for c = string.byte("A"), string.byte("Z") do t[string.char(c)] = string.char(c):lower() end
@@ -243,15 +245,15 @@ local function bind_session_keys(on)
   M.bound = {}
   if not on then return end
   local used = load_used()
-  local function free(key) return used == nil or not used["8:" .. key] end
-  local function add(chord, key, fn)
-    -- keys with a bind of the user's own are left alone; unknown (no snapshot yet) is allowed for navigation keys, never for typing
+  -- keys with a bind of the user's own are left alone; unknown (no snapshot yet) is allowed for navigation keys, never for typing
+  local function free(key) return Modifier.free(M.mod, used, key) ~= false end
+  local function add(key, fn)
+    local chord = Modifier.chord(M.mod, key)
     if pcall(hl.bind, chord, fn, {}) then M.bound[#M.bound + 1] = chord end
   end
-  for chord, name in pairs(M.session_keys) do
-    local key = chord:match("%+ (%w+)$")
+  for key, name in pairs(M.session_keys) do
     if free(key) then
-      add(chord, key, function()
+      add(key, function()
         if name == "delete" then M.close_selected(); return end                           -- quick action: close the picked window
         M.apply(M.session:key(M.now(), name))
       end)
@@ -259,20 +261,14 @@ local function bind_session_keys(on)
   end
   if M.cfg.search and used ~= nil then
     for key, ch in pairs(typing_keys()) do
-      if free(key) then add("ALT + " .. key, key, function() M.type_key(ch) end) end
+      if free(key) then add(key, function() M.type_key(ch) end) end
     end
   end
 end
 
 local function keys_down()
-  local alt, tab = nil, nil
-  for _, k in ipairs({ "Alt_L", "Alt_R" }) do
-    local ok, r = pcall(hl.is_key_down, k)
-    if ok and r ~= nil then alt = (alt or false) or r end
-  end
-  local ok, r = pcall(hl.is_key_down, "Tab")
-  if ok then tab = r end
-  return { alt = alt, tab = tab }
+  local ok, tab = pcall(hl.is_key_down, "Tab")
+  return { mod = Modifier.held(M.mod, hl.is_key_down), tab = ok and tab or nil }
 end
 
 -- Entry points for the overlay's pointer (called from QML through `hyprctl eval`, so every argument is validated: addresses are hex only, an index is an integer).
@@ -390,31 +386,52 @@ function M.same_app(entries, focused)
   return out
 end
 
--- Give a chord's key back to the focused app (used when the same-app chord fires where omahop is not active). send_key_state, never pass: pass makes Hyprland call the bind again.
-function M.pass_chord(chord)
+-- Give a chord's key back to the focused app (used when a chord with no stock meaning fires where omahop is not active). send_key_state, never pass: pass makes Hyprland call the bind again.
+function M.pass_chord(chord, shift)
   local key = chord and chord:match("%+ (%w+)$")
   local w = hl.get_active_window()
   if not key or not w then return end
   key = key:lower()
+  local mods = M.mod.bind .. (shift and " SHIFT" or "")
   pcall(function()
-    hl.dispatch(hl.dsp.send_key_state({ mods = "ALT", key = key, state = "down", window = w }))
-    hl.dispatch(hl.dsp.send_key_state({ mods = "ALT", key = key, state = "up", window = w }))
+    hl.dispatch(hl.dsp.send_key_state({ mods = mods, key = key, state = "down", window = w }))
+    hl.dispatch(hl.dsp.send_key_state({ mods = mods, key = key, state = "up", window = w }))
   end)
 end
 
 -- Bind the same-app shortcut (and its Shift variant) once the snapshot of existing binds is there: a chord that is already used is left alone (never unbound).
--- Only chords that start with ALT work (omahop polls the Alt keys to know when to end).
+-- Only chords that start with the modifier work (omahop polls that key to know when to end).
 function M.bind_same_app()
   local chord = M.cfg and M.cfg.same_app_key or ""
   if chord == "" then return end
-  local key = chord:match("^ALT %+ (%w+)$")
-  if not key then log("same_app_key must look like ALT + GRAVE, ignored: " .. chord); return end
+  local key = chord:match("^" .. M.mod.bind .. " %+ (%w+)$")
+  if not key then log("same_app_key must start with the key to hold, like " .. Modifier.chord(M.mod, "GRAVE") .. ", ignored: " .. chord); return end
   local used = load_used()
   if used == nil then log("same_app_key: no snapshot of the binds yet, not bound"); return end
-  if used["8:" .. key:upper()] or used["9:" .. key:upper()] then log("same_app_key: " .. chord .. " is already used, left alone"); return end
+  if not Modifier.free(M.mod, used, key, true) then log("same_app_key: " .. chord .. " is already used, left alone"); return end
   M.same_app_chord = chord
   hl.bind(chord, function() M.on_tab(1, "same_app") end, {})
-  hl.bind("ALT + SHIFT + " .. key, function() M.on_tab(-1, "same_app") end, {})
+  hl.bind(Modifier.shift_chord(M.mod, key), function() M.on_tab(-1, "same_app") end, {})
+end
+
+local function bind_trigger_now()
+  local chord, shifted = Modifier.chord(M.mod, M.trigger_key), Modifier.shift_chord(M.mod, M.trigger_key)
+  for _, c in ipairs({ chord, shifted }) do pcall(hl.unbind, c) end
+  hl.bind(chord, function() M.on_tab(1) end, {})
+  hl.bind(shifted, function() M.on_tab(-1) end, {})
+end
+
+-- A modifier other than Alt: its Tab chord has no Omarchy meaning omahop could run itself, so it is bound only when the snapshot shows
+-- it (and its Shift variant) free; otherwise nothing is bound and the reason is logged. Runs after the snapshot, like the same-app chord.
+function M.bind_trigger()
+  local chord, shifted = Modifier.chord(M.mod, M.trigger_key), Modifier.shift_chord(M.mod, M.trigger_key)
+  local free = Modifier.free(M.mod, load_used(), M.trigger_key, true)
+  if free == nil then log("modifier: no snapshot of the binds yet, " .. chord .. " not bound"); return end
+  if not free then
+    log("modifier: " .. chord .. " or " .. shifted .. " is already used, omahop is not bound. Free both in your bindings or choose another key to hold.")
+    return
+  end
+  bind_trigger_now()
 end
 
 -- Without this key the app under the overlay sees Alt down and Alt up and treats it as a tap (opens its menu bar).
@@ -428,8 +445,9 @@ local function inject()
   end)
 end
 
--- What Alt+Tab does where omahop is not active: the stock Omarchy behaviour, so those workspaces are untouched.
+-- What the trigger does where omahop is not active: Omarchy's stock Alt+Tab when omahop replaced it, else the key goes back to the app.
 function M.stock(delta)
+  if not M.mod.replaces then return M.pass_chord(Modifier.chord(M.mod, M.trigger_key), delta < 0) end
   if delta > 0 then
     hl.dispatch(hl.dsp.window.cycle_next())
     hl.dispatch(hl.dsp.window.bring_to_top())
@@ -441,7 +459,7 @@ end
 
 -- Re-read the config file when a session is about to start, so edits (and the settings panel) apply to the next Alt+Tab with no reload.
 -- A read of a small file costs microseconds and nothing is parsed when the text has not changed. `takeover` is the exception: it decides
--- whether the binds exist at all, so it only applies at load (the panel offers a reload for it).
+-- whether the binds exist at all, so it only applies at load (the panel offers a reload for it); `modifier` too, for the same reason.
 function M.reload_config()
   local text = read_file(M.config_path) or ""
   if text == M.config_text then return end
@@ -498,6 +516,7 @@ function M.setup()
   M.config_text = nil
   M.reload_config()
   local cfg = M.cfg
+  M.mod = Modifier.get(cfg.modifier)
   M.entries = {}
   M.last_state = nil
   M.write_state()
@@ -505,12 +524,11 @@ function M.setup()
   seed_order()
   M.used = nil
   pcall(hl.timer, M.bind_same_app, { type = "oneshot", timeout = 3500 }) -- after the snapshot below is on disk
+  if not M.mod.replaces then pcall(hl.timer, M.bind_trigger, { type = "oneshot", timeout = 3500 }) end
   pcall(hl.timer, M.refresh_binds, { type = "oneshot", timeout = 2000 }) -- after the config has finished loading, so the snapshot shows the final binds
   pcall(hl.on, "window.active", function(w) if w and w.address then M.order = Mru.touch(M.order, w.address) end end)
   pcall(hl.on, "window.close", function(w) if w and w.address then M.on_window_closed(w.address) end end)
-  for _, chord in ipairs({ "ALT + TAB", "ALT + SHIFT + TAB" }) do pcall(hl.unbind, chord) end
-  hl.bind("ALT + TAB", function() M.on_tab(1) end, {})
-  hl.bind("ALT + SHIFT + TAB", function() M.on_tab(-1) end, {})
+  if M.mod.replaces then bind_trigger_now() end -- at once, unconditionally: it replaces Omarchy's own Alt+Tab (M.stock runs that out of scope)
   return M
 end
 

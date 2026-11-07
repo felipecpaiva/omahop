@@ -463,7 +463,94 @@ do
   setcfg('[windows]\nworkspaces = "all"\n')
 end
 
--- never a bare key: every chord bound in this whole run carries ALT
-for chord in pairs(ever_bound) do assert(chord:find("^ALT %+ "), "a bind without ALT: " .. chord) end
+-- v1.3 modifier: the key held for the switch (Alt, Super or Ctrl), pinned at load
+do
+  local function setcfg(text) local f = io.open(TESTDIR .. "/cfg/omahop/config.toml", "w"); f:write(text); f:close() end
+  local binds_path, log_path = TESTDIR .. "/run/omahop/binds.txt", TESTDIR .. "/run/omahop/log"
+  local function snapshot(extra) local f = io.open(binds_path, "w"); f:write("bind\n\tmodmask: 8\n\tkey: TAB\n\n" .. (extra or "")); f:close() end
+  local function logtext() local f = io.open(log_path); local s = f and f:read("a") or ""; if f then f:close() end return s end
+  local function load()
+    if M.session and M.session:is_open() then M.session:key(clock, "cancel"); M.apply({}) end
+    for k in pairs(binds) do binds[k] = nil end
+    timers = {}; os.remove(log_path)
+    dofile(here .. "/omahop.lua"); M = _G.omahop; M.now = function() return clock end
+  end
+  windows = {}
+  local wa = win("0xa6", "app-a", 1, { focus_history_id = 0, tags = { "omarchy-floating-workspace" } })
+  win("0xb6", "app-b", 1, { focus_history_id = 1, tags = { "omarchy-floating-workspace" } })
+  win("0xc6", "app-c", 1, { focus_history_id = 2, tags = { "omarchy-floating-workspace" } })
+  local tw = win("0xd6", "app-t", 2, { focus_history_id = 3 })
+  local base = 'reveal_delay_ms = 0\n[windows]\nworkspaces = "current"\n'
+  for _, case in ipairs({ { name = "super", bind = "SUPER", mask = 64, keys = { "Super_L", "Super_R" } }, { name = "ctrl", bind = "CTRL", mask = 4, keys = { "Control_L", "Control_R" } } }) do
+    local B, K1, K2 = case.bind, case.keys[1], case.keys[2]
+    setcfg('modifier = "' .. case.name .. '"\n' .. base)
+    snapshot("bind\n\tmodmask: " .. case.mask .. "\n\tkey: X\n\n")
+    load()
+    assert(M.mod.bind == B, case.name .. ": modifier pinned at load")
+    assert(next(binds) == nil, case.name .. ": nothing bound before the snapshot is read (Alt+Tab is left to Omarchy)")
+    run_timers()
+    assert(binds[B .. " + TAB"] and binds[B .. " + SHIFT + TAB"] and binds["ALT + TAB"] == nil, case.name .. ": trigger bound with " .. B .. " once the snapshot shows it free")
+    assert(logtext():find("same_app_key must start with the key to hold, like " .. B .. " + GRAVE", 1, true) and binds["ALT + GRAVE"] == nil, case.name .. ": the default ALT same-app chord is refused with a note")
+    -- a session: chords carry the modifier, a chord of the user's own is left alone
+    key_state = { [K1] = true, Tab = true }; active = wa; reset(); binds[B .. " + TAB"]()
+    assert(M.session:is_open() and M.session:selected() == 2, case.name .. ": session open on the previous window")
+    assert(binds[B .. " + ESCAPE"] and binds[B .. " + RETURN"] and binds[B .. " + A"] and binds[B .. " + BACKSPACE"], case.name .. ": session and typing chords use " .. B)
+    assert(binds[B .. " + X"] == nil and binds["ALT + ESCAPE"] == nil and binds["ALT + A"] == nil, case.name .. ": the user's " .. B .. " + X is left alone, no ALT chords")
+    binds[B .. " + B"]()
+    assert(M.query == "b" and #M.entries == 1, case.name .. ": typing with the modifier searches")
+    binds[B .. " + ESCAPE"]()
+    -- release detection follows the modifier: Alt held means nothing; the other side's key keeps it open
+    local want = M.entries[M.session:selected()].address
+    reset(); key_state = { [K1] = false, [K2] = true, Alt_L = true, Tab = false }; advance(25, 3)
+    assert(M.session:is_open(), case.name .. ": right-hand key still held: open")
+    key_state = { [K1] = false, [K2] = false, Alt_L = true, Alt_R = true, Tab = false }; advance(25, 2)
+    assert(not M.session:is_open() and dispatched[1] and dispatched[1].args.window.address == want, case.name .. ": releasing " .. B .. " picks, whatever Alt does")
+    assert(binds[B .. " + ESCAPE"] == nil and binds[B .. " + A"] == nil, case.name .. ": session chords unbound at the end")
+    -- the config file changes to another modifier without a reload: the pinned one still drives the session
+    setcfg('modifier = "alt"\n' .. base)
+    key_state = { [K1] = true, Tab = true }; active = wa; reset(); binds[B .. " + TAB"]()
+    assert(M.cfg.modifier == "alt" and M.session:is_open() and binds[B .. " + ESCAPE"] and binds["ALT + ESCAPE"] == nil, case.name .. ": an edit without reload keeps the bound modifier")
+    reset(); key_state = { [K1] = false, Tab = false }; advance(25, 2)
+    assert(not M.session:is_open() and names() == "focus,alter_zorder", case.name .. ": and its release still ends the session")
+    setcfg('modifier = "' .. case.name .. '"\n' .. base)
+    -- out of scope (tiling workspace): no stock meaning to run, the key goes back to the app, Shift included
+    key_state = { [K1] = true, Tab = true }; active = tw; reset(); binds[B .. " + TAB"]()
+    assert(not M.session:is_open() and names() == "send_key_state,send_key_state" and dispatched[1].args.mods == B and dispatched[1].args.key == "tab", case.name .. ": out of scope the chord reaches the app, got " .. names())
+    reset(); binds[B .. " + SHIFT + TAB"]()
+    assert(dispatched[1].args.mods == B .. " SHIFT" and dispatched[2].args.state == "up", case.name .. ": Shift variant too")
+    -- same-app chord with the same modifier is accepted
+    setcfg('modifier = "' .. case.name .. '"\nsame_app_key = "' .. B .. ' + GRAVE"\n' .. base)
+    load(); run_timers()
+    assert(binds[B .. " + GRAVE"] and binds[B .. " + SHIFT + GRAVE"], case.name .. ": same-app chord with " .. B .. " is bound")
+    -- the trigger chord or its Shift variant already used: nothing bound, a clear note in the log
+    for _, m in ipairs({ case.mask, case.mask + 1 }) do
+      setcfg('modifier = "' .. case.name .. '"\n' .. base)
+      snapshot("bind\n\tmodmask: " .. m .. "\n\tkey: TAB\n\n")
+      load(); run_timers()
+      assert(binds[B .. " + TAB"] == nil and binds[B .. " + SHIFT + TAB"] == nil and binds["ALT + TAB"] == nil, case.name .. ": a used chord (mask " .. m .. ") is not taken")
+      assert(logtext():find("modifier: " .. B .. " + TAB or " .. B .. " + SHIFT + TAB is already used, omahop is not bound", 1, true), case.name .. ": the log says why: " .. logtext())
+    end
+    -- no snapshot at all: not bound, said so
+    os.remove(binds_path); load(); run_timers()
+    assert(binds[B .. " + TAB"] == nil and logtext():find("no snapshot of the binds yet, " .. B .. " + TAB not bound", 1, true), case.name .. ": no snapshot, not bound")
+  end
+  -- an unknown value falls back to Alt (bound at once) with a note; so does a wrong type
+  for _, bad in ipairs({ '"hyper"', '"SUPER"', "3" }) do
+    setcfg("modifier = " .. bad .. "\n" .. base); snapshot(); load()
+    assert(M.mod.bind == "ALT" and binds["ALT + TAB"] and binds["SUPER + TAB"] == nil, "bad modifier " .. bad .. ": falls back to ALT")
+    assert(logtext():find("config: top.modifier = " .. bad:gsub('"', ""), 1, true), "bad modifier " .. bad .. " is logged: " .. logtext())
+  end
+  -- back to the default
+  setcfg('[windows]\nworkspaces = "all"\n'); snapshot(); load()
+  assert(M.mod.bind == "ALT" and binds["ALT + TAB"], "default again")
+end
+
+-- never a bare key: every chord bound in this whole run carries one of the modifiers
+local Modifier = dofile(here .. "/modifier.lua")
+for chord in pairs(ever_bound) do
+  local ok = false
+  for _, n in ipairs(Modifier.names) do ok = ok or chord:find("^" .. Modifier.by_name[n].bind .. " %+ ") ~= nil end
+  assert(ok, "a bind without a modifier: " .. chord)
+end
 
 print("glue ok")

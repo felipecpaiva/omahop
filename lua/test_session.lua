@@ -12,7 +12,7 @@ local function ticks(s, from, to, keys)  -- tick every 25 ms; returns "time=acti
   end
   return table.concat(all, " ")
 end
-local HELD, TABDOWN, GONE = { alt = true, tab = false }, { alt = true, tab = true }, { alt = false, tab = false }
+local HELD, TABDOWN, GONE = { mod = true, tab = false }, { mod = true, tab = true }, { mod = false, tab = false }
 
 -- quick tap: Alt gone before the reveal delay commits the first pick and never reveals
 local s = S.new(cfg)
@@ -51,7 +51,7 @@ assert(types(s:key(10, "x")) == "", "unknown key on a closed session")
 
 -- Alt unknown (nil) counts as held; a single glitch does not end the session (stuck-drag lesson)
 s = S.new(cfg); s:open(0, 3, 2)
-assert(ticks(s, 25, 500, { alt = nil, tab = nil }) == "100=reveal", "nil Alt never commits")
+assert(ticks(s, 25, 500, { mod = nil, tab = nil }) == "100=reveal", "nil Alt never commits")
 assert(types(s:tick(525, GONE)) == "" and types(s:tick(550, HELD)) == "" and s:is_open(), "one gone tick then held again: still open")
 assert(types(s:tick(575, GONE)) == "" and types(s:tick(600, GONE)) == "commit:2", "two in a row ends it")
 

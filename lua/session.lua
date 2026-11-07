@@ -1,10 +1,10 @@
--- omahop switch session: the state machine behind one Alt+Tab. Pure: time and key state are passed in, so it tests without Hyprland.
--- Times are milliseconds. Glue (omahop.lua) feeds it Tab presses from binds and polls Alt and Tab with hl.is_key_down on a timer.
+-- omahop switch session: the state machine behind one Alt+Tab (or the chosen modifier + Tab; "Alt" below means that key). Pure: time and key state are passed in, so it tests without Hyprland.
+-- Times are milliseconds. Glue (omahop.lua) feeds it Tab presses from binds and polls the modifier (setting `modifier`, Alt by default) and Tab with hl.is_key_down on a timer.
 --
 --   open(now, n, selected)  first Tab: a session starts, nothing is shown yet (a quick tap must not flash an overlay)
 --   step(now, delta)        a Tab or Shift+Tab press
 --   key(now, name)          escape, return, left, right, up, down while the overlay is up
---   tick(now, keys)         keys = { alt = true|false|nil, tab = true|false|nil } (nil: cannot tell, counts as held)
+--   tick(now, keys)         keys = { mod = true|false|nil, tab = true|false|nil } (nil: cannot tell, counts as held)
 --   mark_query(on)          glue says whether a search is typed (Escape clears it first; it decides whether Alt up lingers)
 --   touch(now)              a key reached the list: a lingering session's deadline starts again
 -- Each call returns a list of actions: { type = "reveal" } | { type = "select", index = i } | { type = "commit", index = i } | { type = "cancel" }
@@ -13,7 +13,7 @@
 local S = {}
 S.__index = S
 
-S.alt_gone_ticks = 2 -- Alt must read as up on this many ticks in a row (omagnet's stuck-drag lesson: one nil or glitch must not end it)
+S.mod_gone_ticks = 2 -- the modifier must read as up on this many ticks in a row (omagnet's stuck-drag lesson: one nil or glitch must not end it)
 S.max_ms = 60000 -- failsafe: a session never outlives this
 
 function S.new(cfg)
@@ -51,7 +51,7 @@ end
 function S:open(now, n, selected)
   if self.open_ or n < 1 then return {} end
   self.open_, self.revealed, self.n, self.sel = true, false, n, selected
-  self.opened_at, self.last_step_at, self.repeating, self.dir, self.alt_gone = now, now, false, 1, 0
+  self.opened_at, self.last_step_at, self.repeating, self.dir, self.mod_gone = now, now, false, 1, 0
   self.lingering, self.query_on = false, false
   return { { type = "select", index = selected } }
 end
@@ -99,14 +99,14 @@ function S:tick(now, keys)
     return out
   end
   if now - self.opened_at > S.max_ms then finish(self); return { { type = "cancel" } } end
-  if keys.alt == false then self.alt_gone = self.alt_gone + 1 else self.alt_gone = 0 end
-  if self.alt_gone >= S.alt_gone_ticks and self.linger_ms > 0 and self.query_on then
+  if keys.mod == false then self.mod_gone = self.mod_gone + 1 else self.mod_gone = 0 end
+  if self.mod_gone >= S.mod_gone_ticks and self.linger_ms > 0 and self.query_on then
     self.lingering, self.deadline, self.rev = true, now + self.linger_ms, self.rev + 1
     if not self.revealed then self.revealed = true; out[#out + 1] = { type = "reveal" } end
     out[#out + 1] = { type = "linger" }
     return out
   end
-  if self.alt_gone >= S.alt_gone_ticks then
+  if self.mod_gone >= S.mod_gone_ticks then
     local i = self.sel
     finish(self)
     return { { type = "commit", index = i } }
