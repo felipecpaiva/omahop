@@ -14,6 +14,14 @@ ColumnLayout {
   property string fontFamily: Style.font.menuFamily
 
   readonly property var current: row.store ? row.store.value(row.setting) : row.setting.default
+  readonly property var overridden: row.store ? row.store.override(row.setting) : undefined
+
+  // A value as the row words it: the display name of a choice, on or off for a switch, else the value itself.
+  function shown(v) {
+    if (row.setting.names && row.setting.names[v] !== undefined) return row.setting.names[v]
+    if (typeof v === "boolean") return v ? "on" : "off"
+    return v === "" ? "empty" : String(v)
+  }
 
   Layout.fillWidth: true
   spacing: Style.spacing.xs
@@ -47,10 +55,10 @@ ColumnLayout {
     Layout.fillWidth: true
     spacing: Style.spacing.xs
     Repeater {
-      model: row.setting.type === "enum" ? row.setting.values : []
+      model: row.setting.type === "enum" && row.store ? row.store.choices(row.setting) : []
       Button {
         required property string modelData
-        text: (row.setting.names && row.setting.names[modelData]) || modelData
+        text: row.shown(modelData)
         bordered: modelData === row.current
         foreground: row.foreground
         accent: row.accent
@@ -98,6 +106,18 @@ ColumnLayout {
     wrapMode: Text.WordWrap
     text: row.setting.help || ""
     color: Qt.darker(row.foreground, 1.6)
+    font.family: row.fontFamily
+    font.pixelSize: Style.font.caption
+  }
+
+  // The chosen profile replaces this value: say so, since the control above shows the base value.
+  Text {
+    visible: row.overridden !== undefined
+    Layout.fillWidth: true
+    textFormat: Text.PlainText
+    wrapMode: Text.WordWrap
+    text: row.overridden === undefined ? "" : "Profile " + row.store.resolved.profile + " sets this to " + row.shown(row.overridden) + "."
+    color: row.accent
     font.family: row.fontFamily
     font.pixelSize: Style.font.caption
   }

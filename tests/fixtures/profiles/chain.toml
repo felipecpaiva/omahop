@@ -1,0 +1,16 @@
+# A profile cannot choose another profile, and the hidden schema key is unknown to a profile.
+profile = "a"
+peek = "edge"
+
+[profiles.a]
+profile = "b"
+schema = 2
+peek = "always"
+peek_position = "left"
+
+[profiles.a.windows]
+workspaces = "current"
+minimized = 1
+
+[profiles.b]
+peek = "off"

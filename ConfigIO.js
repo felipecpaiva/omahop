@@ -6,6 +6,11 @@
 // Writing changes ONE line and leaves everything else byte for byte: comments, order, unknown keys and sections survive, so the user's
 // hand edits are never lost when the panel saves.
 
+// A table name: words of letters, digits and underscores joined by single dots (windows, profiles.work, profiles.work.windows), as in Lua.
+var SECTION = /^\[([A-Za-z0-9_]+(?:\.[A-Za-z0-9_]+)*)\]$/
+var PROFILES = "profiles"
+var PROFILE_ID = "top.profile"
+
 function valueOf(raw) {
   if (raw === "true") return true
   if (raw === "false") return false
@@ -39,7 +44,7 @@ function parse(text) {
   for (var i = 0; i < lines.length; i++) {
     var l = splitLine(lines[i]).body.replace(/^\s+/, "")
     if (l === "" || l[0] === "#") continue
-    var h = /^\[([A-Za-z0-9_]+)\]$/.exec(l)
+    var h = SECTION.exec(l)
     if (h) { section = h[1]; if (!out.sections[section]) out.sections[section] = {}; continue }
     var kv = /^([A-Za-z0-9_]+)\s*=\s*(.*)$/.exec(l)
     var v = kv ? valueOf(kv[2]) : undefined
@@ -66,7 +71,8 @@ function format(v) {
 function range(lines, section) {
   var from = section === "top" ? 0 : -1, to = lines.length
   for (var i = 0; i < lines.length; i++) {
-    var h = /^\s*\[([A-Za-z0-9_]+)\]\s*(#.*)?$/.exec(lines[i])
+    var h = /^\s*\[([A-Za-z0-9_.]+)\]\s*(#.*)?$/.exec(lines[i])
+    if (h && !SECTION.test("[" + h[1] + "]")) h = null
     if (!h) continue
     if (section !== "top" && from < 0 && h[1] === section) from = i + 1
     else if (from >= 0 || section === "top") { to = i; break }
@@ -112,4 +118,81 @@ function unset(text, section, key) {
   var at = r ? findKey(lines, r, key) : -1
   if (at >= 0) lines.splice(at, 1)
   return lines.join("\n") + (hadEnd || lines.length ? "\n" : "")
+}
+
+// ---- profiles: the same rule as lua/config.lua C.resolve (tests/config_io.test.mjs runs both on the same fixtures) ----
+
+// The settings of spec.json as one flat list.
+function flatSettings(spec) {
+  var out = []
+  var groups = (spec && spec.groups) || []
+  for (var g = 0; g < groups.length; g++) out = out.concat(groups[g].settings)
+  return out
+}
+
+// A value is valid when it has the default's type, is one of the allowed values, and is in range. Mirrors `valid` in lua/config.lua.
+function valid(setting, v) {
+  if (typeof v !== typeof setting.default) return false
+  if (setting.values && setting.values.indexOf(v) < 0) return false
+  if (setting.min !== undefined && (v < setting.min || v > setting.max)) return false
+  return true
+}
+
+function bagOf(parsed, section) {
+  return (section === "top" ? parsed.top : parsed.sections[section]) || {}
+}
+
+// The names of the profiles in a parsed file, sorted.
+function profileNames(parsed) {
+  var seen = {}, names = []
+  var re = new RegExp("^" + PROFILES + "\\.([A-Za-z0-9_]+)")
+  for (var section in parsed.sections) {
+    var m = re.exec(section)
+    if (m && !seen[m[1]]) { seen[m[1]] = true; names.push(m[1]) }
+  }
+  return names.sort()
+}
+
+function profileBag(parsed, name, section) {
+  var base = PROFILES + "." + name
+  return parsed.sections[section === "top" ? base : base + "." + section] || {}
+}
+
+// The base over the defaults, bad values reported. Mirrors C.merge.
+function mergeBase(parsed, settings, out) {
+  for (var i = 0; i < settings.length; i++) {
+    var s = settings[i], v = bagOf(parsed, s.section)[s.key]
+    var ok = v !== undefined && valid(s, v)
+    out.values[s.id] = ok ? v : s.default
+    if (v !== undefined && !ok) out.problems.push(s.id + " = " + String(v))
+  }
+}
+
+// The active profile over the base. Mirrors C.apply_profile.
+function applyProfile(parsed, settings, out) {
+  var name = out.values[PROFILE_ID]
+  if (!name) return
+  if (profileNames(parsed).indexOf(name) < 0) {
+    out.problems.push("profile = " + name + ": no such profile, using the base settings")
+    out.values[PROFILE_ID] = ""
+    return
+  }
+  out.profile = name
+  for (var i = 0; i < settings.length; i++) {
+    var s = settings[i], v = profileBag(parsed, name, s.section)[s.key]
+    if (v === undefined) continue
+    var where = PROFILES + "." + name + "." + (s.section === "top" ? "" : s.section + ".") + s.key
+    if (!s.overridable) out.problems.push(where + ": not overridable in a profile, ignored")
+    else if (valid(s, v)) { out.values[s.id] = v; out.overridden[s.id] = v }
+    else out.problems.push(where + " = " + String(v))
+  }
+}
+
+// The settings in use: { values: {"section.key": v}, problems: [sorted], profile: active name or "", overridden: {"section.key": v} }.
+function resolve(parsed, settings) {
+  var out = { values: {}, problems: [], profile: "", overridden: {} }
+  mergeBase(parsed, settings, out)
+  applyProfile(parsed, settings, out)
+  out.problems.sort()
+  return out
 }

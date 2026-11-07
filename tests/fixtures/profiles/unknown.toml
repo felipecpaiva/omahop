@@ -1,0 +1,7 @@
+# The chosen profile does not exist: logged, the base is used.
+profile = "ghost"
+style = "cards"
+scope = "everywhere"
+
+[profiles.work]
+style = "list"

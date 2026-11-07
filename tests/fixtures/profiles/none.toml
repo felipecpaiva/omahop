@@ -1,0 +1,11 @@
+# Profiles in the file but none chosen; bad base values fall back to the defaults.
+style = "cards"
+reveal_delay_ms = 99999
+border = "thick"
+
+[keys]
+repeat_ms = 1
+
+[profiles.gaming]
+style = "list"
+peek = "always"

@@ -229,7 +229,7 @@ function C.apply_profile(cfg, parsed, problems)
     local target = section == "top" and cfg or cfg[section]
     local prefix = PROFILES .. "." .. name .. "." .. (section == "top" and "" or section .. ".")
     for key, v in pairs(profile_bag(parsed, name, section) or {}) do
-      local rule = rules[key]
+      local rule = not (rules[key] and rules[key].hidden) and rules[key] or nil -- a hidden setting is unknown to a profile, as to the panel
       if rule and not C.overridable(rule) then
         problems[#problems + 1] = prefix .. key .. ": not overridable in a profile, ignored"
       elseif rule and valid(rule, v) then

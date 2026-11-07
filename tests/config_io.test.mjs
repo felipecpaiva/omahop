@@ -1,5 +1,5 @@
 // Node check of ConfigIO.js:  node tests/config_io.test.mjs
-import { readFileSync } from "node:fs"
+import { readFileSync, readdirSync } from "node:fs"
 import { execFileSync } from "node:child_process"
 import assert from "node:assert/strict"
 const src = readFileSync(new URL("../ConfigIO.js", import.meta.url), "utf8").replace(".pragma library", "")
@@ -63,4 +63,52 @@ for (const [sec, bag] of Object.entries(p.sections)) for (const [k, v] of Object
 fromJs.sort()
 const norm = (a) => a.map((x) => x.replace(":number", ":number").replace(":boolean", ":boolean")).sort()
 assert.deepEqual(norm(fromJs), norm(fromLua), "Lua and JavaScript parsers disagree")
-console.log("config io ok")
+
+// ---- profiles ----
+const P = new Function(src + "; return { parse, set, unset, resolve, flatSettings, profileNames }")()
+const root = new URL("..", import.meta.url).pathname
+const settings = P.flatSettings(JSON.parse(readFileSync(root + "spec.json", "utf8")))
+
+// dotted table names: parsed, and a write to the base never lands inside a profile
+const withProfiles = 'style = "list"\n\n[profiles.work]   # note\nstyle = "cards"\n\n[profiles.work.windows]\nignore = "slack"\n'
+const pp = P.parse(withProfiles)
+assert.equal(pp.sections["profiles.work"].style, "cards"); assert.equal(pp.sections["profiles.work.windows"].ignore, "slack")
+assert.deepEqual(P.profileNames(pp), ["work"])
+assert.equal(P.parse("[profiles..x]\n[profiles.x.]\n").bad.length, 2, "empty segments are unreadable headers")
+t = P.set(withProfiles, "top", "style", "cards")
+assert.equal(t, withProfiles.replace('style = "list"', 'style = "cards"'), "the base line changes, the profile's does not")
+t = P.set(withProfiles, "top", "profile", "work")
+assert.ok(t.indexOf('profile = "work"') < t.indexOf("[profiles.work]"), "a new top-level key goes above the first table, never into a profile")
+t = P.set(withProfiles, "windows", "monitors", "all")
+assert.ok(t.endsWith('ignore = "slack"\n\n[windows]\nmonitors = "all"\n'), "a missing base section is added, not merged into a profile")
+assert.equal(P.unset(withProfiles, "top", "style"), withProfiles.replace('style = "list"\n', ""), "unset of a base key leaves the profile")
+
+// overridden values are reported for the settings window
+const r = P.resolve(P.parse('profile = "work"\n' + withProfiles), settings)
+assert.equal(r.profile, "work"); assert.equal(r.values["top.style"], "cards"); assert.deepEqual(r.overridden, { "top.style": "cards", "windows.ignore": "slack" })
+
+// parity: Lua C.resolve (the switcher) and ConfigIO.resolve (the overlay and the settings window) give the same values and problems on every fixture
+const luaResolve = (file) => {
+  const code = `local C = dofile("lua/config.lua"); local f = assert(io.open(${JSON.stringify(file)})); local text = f:read("a"); f:close()
+  local cfg, problems = C.resolve((C.parse(text)))
+  for id in io.read("a"):gmatch("[^\\n]+") do
+    local section, key = id:match("^(%w+)%.([%w_]+)$")
+    local v = (section == "top" and cfg or cfg[section])[key]
+    print("v " .. id .. "=" .. tostring(v) .. ":" .. type(v))
+  end
+  for _, p in ipairs(problems) do print("p " .. p) end`
+  return execFileSync("lua", ["-e", code], { cwd: root, input: settings.map((s) => s.id).join("\n") }).toString().trim().split("\n")
+}
+const jsType = { boolean: "boolean", number: "number", string: "string" }
+const dir = root + "tests/fixtures/profiles/"
+const fixtures = readdirSync(dir).filter((f) => f.endsWith(".toml")).sort()
+assert.ok(fixtures.length >= 4, "profile fixtures found")
+for (const name of fixtures) {
+  const res = P.resolve(P.parse(readFileSync(dir + name, "utf8")), settings)
+  const fromJs = settings.map((s) => `v ${s.id}=${res.values[s.id]}:${jsType[typeof res.values[s.id]]}`).concat(res.problems.map((p) => "p " + p))
+  assert.deepEqual(fromJs, luaResolve(dir + name), `Lua and JavaScript disagree on ${name}`)
+}
+const work = P.resolve(P.parse(readFileSync(dir + "work.toml", "utf8")), settings)
+assert.equal(work.values["top.style"], "cards"); assert.equal(work.values["top.reveal_delay_ms"], 0, "bad profile value keeps the base")
+assert.equal(work.values["top.takeover"], true); assert.equal(work.values["top.browser_tabs"], false, "base-only settings are never taken from a profile")
+console.log(`config io ok (profile parity on ${fixtures.length} fixtures)`)

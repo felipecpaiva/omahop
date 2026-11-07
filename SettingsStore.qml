@@ -21,8 +21,21 @@ Item {
   property bool failed: false
   property bool needsReload: false // a setting that only applies after a Hyprland reload was changed
   readonly property bool pending: saveTimer.running
+  // The values in use with the chosen profile laid over the file (same rule as the Lua side). Rows still show and edit the base values.
+  readonly property var resolved: ConfigIO.resolve(store.parsed, ConfigIO.flatSettings(store.spec))
+  readonly property var profileNames: ConfigIO.profileNames(store.parsed)
 
   function reload() { file.reload() }
+
+  // The values a choice row offers: its fixed list, or for `choices: "profiles"` none ("") plus the profiles in the file.
+  function choices(setting) {
+    if (setting.choices === "profiles") return [""].concat(store.profileNames)
+    return setting.values || []
+  }
+  // What the active profile sets this setting to, or undefined when it leaves it alone.
+  function override(setting) {
+    return store.resolved.overridden[setting.id]
+  }
 
   // The value in use: what the file says, else the default from the spec.
   function value(setting) {

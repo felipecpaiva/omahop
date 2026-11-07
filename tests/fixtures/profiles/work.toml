@@ -1,0 +1,36 @@
+# A profile with good, bad and refused values, nested sections and a second profile that is not chosen.
+profile = "work"
+style = "list"
+reveal_delay_ms = 0
+takeover = true
+
+[windows]
+ignore = "steam"
+monitors = "all"
+
+[profiles.work]   # trailing comment on a header
+style = "cards"
+thumbnails = "sometimes"
+reveal_delay_ms = 5000
+takeover = false
+modifier = "ctrl"
+same_app_key = ""
+browser_tabs = true
+browser_tabs_ignore = "example.com"
+unknown_key = 1
+search = "yes"
+
+[profiles.work.windows]
+ignore = "slack, discord"
+first = "kitty"
+
+[profiles.work.keys]
+repeat_ms = 20
+repeat_delay_ms = 1
+
+[profiles.work.nosuchsection]
+x = 1
+
+[profiles.gaming]
+passthrough_fullscreen = true
+style = "list"
