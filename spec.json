@@ -12,6 +12,22 @@
       "section": "top",
       "type": "bool"
     }, {
+      "default": "alt",
+      "help": "The key you hold while pressing Tab: Alt (the default), Super or Ctrl. Applies after a Hyprland reload. Super + Tab is Omarchy's next workspace: free it in your bindings first, or omahop leaves it alone and logs why. Omarchy uses Super with most letters, Return and the arrows, so with Super most of the keys that work while the list is up are skipped (a chord you already use is never taken). Ctrl + Tab switches tabs in browsers and editors; with Ctrl it opens omahop instead where omahop is active. The same-app shortcut must start with the same key.",
+      "hidden": false,
+      "id": "top.modifier",
+      "key": "modifier",
+      "label": "Key to hold",
+      "names": {
+        "alt": "Alt",
+        "ctrl": "Ctrl",
+        "super": "Super"
+      },
+      "reload": true,
+      "section": "top",
+      "type": "enum",
+      "values": ["alt", "super", "ctrl"]
+    }, {
       "default": "floating",
       "help": "On other workspaces Alt+Tab stays exactly as Omarchy has it.",
       "hidden": false,
@@ -340,7 +356,7 @@
     "id": "shortcuts",
     "settings": [{
       "default": "ALT + GRAVE",
-      "help": "A second shortcut that lists only the windows of the app you are in, like Cmd+backtick on a Mac. It must start with ALT (for example ALT + GRAVE). Leave it empty to turn it off. Applies after a Hyprland reload; a chord you already use is never taken.",
+      "help": "A second shortcut that lists only the windows of the app you are in, like Cmd+backtick on a Mac. It must start with the key to hold (for example ALT + GRAVE, or SUPER + GRAVE when that key is Super). Leave it empty to turn it off. Applies after a Hyprland reload; a chord you already use is never taken.",
       "hidden": false,
       "id": "top.same_app_key",
       "key": "same_app_key",
@@ -357,7 +373,7 @@
       "label": "Quick jump keys",
       "names": {
         "apps": "App letters (set below)",
-        "numbers": "Number keys (Alt + 1 to 9)",
+        "numbers": "Number keys (1 to 9, with the key held)",
         "off": "Off"
       },
       "reload": false,

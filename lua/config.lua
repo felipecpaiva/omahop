@@ -2,6 +2,8 @@
 -- Pure, so it tests under plain Lua 5.5 (Hyprland embeds 5.5).
 -- shortcut: no arrays, no inline tables, no escaped quotes in strings; lists are comma separated strings. Upgrade if a setting needs more.
 local C = {}
+local here = debug.getinfo(1, "S").source:match("^@(.*)/") or "."
+local Modifier = dofile(here .. "/modifier.lua")
 
 C.schema = 1
 
@@ -13,6 +15,8 @@ C.spec = {
     schema = { default = C.schema, hidden = true },
     takeover = { default = true, group = "general", reload = true, label = "Take over Alt+Tab",
       help = "Turn off to leave Alt+Tab alone, for example if you set your own Alt+Tab bind. Applies after a Hyprland reload." },
+    modifier = { default = Modifier.default, values = Modifier.names, names = Modifier.labels(), group = "general", reload = true, label = "Key to hold",
+      help = "The key you hold while pressing Tab: Alt (the default), Super or Ctrl. Applies after a Hyprland reload. Super + Tab is Omarchy's next workspace: free it in your bindings first, or omahop leaves it alone and logs why. Omarchy uses Super with most letters, Return and the arrows, so with Super most of the keys that work while the list is up are skipped (a chord you already use is never taken). Ctrl + Tab switches tabs in browsers and editors; with Ctrl it opens omahop instead where omahop is active. The same-app shortcut must start with the same key." },
     scope = { default = "floating", values = { "floating", "all" }, group = "general", label = "Where it takes over Alt+Tab",
       names = { floating = "Floating workspaces only", all = "All workspaces" },
       help = "On other workspaces Alt+Tab stays exactly as Omarchy has it." },
@@ -45,9 +49,9 @@ C.spec = {
     passthrough = { default = "", group = "rules", label = "Step aside for these apps",
       help = "Window classes, comma separated, for which Alt+Tab is always left alone, whatever their state." },
     same_app_key = { default = "ALT + GRAVE", group = "shortcuts", reload = true, label = "Same-app shortcut",
-      help = "A second shortcut that lists only the windows of the app you are in, like Cmd+backtick on a Mac. It must start with ALT (for example ALT + GRAVE). Leave it empty to turn it off. Applies after a Hyprland reload; a chord you already use is never taken." },
+      help = "A second shortcut that lists only the windows of the app you are in, like Cmd+backtick on a Mac. It must start with the key to hold (for example ALT + GRAVE, or SUPER + GRAVE when that key is Super). Leave it empty to turn it off. Applies after a Hyprland reload; a chord you already use is never taken." },
     hints = { default = "off", values = { "off", "numbers", "apps" }, group = "shortcuts", label = "Quick jump keys",
-      names = { off = "Off", numbers = "Number keys (Alt + 1 to 9)", apps = "App letters (set below)" },
+      names = { off = "Off", numbers = "Number keys (1 to 9, with the key held)", apps = "App letters (set below)" },
       help = "While the list is up and nothing is typed yet, a hint key jumps straight to a window. Any other key still types into the search." },
     hint_keys = { default = "", group = "shortcuts", label = "App letters",
       help = "Pairs of letter and app class, comma separated, for example: c=google-chrome, t=kitty. Used when Quick jump keys is App letters." },
@@ -89,7 +93,7 @@ C.groups = {
   { id = "rules", title = "App rules" },
   { id = "shortcuts", title = "Shortcuts" },
 }
-C.order = { "top.takeover", "top.scope", "top.search", "top.search_fuzzy", "top.search_linger_seconds", "windows.workspaces", "windows.monitors", "windows.minimized", "windows.specials", "windows.ignore",
+C.order = { "top.takeover", "top.modifier", "top.scope", "top.search", "top.search_fuzzy", "top.search_linger_seconds", "windows.workspaces", "windows.monitors", "windows.minimized", "windows.specials", "windows.ignore",
   "top.style", "top.thumbnails", "top.thumbnail_exclude", "top.reveal_delay_ms", "top.border", "top.icon_theme", "top.actions", "keys.repeat_delay_ms", "keys.repeat_ms", "top.peek", "top.peek_position",
   "windows.ignore_titles", "windows.first", "top.passthrough_fullscreen", "top.passthrough", "top.same_app_key", "top.hints", "top.hint_keys" }
 

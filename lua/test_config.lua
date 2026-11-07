@@ -50,6 +50,18 @@ local lc_, lp_ = C.merge({ top = { search_linger_seconds = 61 } })
 assert(lc_.search_linger_seconds == 0 and #lp_ == 1, "61 falls back to 0 and is reported")
 assert(C.merge({ top = { search_linger_seconds = -1 } }).search_linger_seconds == 0 and C.merge({ top = { search_linger_seconds = "5" } }).search_linger_seconds == 0, "negative and text fall back")
 
+-- modifier: alt by default, the allowed values are the modifier table's names, anything else falls back to alt and is reported; it needs a reload
+local Modifier = dofile(dir .. "/modifier.lua")
+assert(d.modifier == "alt" and C.spec.top.modifier.reload == true, "modifier: alt by default, applies after a reload")
+assert(table.concat(C.spec.top.modifier.values, ",") == table.concat(Modifier.names, ","), "values come from the modifier table")
+assert(C.merge({ top = { modifier = "super" } }).modifier == "super" and C.merge({ top = { modifier = "ctrl" } }).modifier == "ctrl", "super and ctrl accepted")
+for _, bad in ipairs({ "hyper", "ALT", "shift", "", 1, true }) do
+  local mc, mp = C.merge({ top = { modifier = bad } })
+  assert(mc.modifier == "alt" and #mp == 1 and mp[1]:find("^top%.modifier = "), "bad modifier falls back to alt and is reported: " .. tostring(bad))
+end
+local pm = C.merge((C.parse('modifier = "super"\n')))
+assert(pm.modifier == "super", "parsed from the file")
+
 -- defaults are not shared with the merged copy
 local c3 = C.merge(nil)
 c3.windows.workspaces = "all"
