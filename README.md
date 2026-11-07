@@ -85,7 +85,7 @@ Privacy: tab titles and addresses are private, so they stay on this computer. Th
    pcall(dofile, os.getenv("HOME") .. "/.config/omarchy/plugins/io.github.felipecpaiva.omahop/lua/omahop.lua")
    ```
 
-   The `pcall` makes sure a missing or broken file never breaks the rest of your config.
+   The `pcall` makes sure a missing or broken file never breaks the rest of your config. Keep it the last line, after your own gestures, so a touchpad swipe you already use always wins over omahop's.
 
 To remove: delete that line, then `omarchy plugin remove io.github.felipecpaiva.omahop`.
 
