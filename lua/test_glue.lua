@@ -728,6 +728,99 @@ do
   setcfg('[windows]\nworkspaces = "all"\n')
 end
 
+-- touchpad swipe (swipe_trigger): Hyprland's gesture callbacks, fed with the tables Hyprland 0.56.2 builds (LuaFunctionGesture.cpp)
+do
+  local function setcfg(text) local f = io.open(TESTDIR .. "/cfg/omahop/config.toml", "w"); f:write(text); f:close() end
+  local function reload() dofile(here .. "/omahop.lua"); M = _G.omahop; M.now = function() return clock end end
+  local gestures = {}
+  -- off by default: no gesture at all, and a Hyprland without hl.gesture loads fine (the fake has none until now)
+  setcfg('[windows]\nworkspaces = "current"\n'); reload()
+  assert(M.cfg.swipe_trigger == false and not M.swipe_registered, "swipe off by default: nothing registered")
+  setcfg('swipe_trigger = true\n[windows]\nworkspaces = "current"\n'); reload()
+  assert(not M.swipe_registered, "no hl.gesture: logged, load goes on")
+  hl.gesture = function(spec) gestures[#gestures + 1] = spec end
+  reload()
+  assert(#gestures == 1 and gestures[1].fingers == 4 and gestures[1].direction == "horizontal", "on: one 4-finger horizontal gesture")
+  local act = gestures[1].action
+  assert(type(act.start) == "function" and type(act.update) == "function" and type(act.finish) == "function", "start, update and finish callbacks (finish, not end: Hyprland reads `finish`)")
+  reload()
+  assert(#gestures == 1, "a second load in the same Lua state never registers again (Hyprland would refuse it with a config error)")
+
+  local function start() act.start({ phase = "start", direction = "RIGHT", type = "swipe", time_ms = clock, fingers = 4, delta = { x = 6, y = 0 } }) end
+  local function move(dx) act.update({ phase = "update", direction = "RIGHT", type = "swipe", time_ms = clock, fingers = 4, delta = { x = dx, y = 1 } }) end
+  local function lift(cancelled) act.finish({ phase = "end", direction = "HORIZONTAL", type = "swipe", time_ms = clock, cancelled = cancelled == true }) end
+
+  windows = {}
+  local sa = win("0xsa", "app-a", 1, { focus_history_id = 0, tags = { "omarchy-floating-workspace" } })
+  win("0xsb", "app-b", 1, { focus_history_id = 1, tags = { "omarchy-floating-workspace" } })
+  win("0xsc", "app-c", 1, { focus_history_id = 2, tags = { "omarchy-floating-workspace" } })
+  active = sa; key_state = { Alt_L = false, Alt_R = false, Tab = false }
+  M.order = {}
+
+  -- a short swipe opens nothing; the first row of travel opens on the previous window, with no injected key
+  reset(); start(); move(40)
+  assert(not M.session:is_open(), "40 px: no list yet")
+  move(70)
+  assert(M.session:is_open() and M.session:selected() == 2 and names() == "", "first row: list open on the previous window, nothing injected, got " .. names())
+  advance(25, 3)
+  assert(M.session:is_open(), "no Alt held, yet the fingers keep the session open")
+  move(100)
+  assert(M.session:selected() == 3, "another row: the next window")
+  reset(); lift()
+  assert(not M.session:is_open() and dispatched[1] and dispatched[1].args.window.address == "0xsc", "lifting picks the selected window")
+
+  -- swipe back to the window it started from: lifting closes without switching
+  active = sa; reset(); start(); move(110); move(-110)
+  assert(M.session:is_open() and M.session:selected() == 1, "back on the starting window, got " .. tostring(M.session:is_open()) .. " " .. tostring(M.session:selected()))
+  lift()
+  assert(not M.session:is_open() and names() == "", "lifting on the start window closes without a focus, got " .. names())
+
+  -- a left swipe starts at the end; Hyprland's cancelled flag closes without switching
+  active = sa; reset(); start(); move(-120)
+  assert(M.session:selected() == 3, "a left swipe opens on the last window")
+  lift(true)
+  assert(not M.session:is_open() and names() == "", "a cancelled swipe never picks")
+
+  -- a lost finish event: the session closes after the idle limit and picks nothing
+  local Swipe = dofile(here .. "/swipe.lua")
+  active = sa; reset(); start(); move(110)
+  assert(M.session:is_open(), "open")
+  advance(Swipe.idle_ms // 2, 3)
+  assert(not M.session:is_open() and names() == "", "no event for the idle limit: closed, nothing picked")
+  lift()
+  assert(names() == "", "a late finish after that does nothing")
+
+  -- out of scope (tiling workspace) and fullscreen passthrough: the swipe does nothing at all
+  local st = win("0xst", "app-t", 2, { focus_history_id = 5 })
+  active = st; reset(); start(); move(300); lift()
+  assert(not M.session:is_open() and names() == "", "tiling workspace: nothing happens, got " .. names())
+  sa.fullscreen = 1; setcfg('swipe_trigger = true\npassthrough_fullscreen = true\n[windows]\nworkspaces = "current"\n')
+  active = sa; reset(); start(); move(300); lift()
+  assert(not M.session:is_open() and names() == "", "fullscreen passthrough: nothing happens")
+  sa.fullscreen = nil
+
+  -- a keyboard session already open is never taken over by a swipe
+  setcfg('swipe_trigger = true\n[windows]\nworkspaces = "current"\n')
+  key_state = { Alt_L = true, Alt_R = false, Tab = true }; active = sa; reset(); binds["ALT + TAB"]()
+  start(); move(300); lift()
+  assert(M.session:is_open() and M.session:selected() == 2, "the swipe left the keyboard session alone")
+  reset(); key_state.Alt_L = false; key_state.Tab = false; advance(25, 2)
+  assert(dispatched[1] and dispatched[1].args.window.address == "0xsb", "releasing Alt still picks as usual")
+
+  -- turned off in the settings without a reload: the registered gesture stays idle
+  setcfg('[windows]\nworkspaces = "current"\n'); active = sa; reset(); start(); move(300); lift()
+  assert(not M.session:is_open() and names() == "", "setting off: the gesture does nothing")
+
+  -- swipe_fingers = 3 is passed through; out of range falls back to 4
+  gestures = {}; M.swipe_registered = false; _G.omahop = nil
+  setcfg('swipe_trigger = true\nswipe_fingers = 3\n'); reload()
+  assert(gestures[1] and gestures[1].fingers == 3, "3 fingers on request")
+  gestures = {}; _G.omahop = nil
+  setcfg('swipe_trigger = true\nswipe_fingers = 5\n'); reload()
+  assert(gestures[1] and gestures[1].fingers == 4, "5 is out of range: 4")
+  hl.gesture = nil; setcfg('[windows]\nworkspaces = "all"\n'); reload()
+end
+
 -- never a bare key: every chord bound in this whole run carries one of the modifiers
 local Modifier = dofile(here .. "/modifier.lua")
 for chord in pairs(ever_bound) do

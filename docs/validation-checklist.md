@@ -154,3 +154,21 @@ No automated live test (it would need real sound). By hand, at a low volume, wit
 - [ ] With the list closed, nothing runs: `pgrep -f audio-sample` is empty and the shell's CPU stays idle.
 - [ ] The omahop log (`$XDG_RUNTIME_DIR/omahop/log`) and the shell log hold no song or video title after a session with sound.
 - [ ] Note the glyph renders as a speaker with your shell font (a box means a non-Nerd font).
+## v1.5 (touchpad swipe)
+
+No live test drives the touchpad (no fake pointer or touch input is injected), so all of these are by hand on the real touchpad. Settings window, group Touchpad swipe, turn on "Swipe on the touchpad to switch", then `hyprctl reload`. Three or more windows on a floating workspace.
+
+- [ ] First check (the spike read the callback form from the 0.56.2 source, never observed): a 4-finger swipe right opens the list. If nothing happens, look for `swipe:` lines in `$XDG_RUNTIME_DIR/omahop/log` and for a Hyprland config error, and note them.
+- [ ] Keep moving right: the selection moves one row per stretch; left moves back. Lift: the selected window comes to the front.
+- [ ] Swipe right one row, back one row, lift: the list closes and nothing switches.
+- [ ] Swipe left: the list opens on the last window.
+- [ ] A small 4-finger nudge (well under one row): no list, no flash.
+- [ ] Feel of "Swipe distance per row": try 60, 100 and 200 (applies at once, no reload); note the value that feels right on this touchpad.
+- [ ] Rest four fingers without moving after the list opened: after about 10 seconds it closes without switching.
+- [ ] Tiling workspace (scope floating): a 4-finger swipe does nothing. Fullscreen window with "Step aside for fullscreen apps" on: nothing.
+- [ ] 3-finger workspace swipe still changes workspace with the trigger on (fingers 4).
+- [ ] Set fingers to 3 with the 3-finger workspace swipe in `~/.config/hypr/input.lua`, reload: Hyprland shows a config error naming the overshadowed gesture, and the workspace swipe still works. Set it back to 4.
+- [ ] `lua tools/gesture-map.lua` lists the same gestures as `~/.config/hypr/input.lua` and says 4 fingers is free.
+- [ ] Alt+Tab, then hold Alt and swipe with 4 fingers: the swipe changes nothing, releasing Alt picks as usual.
+- [ ] Turn the setting off in the settings window (no reload): a 4-finger swipe does nothing at once.
+- [ ] Touchscreen: a 4-finger swipe on the screen does nothing (expected: Hyprland does not pass touchscreen swipes to plugins).

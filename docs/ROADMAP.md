@@ -76,6 +76,14 @@ E1 `tests/scrub.sh` clean, E2 offline and live suites green, E3 branding kit, E4
 - Scope test: on a tiling workspace, Alt+Tab result equals stock for every run.
 - Never create headless monitors in live tests.
 
+## v1.5: touchpad swipe trigger (branch v1.5-swipe)
+
+Spike and design: `research/swipe-spike.md` (GO for the touchpad, NO-GO for the touchscreen), decision D20. Settings `swipe_trigger` (off),
+`swipe_fingers` (4), `swipe_distance` (100 px). Files: `lua/swipe.lua` (pure, `lua/test_swipe.lua`), `lua/omahop.lua` (`open_session`,
+`swipe_start`, `swipe_update`, `swipe_finish`, `bind_swipe`), `lua/config.lua`, `spec.json`, `tools/gesture-map.lua` (`--check` in run-all).
+Tests: pure and fake `hl` glue in `run-all.sh --no-live`; the real touchpad is a hand check (`validation-checklist.md`, v1.5). Status: built,
+hand checks pending.
+
 ## After 1.0 (ideas, not scheduled)
 
 - **Audio marker per browser window** (from the v1.5 spike): today every window of a browser playing sound gets the speaker, because one process plays all tabs. The tabs API has an `audible` flag per tab; the `omahop-tabs` extension could write it, and omahop could then mark only the window that holds the audible tab.

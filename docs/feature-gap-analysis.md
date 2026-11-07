@@ -109,7 +109,7 @@ Columns: id, item, source, status, evidence, then for PARTLY and NOT BUILT: valu
 | B48 | Vim navigation | NOT BUILT | letters type into search (`omahop.lua:246`) | low | S | Conflicts with search. Do not build |
 | B49 | Layout-independent in-panel keys | NOT BUILT | typing uses keysym binds `ALT + A..Z` (`omahop.lua:193`); `input:resolve_binds_by_sym` is false here (read with hyprctl) | medium | M | Unverified on non-US layouts (see section 6). A user on AZERTY or Cyrillic may not be able to type. Check before 1.1 |
 | B50 | Mouse behaviour (wheel, click outside, mouse-up) | PARTLY | hover, click built; no click-outside dismiss (mask is the card only, `Service.qml:214`); no mouse-up pick | low | S | Click outside is a free dismiss, but needs a full-screen input region, which steals clicks |
-| B51 | Trackpad swipe trigger | NOT BUILT | grep `gesture`: none | medium | M | Stale reason: `hl.gesture({fingers, direction, action})` exists in Hyprland 0.56.2 stubs. Risk: collides with Omarchy workspace swipe; release-to-commit semantics unknown (unverified) |
+| B51 | Trackpad swipe trigger | BUILT v1.5 (touchpad only, `swipe_trigger`, D20, `research/swipe-spike.md`) | was: grep `gesture`: none | medium | M | Stale reason: `hl.gesture({fingers, direction, action})` exists in Hyprland 0.56.2 stubs. Risk: collides with Omarchy workspace swipe; release-to-commit semantics unknown (unverified) |
 | B52 | Commit sound or haptic | NOT BUILT | none | low | S | Against slim |
 | B53 | Window tiling hotkeys | OUT OF SCOPE | sibling project omagnet | | | |
 | B54 | Hide all, show all | OUT OF SCOPE | Omarchy has close-all; hide-all has no Hyprland meaning | | | |

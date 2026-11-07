@@ -49,7 +49,17 @@ Jump to any window fast on Omarchy's floating workspaces. Hold Alt, press Tab: a
 - **Quick jump keys:** number keys (`Alt + 1` to `9`) or letters you map to apps jump straight to a window; any other key still types into the search.
 - **Quit and minimize by key:** set `action_keys = "q=close, m=minimize"` and, with the list up and nothing typed yet, that key closes or minimizes the selected window and the selection moves to the next row. Once you type a letter, every key types. Off by default; a key a hint already uses is left to the hint. Needs `Type to search` on, because it rides the same keys.
 - **Audio marker (off by default):** with "Mark windows playing sound" on, a small speaker shows after the app name of a window whose app is playing sound, so you can find the call or the music. It is checked once when the list opens (with `pactl`); paused or muted sound shows none, and a browser marks all its windows (one process plays every tab). Song and video titles are never logged or saved.
+- **Touchpad swipe (off by default):** see below.
 - Adds nothing to the bar, the dock or the desktop unless you turn the peek strip on.
+
+## Touchpad swipe (optional)
+
+Off by default, new in v1.5. For a tablet or a laptop used without its keyboard: turn on "Swipe on the touchpad to switch" in the settings window (group Touchpad swipe) and reload Hyprland. Then swipe right with four fingers: after a short stretch the list opens on your previous window, each further stretch moves one row (left goes back), and lifting your fingers switches to the selected window.
+
+- To change your mind, swipe back to the window you started on and lift: nothing switches. A swipe that stops moving for 10 seconds also closes the list without switching.
+- Fingers: 4 by default, 3 if you prefer. Omarchy's example config uses 3 fingers left and right for workspaces; a swipe you already have always wins, and Hyprland shows a config error for omahop's. `lua tools/gesture-map.lua` (in the plugin folder) lists the swipes your config uses.
+- "Swipe distance per row" sets how far your fingers travel per row (default 100).
+- It works where omahop takes over Alt+Tab (floating workspaces by default) and does nothing elsewhere. Touchpads only: Hyprland does not pass touchscreen swipes to plugins.
 
 ## Browser tabs (optional)
 
@@ -66,6 +76,7 @@ Privacy: tab titles and addresses are private, so they stay on this computer. Th
 - It reads the list of windows (class, title, workspace, monitor) from Hyprland, and takes screenshots of windows through Wayland's screen-capture protocol only to draw thumbnails (nothing is saved or sent anywhere).
 - It writes small state files under `$XDG_RUNTIME_DIR/omahop` (gone at logout), its settings at `~/.config/omahop/config.toml`, and a launcher entry `~/.local/share/applications/omahop.desktop` (only one that carries its own marker is ever replaced or removed). It never edits your `hyprland.lua` or any Omarchy file.
 - Keys it takes: Alt+Tab and Alt+Shift+Tab (where it is active), the same-app chord, and Alt plus letters, digits, Delete, Escape, Return and the arrows only while the list is up, and never a chord you already use. With `modifier` set to Super or Ctrl, the same keys with that modifier instead, and Super+Tab or Ctrl+Tab is only taken when no bind of yours or Omarchy's uses it.
+- Gestures it takes: none by default. With the touchpad swipe on, one left and right swipe with 3 or 4 fingers, never one your config already uses.
 
 ## Install
 
@@ -76,7 +87,7 @@ Privacy: tab titles and addresses are private, so they stay on this computer. Th
    pcall(dofile, os.getenv("HOME") .. "/.config/omarchy/plugins/io.github.felipecpaiva.omahop/lua/omahop.lua")
    ```
 
-   The `pcall` makes sure a missing or broken file never breaks the rest of your config.
+   The `pcall` makes sure a missing or broken file never breaks the rest of your config. Keep it the last line, after your own gestures, so a touchpad swipe you already use always wins over omahop's.
 
 To remove: delete that line, then `omarchy plugin remove io.github.felipecpaiva.omahop`.
 
@@ -110,6 +121,9 @@ peek_position = "auto"   # "auto" (a free edge), "bottom", "top", "left", "right
 border = "auto"          # the list's outline: "auto" follows Hyprland's window border (none when you turned window borders off), "on", "off"
 icon_theme = ""         # an installed icon theme to prefer, by folder name (for example "Papirus"); "" = none. Applies at once
 icon_pack = ""          # your own icons: a folder name under ~/.config/omahop/packs (format in docs/icon-packs.md); "" = none
+swipe_trigger = false    # true: a touchpad swipe opens the list, lifting picks (needs a Hyprland reload)
+swipe_fingers = 4        # 3 or 4 (needs a Hyprland reload)
+swipe_distance = 100     # finger travel per row, px
 
 [windows]
 workspaces = "floating"  # which workspaces' windows are listed: "current", "floating", "all"
