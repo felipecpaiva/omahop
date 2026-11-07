@@ -33,9 +33,9 @@ def colours(path):
     n = {"A": 0, "B": 0, "C": 0}
     for i in range(0, len(data) - 2, 3):
         r, g, b = data[i], data[i + 1], data[i + 2]
-        # thresholds are loose on purpose: a minimized card is dimmed (opacity 0.7), so its green is darker than the window's own
+        # thresholds are loose on purpose: a minimized card is dimmed (opacity 0.7), so its green is darker than the window's own on a dark theme and lighter on a light one: judge it by how much green dominates
         if r > 120 and g < 50 and b < 50: n["A"] += 1
-        elif g > 100 and r < 50 and b < 50: n["B"] += 1
+        elif g > 100 and g - max(r, b) > 80: n["B"] += 1
         elif b > 120 and r < 50 and g < 50: n["C"] += 1
     return n
 
