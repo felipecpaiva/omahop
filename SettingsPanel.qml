@@ -15,6 +15,7 @@ Item {
   property var manifest: null
 
   property bool opened: false
+  property string page: ""   // "" for the settings list, or the editor page a setting asked for ("packs")
 
   property color background: Color.menu.background
   property color foreground: Color.menu.text
@@ -23,6 +24,7 @@ Item {
   property string fontFamily: Style.font.menuFamily
 
   function open(payloadJson) {
+    root.page = ""
     root.opened = true
     settings.reload()
     Qt.callLater(function () { content.forceActiveFocus() })
@@ -48,7 +50,9 @@ Item {
 
   PanelWindow {
     id: window
-    visible: root.opened
+    // Hidden while the pack editor's file chooser is open: the chooser is a normal window and would open under this overlay.
+    visible: root.opened && !(editorLoader.item && editorLoader.item.picking)
+    onVisibleChanged: if (visible) Qt.callLater(function () { content.forceActiveFocus() })
     anchors { top: true; bottom: true; left: true; right: true }
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore
@@ -116,8 +120,23 @@ Item {
             }
           }
 
+          Loader {
+            id: editorLoader
+            active: root.page === "packs"
+            visible: active
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            sourceComponent: PackEditorPage {
+              foreground: root.foreground
+              accent: root.accent
+              fontFamily: root.fontFamily
+              onBack: root.page = ""
+            }
+          }
+
           Flickable {
             id: scroller
+            visible: root.page === ""
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
@@ -153,6 +172,7 @@ Item {
                       foreground: root.foreground
                       accent: root.accent
                       fontFamily: root.fontFamily
+                      onEditorRequested: function (editor) { root.page = editor }
                     }
                   }
                 }

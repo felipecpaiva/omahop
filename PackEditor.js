@@ -173,3 +173,6 @@ function finish(state, op, code, stdout, stderr, ctx) {
 }
 
 function cancel(state) { return settled(state, "", false) }
+
+// A command that was refused before it ran (command() gave an error).
+function refuse(state, why) { return state.phase === "busy" ? state : settled(state, why, true) }

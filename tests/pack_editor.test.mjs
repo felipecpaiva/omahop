@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs"
 import assert from "node:assert/strict"
 const load = (file, names) => new Function(readFileSync(new URL("../" + file, import.meta.url), "utf8").replace(".pragma library", "") + "; return {" + names + "}")()
-const P = load("PackEditor.js", "iconStem, appRows, parseImportSummary, command, initial, begin, finish, cancel")
+const P = load("PackEditor.js", "iconStem, appRows, parseImportSummary, command, initial, begin, finish, cancel, refuse")
 const R = load("IconResolve.js", "parseIndex, packPick")
 
 // iconStem: the stem tools/pack-edit.sh makes (tests/pack_edit.test.sh compares the two on the same ids)
@@ -98,5 +98,7 @@ assert.equal(P.finish(s, "export", 0, "Exported p (2 icons) to /h/p.omahop-pack.
 assert.deepEqual(P.finish(s, "init", 0, "my-pack\n", "", {}).effect, { refresh: true, select: "my-pack", changed: false })
 assert.equal(P.cancel(asked).phase, "idle")
 assert.equal(P.cancel(asked).confirm, null)
+assert.deepEqual([P.refuse(P.initial(), "no pack chosen").message, P.refuse(P.initial(), "x").error], ["no pack chosen", true])
+assert.equal(P.refuse(s, "x"), s, "a refusal never interrupts a running action")
 
 console.log("ok   pack editor: stems, rows, import summary, argument arrays, state machine")

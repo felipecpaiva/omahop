@@ -231,7 +231,8 @@
       "type": "text"
     }, {
       "default": "",
-      "help": "Type the folder name of an icon pack in ~/.config/omahop/packs, such as omahop-sample. Its icons come first; an app the pack has no icon for keeps its usual one. Empty uses no pack. A pack you made yourself or copied from someone: see docs/icon-packs.md for the format. Applies at once. To share a pack as one zip or install one, run tools/pack-export.sh <name> or tools/pack-import.sh <file.zip> from the plugin folder (~/.config/omarchy/plugins/io.github.felipecpaiva.omahop).",
+      "editor": "packs",
+      "help": "Type the folder name of an icon pack in ~/.config/omahop/packs, such as omahop-sample. Its icons come first; an app the pack has no icon for keeps its usual one. Empty uses no pack. Applies at once. Make or edit packs and share them as one zip with the button below; the format is in docs/icon-packs.md.",
       "hidden": false,
       "id": "top.icon_pack",
       "key": "icon_pack",
