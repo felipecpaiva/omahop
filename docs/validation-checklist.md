@@ -92,3 +92,12 @@ Automated checks (`tests/run-all.sh`) cover logic and the keyboard path with a v
 - [ ] Changing your mind: with the list lingering, start typing into the app below: the first keys go into the search (they are stolen until Escape, a click, or the timeout). Check that this is clear enough from the open list and the countdown line, and that one Escape plus one more Escape, or a click, gives the keyboard back at once.
 - [ ] Setting 0 (default): typing then releasing Alt picks at once, exactly as v1.1.0.
 - [ ] Kill the shell while lingering (`omarchy restart shell`): the keyboard comes back (the grab dies with the process) and the next Alt+Tab works.
+
+## v1.3 part B (quit and minimize by key)
+
+- [ ] Default (`action_keys` empty): Alt+Tab, press `q` and `m`: they type into the search, nothing closes.
+- [ ] Settings, "Quit and minimize keys" = `q=close, m=minimize`: Alt+Tab with three windows, `m` minimizes the selected one, it leaves the list and the selection is on the next row (check the window really went to the dock); `q` closes the selected one (an app that asks to save may stay: its row is gone from the list anyway, check the window is still there afterwards).
+- [ ] Type `b` first, then `q`: it types (query `bq`), nothing closes. Backspace to empty: `q` acts again.
+- [ ] Close or minimize every window but one: the last action ends the session cleanly, no overlay left.
+- [ ] `hints = "numbers"` with `action_keys = "3=close"`: `3` jumps, does not close; the log (`omarchy-debug` or the plugin log) has a `config: action_keys:` line naming the clash.
+- [ ] A typo such as `q=quit` or `delete=close`: the log reports it, the rest still work.

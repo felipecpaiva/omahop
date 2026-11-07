@@ -46,6 +46,7 @@ Jump to any window fast on Omarchy's floating workspaces. Hold Alt, press Tab: a
 - **App rules:** never list windows by title fragment, list some apps first, and step aside (stock Alt+Tab) for fullscreen apps or named apps such as games and remote desktops.
 - **Keep the list open while searching (off by default):** with `search_linger_seconds` from 1 to 60, once you have typed a search, releasing Alt no longer picks. The list stays open that many seconds after your last key and takes the keyboard, so any character can be typed (capitals, accents). Return picks, Escape clears the search and then closes, a click outside the list closes it, and when the time runs out it closes without picking. With 0 (the default) releasing Alt picks, as before.
 - **Quick jump keys:** number keys (`Alt + 1` to `9`) or letters you map to apps jump straight to a window; any other key still types into the search.
+- **Quit and minimize by key:** set `action_keys = "q=close, m=minimize"` and, with the list up and nothing typed yet, that key closes or minimizes the selected window and the selection moves to the next row. Once you type a letter, every key types. Off by default; a key a hint already uses is left to the hint. Needs `Type to search` on, because it rides the same keys.
 - Adds nothing to the bar, the dock or the desktop unless you turn the peek strip on.
 
 ## Requirements and what it touches
@@ -89,6 +90,7 @@ thumbnail_exclude = ""   # window classes never captured into a picture, comma s
 actions = true           # close and minimize buttons on the hovered row or card
 same_app_key = "ALT + GRAVE"  # the same-app shortcut ("" turns it off, needs a Hyprland reload)
 hints = "off"            # quick jump keys: "off", "numbers", "apps" (with hint_keys = "c=google-chrome, t=kitty")
+action_keys = ""         # keys that act on the selected window while nothing is typed: "q=close, m=minimize" (empty: off)
 passthrough_fullscreen = false  # true: stock Alt+Tab while the focused window is fullscreen
 peek = "off"             # the peek strip: "off", "edge" (shows when the pointer touches the screen edge), "always"
 peek_position = "auto"   # "auto" (a free edge), "bottom", "top", "left", "right"

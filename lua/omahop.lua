@@ -4,7 +4,7 @@
 -- The overlay is a separate Quickshell service that watches the state file this module writes (see write_state).
 local here = debug.getinfo(1, "S").source:match("^@(.*)/") or "."
 local function mod(name) return dofile(here .. "/" .. name .. ".lua") end
-local Config, Scope, Windows, Mru, Session, Search, Rules, Hints, Modifier = mod("config"), mod("scope"), mod("windows"), mod("mru"), mod("session"), mod("search"), mod("rules"), mod("hints"), mod("modifier")
+local Config, Scope, Windows, Mru, Session, Search, Rules, Hints, Modifier, ActionKeys = mod("config"), mod("scope"), mod("windows"), mod("mru"), mod("session"), mod("search"), mod("rules"), mod("hints"), mod("modifier"), mod("action_keys")
 
 local M = {}
 _G.omahop = M
@@ -13,6 +13,7 @@ M.tick_ms = 16 -- key polling interval: shorter means the modifier's release is 
 M.release_ms = 50 -- after the overlay lets go of the keyboard, wait this long before focusing: a focus call is ignored while it holds the keyboard (linger spike)
 M.query_max = 256 -- bytes of a search typed into the overlay (set_query); longer is refused
 M.inject_key = "F24" -- see docs/research/spikes.md L1: without it, an app under the overlay sees a bare Alt tap and opens its menu bar
+M.action_map = {} -- key -> action name, from action_keys (see reload_config)
 M.trigger_key = "TAB"
 -- Keys active only while a session is open, each with the modifier (setting `modifier`, held for the whole session). (Unbinding them at the end would also drop a
 -- user's own bind on the same chord: shortcut, none exist in the stock set; upgrade by reading the bind list if one appears.)
@@ -236,6 +237,9 @@ function M.type_key(ch)
     local target = Hints.target(M.entries, M.cfg.hints, Hints.parse_keys(M.cfg.hint_keys), ch)
     if target then M.pick(target); return end
   end
+  -- an action key (action_keys, for example q=close) acts on the selected row, same rule: only while nothing is typed yet
+  local action = M.query == "" and not M.session:is_lingering() and M.action_map[ch]
+  if action then M.act(action); return end
   if ch == "backspace" then M.query = Search.backspace(M.query) else M.query = Search.append(M.query, ch) end
   M.refilter()
 end
@@ -309,9 +313,26 @@ function M.close_selected()
   if e then M.close_window(e.address) end
 end
 
+-- What an action key can do to the selected window; the names here are the only ones action_keys accepts. Both reuse the pointer's paths (never a synchronous hyprctl).
+M.actions = { close = function(address) M.close_window(address) end, minimize = function(address) M.minimize_window(address) end }
+
+-- Run a named action on the selected row, then take that row out of the list so the selection lands on the next one (an empty list ends the session).
+function M.act(name)
+  local e = M.entries[M.session:selected()]
+  local run = M.actions[name]
+  if not (e and run) then return end
+  run(e.address)
+  M.drop_entry(e.address)
+end
+
 -- A window went away: forget it, and while a session is open take it out of the list (selection stays in range, nothing left ends the session).
 function M.on_window_closed(address)
   M.order = Mru.forget(M.order, address)
+  M.drop_entry(address)
+end
+
+-- Take a window out of the open session's list. Selection keeps its index, which is now the next row, clamped to the end.
+function M.drop_entry(address)
   if not (M.session and M.session:is_open()) then return end
   local function drop(list)
     local out = {}
@@ -470,6 +491,11 @@ function M.reload_config()
   for _, line in ipairs(bad) do problems[#problems + 1] = "unreadable line: " .. line end
   for _, p in ipairs(problems) do log("config: " .. p) end
   M.cfg = cfg
+  local known = {}
+  for name in pairs(M.actions) do known[name] = true end
+  local keys, key_problems = ActionKeys.resolve(cfg.action_keys, known, cfg.hints, Hints.parse_keys(cfg.hint_keys))
+  for _, p in ipairs(key_problems) do log("config: " .. p) end
+  M.action_map = keys
   M.session = Session.new(cfg)
 end
 

@@ -55,6 +55,8 @@ C.spec = {
       help = "While the list is up and nothing is typed yet, a hint key jumps straight to a window. Any other key still types into the search." },
     hint_keys = { default = "", group = "shortcuts", label = "App letters",
       help = "Pairs of letter and app class, comma separated, for example: c=google-chrome, t=kitty. Used when Quick jump keys is App letters." },
+    action_keys = { default = "", group = "shortcuts", label = "Quit and minimize keys",
+      help = "Pairs of key and action, comma separated, for example: q=close, m=minimize. While the list is up and nothing is typed yet, that key acts on the selected window and the selection moves to the next row; once you have typed a letter, every key types. Actions: close, minimize. Empty (the default) turns it off. A key a hint already uses is left to the hint." },
     icon_theme = { default = "", group = "look", label = "Icon theme",
       help = "Type the folder name of an installed icon theme, such as Papirus, to prefer its icons. Empty uses whichever installed theme the scan finds first. An app the theme has no icon for still gets one from the others. Applies after a shell restart." },
     border = { default = "auto", values = { "auto", "on", "off" }, group = "look", label = "Outline",
@@ -95,7 +97,7 @@ C.groups = {
 }
 C.order = { "top.takeover", "top.modifier", "top.scope", "top.search", "top.search_fuzzy", "top.search_linger_seconds", "windows.workspaces", "windows.monitors", "windows.minimized", "windows.specials", "windows.ignore",
   "top.style", "top.thumbnails", "top.thumbnail_exclude", "top.reveal_delay_ms", "top.border", "top.icon_theme", "top.actions", "keys.repeat_delay_ms", "keys.repeat_ms", "top.peek", "top.peek_position",
-  "windows.ignore_titles", "windows.first", "top.passthrough_fullscreen", "top.passthrough", "top.same_app_key", "top.hints", "top.hint_keys" }
+  "windows.ignore_titles", "windows.first", "top.passthrough_fullscreen", "top.passthrough", "top.same_app_key", "top.hints", "top.hint_keys", "top.action_keys" }
 
 local function contains(list, v)
   for _, x in ipairs(list) do if x == v then return true end end
