@@ -96,6 +96,27 @@ Automated checks (`tests/run-all.sh`) cover logic and the keyboard path with a v
 - [ ] A hostile zip: `python3 -c 'import zipfile; z=zipfile.ZipFile("/tmp/evil.zip","w"); z.writestr("pack.toml","name = \"x\""); z.writestr(zipfile.ZipInfo("../evil.png"), "x")'` then `bash tools/pack-import.sh /tmp/evil.zip`: refused with "a path that leads out of the pack", nothing new in `~/.config/omahop/packs/`, `~/.cache/omahop/` or the folder above the zip.
 - [ ] The Icon pack help text in the settings window names both commands.
 
+## v1.5 (icon pack editor)
+
+Run on a desktop session with the branch installed as the plugin. Keep a copy of `~/.config/omahop/packs` first.
+
+- [ ] Settings window, group Look: under Icon pack a button **Make or edit icon packs**; it swaps the list for the editor, **Back** returns, Escape closes the window. Reopening the window shows the settings list.
+- [ ] **New pack** with name `Test Pack`, author, licence `CC0-1.0`: the status says `Made the pack test-pack.`, a `test-pack` button appears and is chosen, the fields show what was typed. `~/.config/omahop/packs/test-pack/pack.toml` holds the four lines.
+- [ ] Making it again says a folder named test-pack exists. A name with a `"` is refused with the reason.
+- [ ] Set Icon pack to `test-pack`. Open the editor again: open windows are listed first, then installed apps; Filter apps narrows the list.
+- [ ] **Choose image** on kitty: the settings window disappears and the Omarchy file chooser opens on top (hand check 1, the main risk); pick a PNG or SVG: the window comes back, the status says `Added icons/kitty.svg.`, the row shows the picture and `pack icon kitty.svg`. Alt+Tab with a kitty window: the switcher shows the new icon without a shell restart.
+- [ ] Cancel the chooser: the window comes back and nothing changes.
+- [ ] Choose a `.jpg` (rename one to `.png` too): refused, the status names the reason, `icons/` unchanged.
+- [ ] Choose image again on kitty with an SVG after a PNG: one file remains (`kitty.svg`), the row and the switcher show it (the switcher may need `omarchy restart shell` if the file name stayed the same).
+- [ ] With `omarchy` off the PATH (or `omarchy-file-select` failing): Choose image shows the path field; a full path adds the image, a relative one is refused.
+- [ ] **Remove** on kitty: the row shows the system icon again; Alt+Tab shows the system icon.
+- [ ] **Save details** with a new author and an empty description: `pack.toml` has the new author, no description line, and any comment line added by hand is still there.
+- [ ] **Export**: the status says `Exported test-pack (n icons) to ...`; again: the page asks to replace; **Replace** writes it, **Cancel** keeps it.
+- [ ] **Import a zip** with the exported file: the summary names the pack, author, licence, icon count and says a pack of that name is installed; **Replace** installs, **Cancel** leaves it. Import `omahop-sample`'s zip on a HOME without it: **Install** installs and the new folder appears in the pack buttons.
+- [ ] Import the hostile zip from the v1.4 part C check: refused with "a path that leads out of the pack", nothing new under `~/.config/omahop/packs/`.
+- [ ] A linked pack folder (`ln -s ~/somewhere/pack ~/.config/omahop/packs/linked`): its row is listed, adding an image is refused with "edit it there", export works.
+- [ ] Theme switch (`omarchy theme set ...`) while the editor is open: colours follow.
+
 ## v1.1b (keep the list open while searching)
 
 - [ ] Settings, "Keep the list open after typing" = 5: Alt+Tab, type two letters, release Alt: the list stays, a thin line under the search runs down; type more (a capital, an accent such as `ç`), Return picks.
