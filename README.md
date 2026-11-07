@@ -11,7 +11,7 @@
 
 Jump to any window fast on Omarchy's floating workspaces. Hold Alt, press Tab: a list of your windows (icon, app name, title) appears in your Omarchy theme. Let go of Alt to switch. Prefer Super or Ctrl? The `modifier` setting changes the key you hold (Alt everywhere below means that key).
 
-**Status: v1.2.0 released.** A list or cards switcher, type to search (accents ignored, fuzzy, optionally kept open), mouse and quick actions, an optional peek strip, a same-app shortcut, app rules, quick jump keys, icon theme and thumbnail exclusions, and a settings window. More in later releases (see `docs/ROADMAP.md`).
+**Status: v1.3.0 released.** A list or cards switcher, type to search (accents ignored, fuzzy, optionally kept open), mouse and quick actions, an optional peek strip, a same-app shortcut, app rules, quick jump keys, icon theme, icon packs, quit and minimize by key, a choice of held key, and thumbnail exclusions, and a settings window. More in later releases (see `docs/ROADMAP.md`).
 
 ## See it
 
@@ -96,7 +96,7 @@ passthrough_fullscreen = false  # true: stock Alt+Tab while the focused window i
 peek = "off"             # the peek strip: "off", "edge" (shows when the pointer touches the screen edge), "always"
 peek_position = "auto"   # "auto" (a free edge), "bottom", "top", "left", "right"
 border = "auto"          # the list's outline: "auto" follows Hyprland's window border (none when you turned window borders off), "on", "off"
-icon_theme = ""         # an installed icon theme to prefer, by folder name (for example "Papirus"); "" = none. Applies after a shell restart
+icon_theme = ""         # an installed icon theme to prefer, by folder name (for example "Papirus"); "" = none. Applies at once
 icon_pack = ""          # your own icons: a folder name under ~/.config/omahop/packs (format in docs/icon-packs.md); "" = none
 
 [windows]

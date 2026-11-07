@@ -19,6 +19,10 @@ def ev(lua):
     subprocess.run(["hyprctl", "eval", lua], capture_output=True)
 
 
+# Screen y of the "Where it takes over Alt+Tab" buttons in the settings window; it moves down when a setting above it gets longer help text (re-measure with a grim screenshot of the panel)
+SCOPE_Y = 436
+
+
 def move(x, y):
     ev(f"hl.dispatch(hl.dsp.cursor.move({{ x = {x}, y = {y} }}))"); time.sleep(0.5)
 
@@ -46,11 +50,11 @@ try:
     sh("omarchy-shell", "shell", "toggle", PLUGIN); time.sleep(1.5)
     check("panel layer is open", '"omahop-settings"' in sh("hyprctl", "layers", "-j"))
     with Mouse() as m:
-        move(639, 298); m.press(); time.sleep(0.1); m.release(); time.sleep(1.3)
+        move(639, SCOPE_Y); m.press(); time.sleep(0.1); m.release(); time.sleep(1.3)
         text = open(CFG).read()
         check("clicking 'All workspaces' writes scope = \"all\"", 'scope = "all"' in text, text)
         check("the user's comments and other keys are untouched", "# my notes" in text and "reveal_delay_ms = 0 # keep this comment" in text, text)
-        move(491, 298); m.press(); time.sleep(0.1); m.release(); time.sleep(1.3)
+        move(491, SCOPE_Y); m.press(); time.sleep(0.1); m.release(); time.sleep(1.3)
         text = open(CFG).read()
         check("clicking 'Floating workspaces only' changes that same line", 'scope = "floating"' in text and text.count("scope =") == 1, text)
 finally:

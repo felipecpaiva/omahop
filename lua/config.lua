@@ -58,7 +58,7 @@ C.spec = {
     action_keys = { default = "", group = "shortcuts", label = "Quit and minimize keys",
       help = "Pairs of key and action, comma separated, for example: q=close, m=minimize. While the list is up and nothing is typed yet, that key acts on the selected window and the selection moves to the next row; once you have typed a letter, every key types. Actions: close, minimize. Empty (the default) turns it off. A key a hint already uses is left to the hint." },
     icon_theme = { default = "", group = "look", label = "Icon theme",
-      help = "Type the folder name of an installed icon theme, such as Papirus, to prefer its icons. Empty uses whichever installed theme the scan finds first. An app the theme has no icon for still gets one from the others. Applies after a shell restart." },
+      help = "Type the folder name of an installed icon theme, such as Papirus, to prefer its icons. Empty uses whichever installed theme the scan finds first. An app the theme has no icon for still gets one from the others. " },
     icon_pack = { default = "", group = "look", label = "Icon pack",
       help = "Type the folder name of an icon pack in ~/.config/omahop/packs, such as omahop-sample. Its icons come first; an app the pack has no icon for keeps its usual one. Empty uses no pack. A pack you made yourself or copied from someone: see docs/icon-packs.md for the format. Applies at once." },
     border = { default = "auto", values = { "auto", "on", "off" }, group = "look", label = "Outline",
