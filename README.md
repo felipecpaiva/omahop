@@ -50,6 +50,14 @@ Jump to any window fast on Omarchy's floating workspaces. Hold Alt, press Tab: a
 - **Quit and minimize by key:** set `action_keys = "q=close, m=minimize"` and, with the list up and nothing typed yet, that key closes or minimizes the selected window and the selection moves to the next row. Once you type a letter, every key types. Off by default; a key a hint already uses is left to the hint. Needs `Type to search` on, because it rides the same keys.
 - Adds nothing to the bar, the dock or the desktop unless you turn the peek strip on.
 
+## Browser tabs (optional)
+
+Off by default, and new in v1.4 (in progress). With "Search browser tabs" on in the settings window, a search also finds the tabs behind other tabs in your browser windows: each matching tab is a compact row under its window (with the browser's own icon, its title and its site), and Return opens that tab and brings its window to the front. Tab rows only appear once you type, so Alt+Tab itself works exactly as before.
+
+It needs a small browser extension and a helper program that live in a separate repository, `omahop-tabs` (private for now), with their own install and removal notes. Chromium browsers first (Chrome, Chromium, Brave, Edge). omahop itself installs nothing for it.
+
+Privacy: tab titles and addresses are private, so they stay on this computer. The helper writes them only while the setting is on, to a temporary folder (`$XDG_RUNTIME_DIR/omahop`, mode 700, emptied at logout); turning the setting off removes them. omahop reads them only when you type into the switcher, keeps only the title and the site name (never the rest of the address) for the open list, and never writes them to its log. Sites you list under "Never list tabs from these sites" (`browser_tabs_ignore`, for example a bank) are dropped by the helper before anything is written, and again by omahop. Details: [docs/file-contract.md](docs/file-contract.md).
+
 ## Requirements and what it touches
 
 - Omarchy 4.5 or newer (the Hyprland Lua configuration and the Quickshell shell it ships). Nothing else to install: no network, no root, no packages.
