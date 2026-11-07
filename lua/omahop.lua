@@ -10,6 +10,8 @@ local M = {}
 _G.omahop = M
 
 M.tick_ms = 16 -- key polling interval: shorter means Alt release is noticed sooner (a tick costs about 8 microseconds, measured)
+M.release_ms = 50 -- after the overlay lets go of the keyboard, wait this long before focusing: a focus call is ignored while it holds the keyboard (linger spike)
+M.query_max = 256 -- bytes of a search typed into the overlay (set_query); longer is refused
 M.inject_key = "F24" -- see docs/research/spikes.md L1: without it, an app under the overlay sees a bare Alt tap and opens its menu bar
 -- Chords active only while a session is open; ALT is held for the whole session. (Unbinding them at the end would also drop a
 -- user's own bind on the same chord: shortcut, none exist in the stock set; upgrade by reading the bind list if one appears.)
@@ -27,6 +29,8 @@ M.all_entries = {}  -- every window of this session, before the query
 M.query = ""
 M.bound = {}        -- chords bound for the running session, unbound exactly at its end
 M.gen = 0
+M.seq = 0           -- the newest sequence number applied from the overlay (set_query, key)
+M.grabbed = false   -- the overlay was told to hold the keyboard during this session
 
 local function log(msg)
   local f = io.open(state_dir .. "/log", "a")
@@ -130,12 +134,21 @@ end
 -- Keep the file the overlay watches in step with the session. Written to a temp file and renamed, so the reader never sees half of it.
 function M.write_state()
   local s = M.session
-  local lines = { "version=1", "open=" .. ((s and s:is_open()) and 1 or 0), "revealed=" .. ((s and s:is_revealed()) and 1 or 0),
-    "selected=" .. (s and s:selected() or 0), "style=" .. M.cfg.style, "thumbnails=" .. M.cfg.thumbnails, "border=" .. M.cfg.border, "actions=" .. (M.cfg.actions and 1 or 0) }
-  if s and s:is_open() then lines[#lines + 1] = "query=" .. (tostring(M.query):gsub("[%c]", " ")) end
-  if s and s:is_open() then
-    -- hint labels (a number or a letter on a row) only while nothing is typed: once there is a query, every key types
-    local labels = M.query == "" and Hints.labels(M.entries, M.cfg.hints, Hints.parse_keys(M.cfg.hint_keys)) or {}
+  local open, lingering = s and s:is_open(), s and s:is_lingering()
+  -- the overlay holds the keyboard while lingering, and already from the first typed letter (Alt still held) so no key is lost at the Alt release
+  local grab = open and s:is_revealed() and M.cfg.search_linger_seconds > 0 and (lingering or M.query ~= "")
+  if grab then M.grabbed = true end
+  local lines = { "version=1", "open=" .. (open and 1 or 0), "revealed=" .. ((s and s:is_revealed()) and 1 or 0),
+    "selected=" .. (s and s:selected() or 0), "style=" .. M.cfg.style, "thumbnails=" .. M.cfg.thumbnails, "border=" .. M.cfg.border, "actions=" .. (M.cfg.actions and 1 or 0),
+    "seq=" .. M.seq, "grab=" .. (grab and 1 or 0) }
+  if lingering then
+    lines[#lines + 1] = "linger_ms=" .. (M.cfg.search_linger_seconds * 1000)
+    lines[#lines + 1] = "linger_rev=" .. s:linger_rev()
+  end
+  if open then lines[#lines + 1] = "query=" .. (tostring(M.query):gsub("[%c]", " ")) end
+  if open then
+    -- hint labels (a number or a letter on a row) only while nothing is typed and Alt is held: once there is a query, or while lingering, every key types
+    local labels = (M.query == "" and not lingering) and Hints.labels(M.entries, M.cfg.hints, Hints.parse_keys(M.cfg.hint_keys)) or {}
     for i, e in ipairs(M.entries) do
       local clean = function(v) return (tostring(v):gsub("[%c]", " ")) end
       lines[#lines + 1] = table.concat({ "w", e.address, clean(e.class), e.minimized and 1 or 0, labels[i] or "", clean(e.title) }, "\t")
@@ -209,13 +222,15 @@ function M.refilter()
   end
   M.entries = Search.filter(M.all_entries, M.query, M.names, { fuzzy = M.cfg.search_fuzzy })
   M.session:resize(#M.entries, #M.entries > 0 and 1 or 0)
+  M.session:mark_query(M.query ~= "")
   M.write_state()
 end
 
 function M.type_key(ch)
   if not M.session:is_open() then return end
   -- a hint key (a number, or a letter mapped to an app) jumps straight to a window, but only while nothing is typed yet
-  if M.query == "" and M.cfg.hints ~= "off" and ch ~= "backspace" and ch ~= " " then
+  M.session:touch(M.now())
+  if M.query == "" and not M.session:is_lingering() and M.cfg.hints ~= "off" and ch ~= "backspace" and ch ~= " " then
     local target = Hints.target(M.entries, M.cfg.hints, Hints.parse_keys(M.cfg.hint_keys), ch)
     if target then M.pick(target); return end
   end
@@ -237,7 +252,6 @@ local function bind_session_keys(on)
     local key = chord:match("%+ (%w+)$")
     if free(key) then
       add(chord, key, function()
-        if name == "escape" and M.query ~= "" then M.query = ""; M.refilter(); return end -- the first Escape clears what was typed
         if name == "delete" then M.close_selected(); return end                           -- quick action: close the picked window
         M.apply(M.session:key(M.now(), name))
       end)
@@ -310,25 +324,48 @@ function M.on_window_closed(address)
   local before = #M.all_entries
   M.all_entries, M.entries = drop(M.all_entries), drop(M.entries)
   if #M.all_entries == before then return end
-  if #M.all_entries < 1 then M.apply(M.session:key(M.now(), "escape")); return end
+  if #M.all_entries < 1 then M.apply(M.session:key(M.now(), "cancel")); return end
   local sel = #M.entries == 0 and 0 or math.min(math.max(M.session:selected(), 1), #M.entries)
   M.session:resize(#M.entries, sel)
   M.write_state()
 end
 
+-- The keyboard while lingering (search_linger_seconds): the overlay owns the typed text and sends all of it, never a single key, with a sequence
+-- number; an older call that lands late is dropped. Called through `hyprctl eval`, so every argument is checked here.
+M.overlay_keys = { ["return"] = true, escape = true, cancel = true, up = true, down = true, left = true, right = true }
+
+function M.set_query(seq, text)
+  if not (M.session and M.session:is_open()) or type(text) ~= "string" then return end
+  local n = Session.newer(M.seq, seq)
+  text = text:gsub("%c", "")
+  if not n or #text > M.query_max or not utf8.len(text) then return end
+  M.seq = n
+  M.session:touch(M.now())
+  if text ~= M.query then M.query = text; M.refilter() else M.write_state() end
+end
+
+function M.key(seq, name)
+  if not (M.session and M.session:is_open()) or not M.overlay_keys[name] then return end
+  local n = Session.newer(M.seq, seq)
+  if not n then return end
+  M.seq = n
+  M.apply(M.session:key(M.now(), name))
+end
+
 function M.apply(actions)
-  local closed = false
+  local closed, target = false, nil
   for _, a in ipairs(actions) do
-    if a.type == "commit" then
-      local e = M.entries[a.index]
-      if e then M.activate(e) end
-      closed = true
-    elseif a.type == "cancel" then
-      closed = true
+    if a.type == "commit" then target = M.entries[a.index]; closed = true
+    elseif a.type == "cancel" then closed = true
+    elseif a.type == "clear" then M.query = ""; M.refilter()
     end
   end
-  if closed then bind_session_keys(false); M.gen = M.gen + 1; M.query = "" end
-  M.write_state()
+  if not closed then M.write_state(); return end
+  local grabbed = M.grabbed
+  bind_session_keys(false); M.gen = M.gen + 1; M.query = ""; M.grabbed = false
+  M.write_state() -- open=0 first: the overlay lets go of the keyboard
+  if not target then return end
+  if grabbed then hl.timer(function() M.activate(target) end, { type = "oneshot", timeout = M.release_ms }) else M.activate(target) end
 end
 
 -- Chained one-shot timers: hl.timer has no stop handle, a generation number does.
@@ -337,7 +374,7 @@ local function tick(gen)
   local ok, err = pcall(function() M.apply(M.session:tick(M.now(), keys_down())) end)
   if not ok then
     log("tick error: " .. tostring(err))
-    M.session:key(M.now(), "escape"); bind_session_keys(false); M.gen = M.gen + 1; M.write_state()
+    M.session:key(M.now(), "cancel"); bind_session_keys(false); M.gen = M.gen + 1; M.write_state()
     return
   end
   if M.session:is_open() then hl.timer(function() tick(gen) end, { type = "oneshot", timeout = M.tick_ms }) end

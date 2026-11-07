@@ -14,7 +14,7 @@ local here = arg[0]:match("^(.*)/") or "."
 local TESTDIR = os.getenv("OMAHOP_TEST_DIR")
 
 -- ---- a fake hl ----
-local binds, dispatched, timers, key_state, handlers, execd = {}, {}, {}, {}, {}, {}
+local binds, dispatched, timers, key_state, handlers, execd, ever_bound, timer_opts = {}, {}, {}, {}, {}, {}, {}, {}
 local windows, active = {}, nil
 local clock = 1000
 local function win(addr, class, ws, extra)
@@ -35,10 +35,10 @@ hl = {
   get_workspace = function(id) return { id = tonumber(id), monitor = { name = "eDP-1" } } end,
   get_window = function(sel) for _, w in ipairs(windows) do if "address:" .. w.address == sel then return w end end end,
   dispatch = function(d) dispatched[#dispatched + 1] = d end,
-  bind = function(chord, fn) binds[chord] = fn end,
+  bind = function(chord, fn) binds[chord] = fn; ever_bound[chord] = true end,
   unbind = function(chord) binds[chord] = nil end,
   on = function(ev, fn) handlers[ev] = fn end,
-  timer = function(fn, opts) timers[#timers + 1] = fn end,
+  timer = function(fn, opts) timers[#timers + 1] = fn; timer_opts[#timer_opts + 1] = opts end,
   exec_cmd = function(cmd) execd[#execd + 1] = cmd end,
   is_key_down = function(k) return key_state[k] end,
 }
@@ -111,7 +111,7 @@ do
   local wb = win("0xb2", "app-b", 1, { focus_history_id = 1, tags = { "omarchy-floating-workspace" } })
   local wc = win("0xc2", "app-c", 1, { focus_history_id = 2, tags = { "omarchy-floating-workspace" } })
   active = wa
-  M.session:key(clock, "escape"); advance(25, 2)
+  M.session:key(clock, "cancel"); advance(25, 2)
   binds["ALT + TAB"]()
   assert(#M.entries == 3 and M.session:selected() == 2, "session with three windows")
   assert(binds["ALT + A"] and binds["ALT + SPACE"] and binds["ALT + BACKSPACE"] and binds["ALT + 5"], "typing chords bound during the session")
@@ -145,7 +145,7 @@ do
   local cfgf = io.open(TESTDIR .. "/cfg/omahop/config.toml", "w"); cfgf:write("search = false\n"); cfgf:close()
   key_state.Alt_L = true; active = wa; reset(); binds["ALT + TAB"]()
   assert(M.session:is_open() and binds["ALT + A"] == nil and binds["ALT + ESCAPE"] ~= nil, "search = false: navigation keys only")
-  M.session:key(clock, "escape"); M.apply({}); key_state.Alt_L = false; advance(25, 2)
+  M.session:key(clock, "cancel"); M.apply({}); key_state.Alt_L = false; advance(25, 2)
   cfgf = io.open(TESTDIR .. "/cfg/omahop/config.toml", "w"); cfgf:write("[windows]\nworkspaces = \"all\"\n"); cfgf:close()
 end
 
@@ -172,10 +172,10 @@ assert(not M.session:is_open() and names() == "send_key_state,send_key_state", "
 local cfgpath = TESTDIR .. "/cfg/omahop/config.toml"
 local cf = io.open(cfgpath, "w"); cf:write('[windows]\nworkspaces = "all"\n'); cf:close()
 windows = { a, t }; active = a; key_state.Alt_L = true; key_state.Tab = true; reset()
-M.session:key(clock, "escape"); advance(25, 2)
+M.session:key(clock, "cancel"); advance(25, 2)
 binds["ALT + TAB"]()
 assert(#M.entries == 2, "file edit applied without a reload: tiling window listed from a floating workspace, got " .. #M.entries)
-M.session:key(clock, "escape"); M.apply({})
+M.session:key(clock, "cancel"); M.apply({})
 cf = io.open(cfgpath, "w"); cf:write('[windows]\nworkspaces = "current"\n'); cf:close()
 reset(); binds["ALT + TAB"]()
 assert(M.cfg.windows.workspaces == "current" and not M.session:is_open(), "second edit applied (one window left in view: nothing to switch to)")
@@ -202,7 +202,7 @@ do
   local wc = win("0xc3", "app-c", 1, { focus_history_id = 2, tags = { "omarchy-floating-workspace" } })
   active = wa; key_state.Alt_L = true; key_state.Tab = true
   local cfgf = io.open(TESTDIR .. "/cfg/omahop/config.toml", "w"); cfgf:write('[windows]\nworkspaces = "current"\n'); cfgf:close()
-  M.session:key(clock, "escape"); M.apply({}); reset()
+  M.session:key(clock, "cancel"); M.apply({}); reset()
   binds["ALT + TAB"]()
   assert(M.session:is_open() and #M.entries == 3, "session for the pointer tests")
   assert(binds["ALT + DELETE"], "ALT + DELETE bound during the session")
@@ -250,7 +250,7 @@ do
   local wd = win("0xd4", "app-d", 1, { focus_history_id = 3, title = "Last", tags = { "omarchy-floating-workspace" } })
   key_state.Alt_L = true; key_state.Tab = true
   local function open_session()
-    if M.session:is_open() then M.session:key(clock, "escape"); M.apply({}) end
+    if M.session:is_open() then M.session:key(clock, "cancel"); M.apply({}) end
     active = wa; reset(); binds["ALT + TAB"]()
   end
   local function classes() local t = {} for i, e in ipairs(M.entries) do t[i] = e.class end return table.concat(t, ",") end
@@ -264,12 +264,12 @@ do
   assert(classes() == "app-c,app-d,app-a,app-b", "listed apps come first in recently used order, got " .. classes())
   -- pass-through: a fullscreen focused window with the setting on runs stock Alt+Tab, nothing opens
   setcfg('passthrough_fullscreen = true\n[windows]\nworkspaces = "current"\n')
-  M.session:key(clock, "escape"); M.apply({})
+  M.session:key(clock, "cancel"); M.apply({})
   wa.fullscreen = 2; active = wa; reset(); binds["ALT + TAB"]()
   assert(not M.session:is_open() and names() == "cycle_next,bring_to_top", "fullscreen focused window: stock Alt+Tab, got " .. names())
   wa.fullscreen = 1; reset(); binds["ALT + TAB"]()
   assert(M.session:is_open(), "a maximized window (state 1) does not make omahop step aside")
-  M.session:key(clock, "escape"); M.apply({})
+  M.session:key(clock, "cancel"); M.apply({})
   wa.fullscreen = 0
   -- pass-through by app class, any state
   setcfg('passthrough = "app-a, other"\n[windows]\nworkspaces = "current"\n')
@@ -277,7 +277,7 @@ do
   assert(not M.session:is_open() and names() == "cycle_next,bring_to_top", "a listed app keeps stock Alt+Tab")
   active = wb; reset(); binds["ALT + TAB"]()
   assert(M.session:is_open(), "other apps still use omahop")
-  M.session:key(clock, "escape"); M.apply({})
+  M.session:key(clock, "cancel"); M.apply({})
   setcfg('[windows]\nworkspaces = "all"\n')
 end
 
@@ -292,9 +292,9 @@ do
   local t1 = win("0xe4", "app-x", 2, { focus_history_id = 3, title = "x on tiling" })
   key_state.Alt_L = true; key_state.Tab = true
   setcfg('[windows]\nworkspaces = "current"\n')
-  if M.session:is_open() then M.session:key(clock, "escape"); M.apply({}) end
+  if M.session:is_open() then M.session:key(clock, "cancel"); M.apply({}) end
   binds["ALT + TAB"]()  -- loads the config through the normal path
-  M.session:key(clock, "escape"); M.apply({})
+  M.session:key(clock, "cancel"); M.apply({})
   -- bound when free, with the Shift variant
   for _, c in ipairs({ "ALT + GRAVE", "ALT + SHIFT + GRAVE" }) do binds[c] = nil end
   snapshot(); M.bind_same_app()
@@ -336,7 +336,7 @@ do
   local wc = win("0xf3", "app-c", 1, { focus_history_id = 2, tags = { "omarchy-floating-workspace" } })
   key_state.Alt_L = true; key_state.Tab = true
   local function open_session()
-    if M.session:is_open() then M.session:key(clock, "escape"); M.apply({}) end
+    if M.session:is_open() then M.session:key(clock, "cancel"); M.apply({}) end
     snapshot(); active = wa; reset(); binds["ALT + TAB"]()
   end
   -- numbers
@@ -367,8 +367,103 @@ do
   setcfg('[windows]\nworkspaces = "current"\n')
   open_session(); binds["ALT + 3"]()
   assert(M.query == "3" and M.session:is_open(), "hints off: a digit types")
-  M.session:key(clock, "escape"); M.apply({})
+  M.session:key(clock, "cancel"); M.apply({})
   setcfg('[windows]\nworkspaces = "all"\n')
 end
+
+-- v1.1b linger (search_linger_seconds): Alt up with a search keeps the list open; the overlay sends the whole query with a sequence number
+do
+  local function setcfg(text) local f = io.open(TESTDIR .. "/cfg/omahop/config.toml", "w"); f:write(text); f:close() end
+  local function snapshot() local f = io.open(TESTDIR .. "/run/omahop/binds.txt", "w"); f:write("bind\n\tmodmask: 8\n\tkey: TAB\n\n"); f:close(); M.used = nil end
+  local function has(line) return read_state():find("\n" .. line .. "\n", 1, true) ~= nil end
+  windows = {}
+  local wa = win("0xa5", "app-a", 1, { focus_history_id = 0, title = "alpha", tags = { "omarchy-floating-workspace" } })
+  win("0xb5", "app-b", 1, { focus_history_id = 1, title = "bravo", tags = { "omarchy-floating-workspace" } })
+  win("0xc5", "app-c", 1, { focus_history_id = 2, title = "charlie", tags = { "omarchy-floating-workspace" } })
+  setcfg('reveal_delay_ms = 0\nsearch_linger_seconds = 3\n[windows]\nworkspaces = "current"\n')
+  if M.session:is_open() then M.session:key(clock, "cancel"); M.apply({}) end
+  -- open, reveal on the first tick, type with Alt held: the overlay is told to take the keyboard from the first letter
+  local function linger_session(letter)
+    snapshot(); key_state = { Alt_L = true, Alt_R = false, Tab = true }; active = wa; reset(); binds["ALT + TAB"](); advance(16)
+    assert(has("grab=0"), "no grab before anything is typed")
+    binds["ALT + " .. letter]()
+    assert(has("grab=1") and M.session:is_open(), "a typed letter with linger on: grab=1")
+    reset(); key_state = { Alt_L = false, Alt_R = false, Tab = false }; advance(16, 2)
+  end
+  linger_session("B")
+  assert(M.session:is_open() and M.session:is_lingering() and names() == "", "Alt up with a search: still open, nothing activated")
+  assert(has("linger_ms=3000") and has("linger_rev=1") and has("grab=1"), "state carries the linger length and revision")
+  -- set_query: newer calls apply, an older one that lands late is dropped
+  local seq0 = M.seq
+  M.set_query(seq0 + 2, "char"); M.set_query(seq0 + 1, "alp")
+  assert(M.query == "char" and #M.entries == 1 and M.entries[1].address == "0xc5", "the late older call did not undo the newer one")
+  assert(has("seq=" .. (seq0 + 2)) and has("query=char"), "state carries the applied seq and query")
+  local rev = read_state():match("linger_rev=(%d+)")
+  M.set_query(seq0 + 3, "char")
+  assert(read_state():match("linger_rev=(%d+)") ~= rev and M.query == "char", "the same text again still restarts the countdown")
+  -- validation at the boundary
+  M.set_query(seq0 + 4, 42); M.set_query("x", "a"); M.set_query(seq0 + 4, string.rep("a", M.query_max + 1)); M.set_query(seq0 + 4, "\xff\xfe")
+  assert(M.query == "char" and M.seq == seq0 + 3, "non string, bad seq, too long and invalid UTF-8 are refused")
+  M.set_query(seq0 + 4, "ch\nar\27"); assert(M.query == "char", "control characters are stripped")
+  M.key(seq0 + 5, "delete"); M.key(seq0 + 5, "os.exit()")
+  assert(M.session:is_open() and M.seq == seq0 + 4, "a key name outside the list is ignored")
+  -- Return: open=0 is written first, the window is focused from a timer (a focus call is ignored while the overlay holds the keyboard)
+  reset(); timer_opts = {}
+  M.set_query(seq0 + 5, "char"); M.key(seq0 + 6, "return")
+  assert(not M.session:is_open() and has("open=0") and has("grab=0"), "Return: the state says closed and no grab")
+  assert(names() == "", "nothing focused yet")
+  assert(timer_opts[#timer_opts].timeout == M.release_ms, "activation scheduled after release_ms")
+  run_timers()
+  assert(names() == "focus,alter_zorder" and dispatched[1].args.window.address == "0xc5", "the timer focuses the picked window, got " .. names())
+  assert(binds["ALT + B"] == nil, "session chords unbound at the end")
+  -- the deadline cancels, never picks
+  linger_session("B"); reset()
+  advance(500, 5)
+  assert(M.session:is_open(), "still open before the deadline")
+  advance(600)
+  assert(not M.session:is_open() and has("open=0"), "closed at the deadline")
+  run_timers(); assert(names() == "", "the timeout activated nothing")
+  -- Escape clears, then cancels
+  linger_session("B"); reset()
+  M.key(M.seq + 1, "escape")
+  assert(M.session:is_open() and M.query == "" and #M.entries == 3 and has("query="), "first Escape clears the search, the list stays")
+  assert(has("grab=1") and has("linger_ms=3000"), "still lingering with the keyboard held: " .. read_state():sub(1, 200))
+  M.key(M.seq + 1, "escape"); run_timers()
+  assert(not M.session:is_open() and names() == "", "second Escape cancels")
+  -- a click outside the list
+  linger_session("B"); reset()
+  M.key(M.seq + 1, "cancel"); run_timers()
+  assert(not M.session:is_open() and names() == "" and has("open=0"), "cancel closes and activates nothing")
+  -- a click on a row while lingering also defers the focus
+  linger_session("A"); reset()
+  M.pick(1)
+  assert(names() == "" and has("open=0"), "pick while lingering: closed first")
+  run_timers(); assert(names() == "focus,alter_zorder", "then focused from the timer")
+  -- linger off: Alt up picks at once, as before (no timer in between)
+  setcfg('reveal_delay_ms = 0\n[windows]\nworkspaces = "current"\n')
+  snapshot(); key_state = { Alt_L = true, Alt_R = false, Tab = true }; active = wa; reset(); binds["ALT + TAB"](); advance(16); binds["ALT + B"]()
+  assert(has("grab=0"), "linger off: never a grab")
+  reset(); key_state.Alt_L = false; key_state.Tab = false; advance(16, 2)
+  assert(not M.session:is_open() and names() == "focus,alter_zorder", "linger off: Alt up picks immediately, got " .. names())
+  -- reload mid-linger: a fresh closed session, open=0 and no grab
+  setcfg('reveal_delay_ms = 0\nsearch_linger_seconds = 3\n[windows]\nworkspaces = "current"\n')
+  linger_session("B")
+  assert(M.session:is_lingering(), "lingering before the reload")
+  dofile(here .. "/omahop.lua"); M = _G.omahop; M.now = function() return clock end
+  assert(not M.session:is_open() and has("open=0") and has("grab=0") and M.seq == 0, "reload mid-linger: closed, no grab, seq reset")
+  reset(); M.set_query(1, "b"); M.key(2, "return"); run_timers()
+  assert(names() == "" and not M.session:is_open(), "calls after the reload do nothing without a session")
+  -- takeover = false: inert, the entry points do nothing
+  for k in pairs(binds) do binds[k] = nil end
+  _G.omahop_takeover = false
+  dofile(here .. "/omahop.lua"); M = _G.omahop; M.now = function() return clock end
+  reset(); M.set_query(1, "b"); M.key(2, "return"); M.key(3, "cancel"); run_timers()
+  assert(next(binds) == nil and names() == "" and has("open=0") and has("grab=0"), "takeover off: no binds, no grab, nothing happens")
+  _G.omahop_takeover = nil
+  setcfg('[windows]\nworkspaces = "all"\n')
+end
+
+-- never a bare key: every chord bound in this whole run carries ALT
+for chord in pairs(ever_bound) do assert(chord:find("^ALT %+ "), "a bind without ALT: " .. chord) end
 
 print("glue ok")
