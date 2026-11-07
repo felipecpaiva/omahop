@@ -59,7 +59,8 @@ overridable), the base value, the default. So a bad value in a profile falls bac
 is logged like any other bad value (`config: profiles.work.style = 5`). A profile key that is not overridable is logged
 (`config: profiles.work.takeover: not overridable in a profile, ignored`) and ignored. An unknown profile name is logged and
 the base settings are used. Keys a profile does not name keep the base value. Unknown keys inside a profile are ignored, as
-they are in the base.
+they are in the base; a hidden setting such as `schema` is ignored the same way (the settings window does not know it), not
+logged.
 
 Built as `C.resolve(parsed)` in Lua (merge the base as before, then `C.apply_profile`), and `ConfigIO.resolve(parsed,
 settings)` in JavaScript, with the same steps and the same problem strings. `C.merge` is unchanged, so every caller that
