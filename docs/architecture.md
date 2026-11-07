@@ -46,7 +46,7 @@ The settings app exposes it. Design consequences:
    - overrides ALT+TAB and ALT+SHIFT+TAB
    - scope guard: out of scope -> run stock cycle_next + bring_to_top
    - keeps the MRU list (focus events)
-   - Alt hold/release: polls hl.is_key_down("Alt_L"/"Alt_R") on chained one-shot timers (omagnet's super_down pattern); the keys come from the `modifier` setting's row in `lua/modifier.lua` (Super_L/R, Control_L/R for the others, D16)
+   - Alt hold/release: polls hl.is_key_down("Alt_L"/"Alt_R") on chained one-shot timers (omagnet's super_down pattern); the keys come from the `modifier` setting's row in `lua/modifier.lua` (Control_L/R for Ctrl, D16)
    - key handling, as measured: the Tab bind is NOT `repeating` (stock Alt+Tab is not, and a repeating bind would rapid-cycle on a tiling workspace
      where the stock handler runs); during a session the same per-tick loop that polls Alt also polls `hl.is_key_down("Tab")`, and the first delay and repeat
      interval are settings. A release bind or a global shortcut cannot end the session: they miss the Alt release once another key was pressed (S9)

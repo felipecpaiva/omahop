@@ -512,7 +512,7 @@ do
   setcfg('[windows]\nworkspaces = "all"\n')
 end
 
--- v1.3 modifier: the key held for the switch (Alt, Super or Ctrl), pinned at load
+-- v1.3 modifier: the key held for the switch (Alt or Ctrl), pinned at load
 do
   local function setcfg(text) local f = io.open(TESTDIR .. "/cfg/omahop/config.toml", "w"); f:write(text); f:close() end
   local binds_path, log_path = TESTDIR .. "/run/omahop/binds.txt", TESTDIR .. "/run/omahop/log"
@@ -530,7 +530,7 @@ do
   win("0xc6", "app-c", 1, { focus_history_id = 2, tags = { "omarchy-floating-workspace" } })
   local tw = win("0xd6", "app-t", 2, { focus_history_id = 3 })
   local base = 'reveal_delay_ms = 0\n[windows]\nworkspaces = "current"\n'
-  for _, case in ipairs({ { name = "super", bind = "SUPER", mask = 64, keys = { "Super_L", "Super_R" } }, { name = "ctrl", bind = "CTRL", mask = 4, keys = { "Control_L", "Control_R" } } }) do
+  for _, case in ipairs({ { name = "ctrl", bind = "CTRL", mask = 4, keys = { "Control_L", "Control_R" } } }) do
     local B, K1, K2 = case.bind, case.keys[1], case.keys[2]
     setcfg('modifier = "' .. case.name .. '"\n' .. base)
     snapshot("bind\n\tmodmask: " .. case.mask .. "\n\tkey: X\n\n")
@@ -583,8 +583,8 @@ do
     os.remove(binds_path); load(); run_timers()
     assert(binds[B .. " + TAB"] == nil and logtext():find("no snapshot of the binds yet, " .. B .. " + TAB not bound", 1, true), case.name .. ": no snapshot, not bound")
   end
-  assert(not ever_unbound["SUPER + TAB"] and not ever_unbound["SUPER + SHIFT + TAB"] and not ever_unbound["CTRL + TAB"] and not ever_unbound["CTRL + SHIFT + TAB"],
-    "super and ctrl never unbind their Tab chord (it may belong to Omarchy or the user)")
+  assert(not ever_unbound["CTRL + TAB"] and not ever_unbound["CTRL + SHIFT + TAB"],
+    "ctrl never unbinds their Tab chord (it may belong to Omarchy or the user)")
   -- an unknown value falls back to Alt (bound at once) with a note; so does a wrong type
   for _, bad in ipairs({ '"hyper"', '"SUPER"', "3" }) do
     setcfg("modifier = " .. bad .. "\n" .. base); snapshot(); load()

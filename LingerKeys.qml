@@ -2,7 +2,7 @@ import QtQuick
 import "Linger.js" as Linger
 
 // The keyboard while the overlay holds it (setting search_linger_seconds): typed text, Backspace, arrows, Return and Escape go to Lua as the
-// whole query with a sequence number (Linger.js). Keys with Alt, Ctrl or Super are left alone: chords with the held modifier (setting `modifier`) are omahop's own binds, the rest are not ours.
+// whole query with a sequence number (Linger.js). Keys with Alt, Ctrl or Super held are left alone: chords with the held modifier (setting `modifier`) are omahop's own binds, the rest are not ours.
 Item {
   id: keys
 

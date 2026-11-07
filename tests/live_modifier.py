@@ -1,6 +1,6 @@
 """Live check of the `modifier` setting (v1.3) with a virtual keyboard: with modifier = ctrl, Ctrl + Tab opens the list on a spare workspace with three windows
 (recently used order C, B, A) and releasing Ctrl picks the second row (B). The setting is read at load, so the test writes it and reloads Hyprland first
-(the binds are made after the 3.5 s snapshot). Super is not tested live: Omarchy owns Super + Tab, so by design nothing is bound there (see docs/gotchas.md).
+(the binds are made after the 3.5 s snapshot). Super is not offered: Omarchy owns Super + Tab (see README, Choosing the key to hold).
 Your own config is saved and put back. Usage: python3 tests/live_modifier.py"""
 import os, subprocess, sys, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

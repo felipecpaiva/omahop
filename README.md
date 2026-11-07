@@ -9,9 +9,9 @@
 
 # omahop
 
-Jump to any window fast on Omarchy's floating workspaces. Hold Alt, press Tab: a list of your windows (icon, app name, title) appears in your Omarchy theme. Let go of Alt to switch. Prefer Super or Ctrl? The `modifier` setting changes the key you hold (Alt everywhere below means that key).
+Jump to any window fast on Omarchy's floating workspaces. Hold Alt, press Tab: a list of your windows (icon, app name, title) appears in your Omarchy theme. Let go of Alt to switch. Prefer Ctrl? The `modifier` setting changes the key you hold (Alt everywhere below means that key).
 
-**Status: v1.3.0 released.** A list or cards switcher, type to search (accents ignored, fuzzy, optionally kept open), mouse and quick actions, an optional peek strip, a same-app shortcut, app rules, quick jump keys, icon theme, icon packs, quit and minimize by key, a choice of held key, and thumbnail exclusions, and a settings window. More in later releases (see `docs/ROADMAP.md`).
+**Status: v1.3.1 released.** A list or cards switcher, type to search (accents ignored, fuzzy, optionally kept open), mouse and quick actions, an optional peek strip, a same-app shortcut, app rules, quick jump keys, icon theme, icon packs, quit and minimize by key, a choice of held key, and thumbnail exclusions, and a settings window. More in later releases (see `docs/ROADMAP.md`).
 
 ## See it
 
@@ -79,7 +79,7 @@ The settings window: open **omahop** from the launcher (Super+Space), or run `om
 ```toml
 schema = 1
 takeover = true          # false: leave Alt+Tab alone
-modifier = "alt"         # the key you hold: "alt", "super" or "ctrl" (needs a Hyprland reload; see "Choosing the key to hold")
+modifier = "alt"         # the key you hold: "alt" or "ctrl" (needs a Hyprland reload; see "Choosing the key to hold")
 search = true            # type letters while the list is up to filter it
 search_fuzzy = true      # also match initials (gc: Google Chrome) and letters in order inside a word (chrm: chrome)
 search_linger_seconds = 0  # 1 to 60: after typing, releasing Alt keeps the list open this long (Return picks); 0 picks on release
@@ -119,9 +119,9 @@ The full model and every combination: `docs/settings.md`.
 
 `modifier = "alt"` (the default) replaces Omarchy's own Alt+Tab, and on workspaces where omahop is not active it runs Omarchy's Alt+Tab itself, as before.
 
-- `"super"`: Super+Tab is Omarchy's "next workspace" (and Super+Shift+Tab "previous workspace"). omahop never takes a chord that is already used, so with stock bindings it binds nothing and writes the reason to `$XDG_RUNTIME_DIR/omahop/log`. Unbind both in your `bindings.lua` first. Omarchy also uses Super with most letters, Return and the arrows, so while the list is up most of those keys are left alone (type-to-search and quick jump keys mostly do not work; "Keep the list open after typing" lets you type after letting go).
+- Super is not offered: Omarchy owns Super+Tab (next workspace) and most other Super chords, so omahop never touches them. Ctrl+Alt is not an option either: Omarchy binds Ctrl+Alt+Tab (focus next monitor).
 - `"ctrl"`: Ctrl+Tab is free in Hyprland, so omahop takes it, but apps use it (tab switching in browsers and editors): where omahop is active, Ctrl+Tab opens omahop instead. Where it is not active, the key is handed back to the app.
-- The same-app shortcut must start with the same key (`same_app_key = "SUPER + GRAVE"` with Super); the default `ALT + GRAVE` is skipped otherwise, with a note in the log.
+- The same-app shortcut must start with the same key (`same_app_key = "CTRL + GRAVE"` with Ctrl); the default `ALT + GRAVE` is skipped otherwise, with a note in the log.
 - Shift is not offered: it already means "go back" (Shift+Tab) and types capitals.
 
 ## Known limits (v0.1)

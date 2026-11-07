@@ -54,13 +54,13 @@ assert(C.merge({ top = { search_linger_seconds = -1 } }).search_linger_seconds =
 local Modifier = dofile(dir .. "/modifier.lua")
 assert(d.modifier == "alt" and C.spec.top.modifier.reload == true, "modifier: alt by default, applies after a reload")
 assert(table.concat(C.spec.top.modifier.values, ",") == table.concat(Modifier.names, ","), "values come from the modifier table")
-assert(C.merge({ top = { modifier = "super" } }).modifier == "super" and C.merge({ top = { modifier = "ctrl" } }).modifier == "ctrl", "super and ctrl accepted")
+assert(C.merge({ top = { modifier = "super" } }).modifier == "alt" and C.merge({ top = { modifier = "ctrl" } }).modifier == "ctrl", "ctrl accepted, super is not an option (falls back to alt)")
 for _, bad in ipairs({ "hyper", "ALT", "shift", "", 1, true }) do
   local mc, mp = C.merge({ top = { modifier = bad } })
   assert(mc.modifier == "alt" and #mp == 1 and mp[1]:find("^top%.modifier = "), "bad modifier falls back to alt and is reported: " .. tostring(bad))
 end
-local pm = C.merge((C.parse('modifier = "super"\n')))
-assert(pm.modifier == "super", "parsed from the file")
+local pm = C.merge((C.parse('modifier = "ctrl"\n')))
+assert(pm.modifier == "ctrl", "parsed from the file")
 
 -- defaults are not shared with the merged copy
 local c3 = C.merge(nil)

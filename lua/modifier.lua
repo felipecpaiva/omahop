@@ -6,14 +6,15 @@
 --   replaces true: the trigger chord is Omarchy's own stock bind, which omahop replaces at load and runs itself out of scope.
 --            false: the chord is bound only when the bind snapshot shows it free, and out of scope the key goes back to the app.
 -- Shift is left out on purpose: it already means "reverse" in every chord (Shift+Tab) and types capitals.
+-- Super is left out on purpose: Omarchy owns Super + Tab and most Super chords, so omahop never takes them. Ctrl + Alt is no option either: Omarchy binds Ctrl + Alt + Tab
+-- (focus next monitor). Alt and Ctrl are the two modifiers whose Tab chord is free on stock Omarchy.
 -- shortcut: one modifier only, no combos such as CTRL + ALT; a combo would need every key group held. Upgrade if someone asks.
 local K = {}
 
 K.default = "alt"
-K.names = { "alt", "super", "ctrl" }
+K.names = { "alt", "ctrl" }
 K.by_name = {
   alt = { label = "Alt", bind = "ALT", mask = 8, keys = { "Alt_L", "Alt_R" }, replaces = true },
-  super = { label = "Super", bind = "SUPER", mask = 64, keys = { "Super_L", "Super_R" }, replaces = false },
   ctrl = { label = "Ctrl", bind = "CTRL", mask = 4, keys = { "Control_L", "Control_R" }, replaces = false },
 }
 K.shift_mask = 1

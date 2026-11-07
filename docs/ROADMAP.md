@@ -17,7 +17,7 @@ Every row must meet [engineering-standards.md](engineering-standards.md): flexib
 | v1.0 (RELEASED 2026-11-07, tag v1.0.0; plan in `v1.0-plan.md`) | Release polish | Requirements and privacy in the README, launch material in `docs/launch/`. submitted to the marketplace (issue 14254) |
 | v1.1 (RELEASED 2026-11-07, tag v1.1.0; plan in `v1.1-plan.md`) | Search and icons | accent and fuzzy search, `icon_theme`, `thumbnail_exclude` |
 | v1.2 (RELEASED 2026-11-07, tag v1.2.0, was planned as v1.1b; design in `research/linger-spike.md`) | Keep the list open while searching | `search_linger_seconds` (default 0): the overlay holds the keyboard while lingering, any character can be typed, Return picks, timeout and click outside cancel. Unit, glue, Node and live tests pass with one monitor; two monitors not measured |
-| v1.3 (RELEASED 2026-11-07, tag v1.3.0; plan in `v1.1-plan.md`) | Keys and icon packs | `modifier` (alt, super, ctrl), `action_keys` (quit and minimize by key), `icon_pack` (hand-made packs, format in `icon-packs.md`) |
+| v1.3 (RELEASED 2026-11-07, tag v1.3.0, v1.3.1 drops Super; plan in `v1.1-plan.md`) | Keys and icon packs | `modifier` (alt, ctrl; Super is not offered, Omarchy owns it), `action_keys` (quit and minimize by key), `icon_pack` (hand-made packs, format in `icon-packs.md`) |
 
 Rule: v0.1 stays small on purpose. A feature not in the v0.1 row waits, but the settings model (`settings.md`) and the
 Lua/QML contract are built so that later features add values and views without rewriting the key handling.
