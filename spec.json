@@ -192,6 +192,16 @@
       "type": "enum",
       "values": ["auto", "on", "off"]
     }, {
+      "default": "",
+      "help": "Type the folder name of an installed icon theme, such as Papirus, to prefer its icons. Empty uses whichever installed theme the scan finds first. An app the theme has no icon for still gets one from the others. Applies after a shell restart.",
+      "hidden": false,
+      "id": "top.icon_theme",
+      "key": "icon_theme",
+      "label": "Icon theme",
+      "reload": false,
+      "section": "top",
+      "type": "text"
+    }, {
       "default": true,
       "help": "Show close and minimize buttons on the row or card under the pointer. Delete (with Alt held) closes the picked window either way.",
       "hidden": false,

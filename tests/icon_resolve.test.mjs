@@ -1,4 +1,5 @@
 // Node check of IconResolve.js against synthetic cases and every desktop entry installed on this machine:  node tests/icon_resolve.test.mjs
+// Set ICON_THEME=breeze to run the same sweep with a preferred theme.
 import { readFileSync, readdirSync, existsSync } from "node:fs"
 import { execFileSync } from "node:child_process"
 import assert from "node:assert/strict"
@@ -18,7 +19,7 @@ assert.equal(R.resolve(idx, "totally-unknown", ""), "/i/application-x-executable
 assert.equal(R.resolve(R.parseIndex(""), "x", ""), "", "empty index gives empty, never throws")
 
 // this machine
-const index = R.parseIndex(execFileSync("bash", [new URL("../tools/icon-index.sh", import.meta.url).pathname], { maxBuffer: 1 << 28 }).toString())
+const index = R.parseIndex(execFileSync("bash", [new URL("../tools/icon-index.sh", import.meta.url).pathname, process.env.ICON_THEME || ""], { maxBuffer: 1 << 28 }).toString())
 const dirs = (process.env.XDG_DATA_DIRS || "/usr/local/share:/usr/share").split(":").concat([process.env.HOME + "/.local/share"]).map((d) => d + "/applications")
 let total = 0
 const generic = []

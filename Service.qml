@@ -81,7 +81,7 @@ Item {
   Component.onCompleted: {
     var touch = DesktopEntries.applications.values.length
     root.refreshBorder()
-    iconScan.running = true
+    root.scanIcons()
     if (root.desktopSource !== "") {
       root.desktopInstalled = true
       Quickshell.execDetached(["sh", "-c", root.installScript, "sh", root.desktopSource, root.desktopDest, root.desktopMarker])
@@ -92,12 +92,23 @@ Item {
   // (tools/icon-index.sh). Nothing is cached before the scan ends, so no row keeps a missing icon.
   property var iconIndex: IconResolve.parseIndex("")
   property bool iconIndexReady: false
+  // The icon theme to prefer (setting icon_theme, "" = none). The index is rebuilt when it changes; the scan in flight finishes first, then the rescan runs.
+  readonly property string iconTheme: String(configReader.value("top", "icon_theme") || "")
+  property string scannedTheme: ""
+  onIconThemeChanged: root.scanIcons()
+  function scanIcons() {
+    if (iconScan.running) return
+    root.scannedTheme = root.iconTheme
+    iconScan.running = true
+  }
   Process {
     id: iconScan
-    command: ["bash", Paths.fromUrl(Qt.resolvedUrl("tools/icon-index.sh"))]
+    command: ["bash", Paths.fromUrl(Qt.resolvedUrl("tools/icon-index.sh")), root.scannedTheme]
+    onRunningChanged: if (!running && root.iconTheme !== root.scannedTheme) root.scanIcons()
     stdout: StdioCollector {
       onStreamFinished: {
         root.iconIndex = IconResolve.parseIndex(text)
+        root.resolved = ({})
         root.iconIndexReady = true
       }
     }

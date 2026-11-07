@@ -71,3 +71,6 @@ Automated checks (`tests/run-all.sh`) cover logic and the keyboard path with a v
 ## v1.1a (thumbnail exclusions)
 
 - [ ] Settings, "Never take a picture of these apps" = `kitty`, cards style: the kitty card shows its app icon in the middle, other cards still show pictures; same in the peek strip's hover popup. Works with Snapshot and Live. Empty again: kitty shows a picture.
+## v1.1a (icon theme)
+
+- [ ] Set `icon_theme = "Papirus"` (any installed theme folder name) in the settings window or config.toml, restart the shell: the rows show that theme's icons; apps it lacks still show an icon. An empty value or a name that is not installed shows the old icons.

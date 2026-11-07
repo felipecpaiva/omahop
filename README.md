@@ -90,6 +90,7 @@ passthrough_fullscreen = false  # true: stock Alt+Tab while the focused window i
 peek = "off"             # the peek strip: "off", "edge" (shows when the pointer touches the screen edge), "always"
 peek_position = "auto"   # "auto" (a free edge), "bottom", "top", "left", "right"
 border = "auto"          # the list's outline: "auto" follows Hyprland's window border (none when you turned window borders off), "on", "off"
+icon_theme = ""         # an installed icon theme to prefer, by folder name (for example "Papirus"); "" = none. Applies after a shell restart
 
 [windows]
 workspaces = "floating"  # which workspaces' windows are listed: "current", "floating", "all"
