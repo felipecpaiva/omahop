@@ -7,6 +7,7 @@ import qs.Commons
 import qs.Ui
 import "State.js" as State
 import "Paths.js" as Paths
+import "IconResolve.js" as IconResolve
 
 // omahop overlay. Watches the state file that lua/omahop.lua writes and draws the switcher while a session is revealed.
 // It never takes the keyboard (Lua owns the keys) and never takes the pointer (empty input mask), so it cannot disturb focus.
@@ -89,24 +90,14 @@ Item {
 
   // Icon name -> file path. The shell hands its app library only to menu plugins, so omahop indexes the XDG icon folders itself
   // (tools/icon-index.sh). Nothing is cached before the scan ends, so no row keeps a missing icon.
-  property var iconIndex: ({})
+  property var iconIndex: IconResolve.parseIndex("")
   property bool iconIndexReady: false
   Process {
     id: iconScan
     command: ["bash", Paths.fromUrl(Qt.resolvedUrl("tools/icon-index.sh"))]
     stdout: StdioCollector {
       onStreamFinished: {
-        var index = {}
-        var lines = text.split("\n")
-        for (var i = 0; i < lines.length; i++) {
-          var path = lines[i].trim()
-          if (path.length === 0) continue
-          var file = path.slice(path.lastIndexOf("/") + 1)
-          var dot = file.lastIndexOf(".")
-          var name = dot > 0 ? file.slice(0, dot) : file
-          if (index[name] === undefined) index[name] = path
-        }
-        root.iconIndex = index
+        root.iconIndex = IconResolve.parseIndex(text)
         root.iconIndexReady = true
       }
     }
@@ -131,12 +122,9 @@ Item {
 
   function lookup(appId) {
     var entry = DesktopEntries.heuristicLookup(appId)
-    var icon = entry && entry.icon ? entry.icon : appId
-    var library = root.shell ? root.shell.appLibrary : null
-    var indexed = icon.charAt(0) === "/" ? icon : root.iconIndex[icon]
-    var source = library ? library.iconSource(icon) : (indexed ? "file://" + indexed : Quickshell.iconPath(icon))
-    // No desktop entry and no icon of that name: a generic application icon, not the checkerboard of a missing image.
-    if (!source || String(source) === "") source = Quickshell.iconPath("application-x-executable")
+    var path = IconResolve.resolve(root.iconIndex, appId, entry && entry.icon ? entry.icon : "")
+    // Nothing in any icon folder, not even a generic one: the themed name, which the image provider may still know.
+    var source = path !== "" ? "file://" + path : Quickshell.iconPath(entry && entry.icon ? entry.icon : appId)
     return { icon: source, name: entry && entry.name ? entry.name : appId }
   }
 
