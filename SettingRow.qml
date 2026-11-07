@@ -13,6 +13,9 @@ ColumnLayout {
   property color accent: Color.accent
   property string fontFamily: Style.font.menuFamily
 
+  // A setting with an editor page (spec field `editor`, such as "packs" on icon_pack) shows a button that asks the panel for that page.
+  signal editorRequested(string editor)
+
   readonly property var current: row.store ? row.store.value(row.setting) : row.setting.default
   readonly property var overridden: row.store ? row.store.override(row.setting) : undefined
 
@@ -120,6 +123,16 @@ ColumnLayout {
     color: row.accent
     font.family: row.fontFamily
     font.pixelSize: Style.font.caption
+  }
+
+  Button {
+    visible: !!row.setting.editor
+    text: row.setting.editor_label || ""
+    bordered: true
+    foreground: row.foreground
+    accent: row.accent
+    fontFamily: row.fontFamily
+    onClicked: row.editorRequested(row.setting.editor)
   }
 
   Button {

@@ -103,7 +103,9 @@ overlay opens (or only the selected card live), which bounds the cost.
 
 Icons: `DesktopEntries.heuristicLookup` or `byId`, then `.icon`, then `Quickshell.iconPath(icon)`. Call it without the
 second argument (`true` returned empty here). Since batch 15 omahop indexes the icon folders itself (`tools/icon-index.sh`, `IconResolve.js`);
-since v1.3 a hand-made icon pack (`icon_pack`, `tools/pack-index.sh`) is a layer in front of that index, see `icon-packs.md`. Touch `ToplevelManager` and `DesktopEntries` early; they are lazy.
+since v1.3 a hand-made icon pack (`icon_pack`, `tools/pack-index.sh`) is a layer in front of that index, see `icon-packs.md`. The settings
+window's pack editor (`PackEditorPage.qml` and its parts, logic in `PackEditor.js`) writes only through `tools/pack-edit.sh` and tells the
+service to rescan the pack through `$XDG_RUNTIME_DIR/omahop/pack-changed`. Touch `ToplevelManager` and `DesktopEntries` early; they are lazy.
 
 ## Hover previews
 

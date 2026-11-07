@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Installs an icon pack shared as one zip (made by pack-export.sh) into ${XDG_CONFIG_HOME:-~/.config}/omahop/packs/<folder>/.
-# Usage: pack-import.sh <file.zip> [--yes] [--replace]. --yes installs without asking, --replace replaces an installed pack of that name.
+# Usage: pack-import.sh <file.zip> [--yes] [--replace] [--dry-run]. --yes installs without asking, --replace replaces an installed pack of
+# that name, --dry-run runs every check and prints the summary, then stops (the settings window shows it before asking).
 # The zip comes from someone else, so in this order:
 #   1. the listing is checked before anything is extracted: only pack.toml and icons/<name>.png|svg, no absolute or leaving paths, no
 #      links or special files, no hidden names, no other folders, no duplicates ignoring case, caps on entries, sizes and compression ratio;
@@ -11,7 +12,6 @@
 # Nothing from the archive is ever run. Any refusal exits 1 and leaves nothing behind.
 set -euo pipefail
 export LC_ALL=C   # byte rules for names, ASCII-only lowercase and printing
-shopt -s extglob
 # shellcheck source=tools/pack-lib.sh
 source "$(dirname "${BASH_SOURCE[0]}")/pack-lib.sh"
 
@@ -19,12 +19,11 @@ readonly MAX_ARCHIVE=$((50 * 1024 * 1024))
 readonly MAX_ENTRIES=$((PACK_MAX_ICONS + 2))    # every icon, pack.toml and the icons/ folder entry
 readonly MAX_TOTAL=$((100 * 1024 * 1024))       # bytes after unpacking, all entries together
 readonly MAX_RATIO=100                          # unpacked bytes per zip byte; icons barely compress, a zip bomb compresses 1000 to 1
-readonly MAX_FOLDER=64                          # characters in the derived folder name
 readonly TOOL_TIMEOUT=20s                       # per bsdtar call
 readonly ZIP_MAGIC=504b0304                     # a zip starts with a local file header
 
 die() { printf 'omahop pack import: %s\n' "$1" >&2; exit 1; }
-usage() { die "usage: pack-import.sh <file.zip> [--yes] [--replace]"; }
+usage() { die "usage: pack-import.sh <file.zip> [--yes] [--replace] [--dry-run]"; }
 reject() { die "refused, the zip holds $(pack_shown "$1"): $2"; }
 # printable() <text>: pack.toml text as it may be shown in a terminal (no escape sequences)
 printable() { printf '%s' "${1//[^[:print:]]/?}"; }
@@ -37,11 +36,12 @@ entry_cap() {
   esac
 }
 
-zip="" yes=0 replace=0
+zip="" yes=0 replace=0 dry=0
 for arg in "$@"; do
   case $arg in
     --yes) yes=1 ;;
     --replace) replace=1 ;;
+    --dry-run) dry=1 ;;
     -*) usage ;;
     *) [[ -z $zip ]] || usage; zip=$arg ;;
   esac
@@ -116,26 +116,25 @@ pack_check_strict "$stage/pack" || die "refused:"$'\n'"$PACK_ERR"
 icon_count=${#PACK_GOOD[@]}
 
 # ---- 4. the folder name: pack.toml name, lower case, runs of other characters as one dash, no leading or trailing dot or dash
-folder=${PACK_META[name],,}
-folder=${folder//+([^a-z0-9._-])/-}
-folder=${folder##+([.-])}
-folder=${folder:0:MAX_FOLDER}
-folder=${folder%%+([.-])}
-pack_name_ok "$folder" || die "refused, pack.toml name gives no usable folder name (use letters or digits)"
+folder=$(pack_folder_name "${PACK_META[name]}") || die "refused, pack.toml name gives no usable folder name (use letters or digits)"
 packs=$(dirname -- "$(pack_dir "$folder")")
 target=$packs/$folder
 exists=0
 [[ ! -e $target && ! -L $target ]] || exists=1
-(( ! exists || replace )) || die "a pack named $folder is already installed, add --replace to replace it"
+(( ! exists || replace || dry )) || die "a pack named $folder is already installed, add --replace to replace it"
 
 # ---- 5. show what it is, ask, install
 printf 'Pack:     %s\n' "$(printable "${PACK_META[name]}")"
 printf 'Author:   %s\n' "$(printable "${PACK_META[author]}")"
 printf 'License:  %s\n' "$(printable "${PACK_META[license]}")"
 printf 'Icons:    %d\n' "$icon_count"
-printf 'Install:  %s%s\n' "$target" "$( (( exists )) && echo " (replaces the installed one)" )"
+note=""
+(( ! exists )) || note=$( (( replace )) && echo " (replaces the installed one)" || echo " (a pack of this name is installed; --replace replaces it)" )
+printf 'Install:  %s%s\n' "$target" "$note"
+printf 'Installed already: %s\n' "$( (( exists )) && echo yes || echo no )"
 printf 'Files:\n'
 printf '  %s\n' "${files[@]}"
+(( ! dry )) || exit 0
 if (( ! yes )); then
   [[ -t 0 ]] || die "not installed: answer in a terminal, or add --yes"
   read -r -p "Install this pack? [y/N] " answer

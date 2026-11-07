@@ -114,6 +114,7 @@ Item {
     root.refreshBorder()
     root.scanIcons()
     root.scanPack()
+    packChanged.setText("0\n")
     if (root.desktopSource !== "") {
       root.desktopInstalled = true
       Quickshell.execDetached(["sh", "-c", root.installScript, "sh", root.desktopSource, root.desktopDest, root.desktopMarker])
@@ -171,6 +172,16 @@ Item {
     stderr: StdioCollector {
       onStreamFinished: if (text.trim() !== "") console.warn(text.trim())
     }
+  }
+
+  // The settings window's pack editor writes this file after it changed a pack; the pack is rescanned (never the system index). Written once
+  // here at load so the watch has a file to watch.
+  FileView {
+    id: packChanged
+    path: root.runtimeDir + "/pack-changed"
+    watchChanges: true
+    printErrors: false
+    onFileChanged: root.scanPack()
   }
 
   function resolve(appId) {

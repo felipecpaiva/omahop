@@ -1,8 +1,8 @@
 # Icon packs
 
-An icon pack gives apps in the switcher, the cards and the peek strip your own icons. Packs are folders you make by hand, copy from someone
-(a git clone works), or receive as one zip and install with the importer (step 2, see [Share a pack as one zip](#share-a-pack-as-one-zip)).
-There is no editor yet; it comes later (`research/packs-spike.md`).
+An icon pack gives apps in the switcher, the cards and the peek strip your own icons. Packs are folders you make in the settings window
+([The editor](#the-editor)) or by hand, copy from someone (a git clone works), or receive as one zip and install with the importer
+(see [Share a pack as one zip](#share-a-pack-as-one-zip)).
 
 Off by default: nothing changes until you set `icon_pack`.
 
@@ -95,10 +95,46 @@ cp -r docs/examples/packs/omahop-sample ~/.config/omahop/packs/
 
 then set Icon pack to `omahop-sample`.
 
+## The editor
+
+Open the settings window, find **Icon pack** (group Look) and press **Make or edit icon packs**. The settings list gives way to the editor;
+**Back** returns. Nothing is added to the bar or the desktop, and nothing runs while the page is closed.
+
+- **Choose a pack** by its folder name, or **New pack**: type the name, author, licence and an optional description, then **Make the pack**.
+  The folder is the name in lower case with other characters as dashes (`My Pack!` becomes `my-pack`), the same rule the importer uses.
+- **Details**: change the four fields and **Save details**. Other lines in `pack.toml` (comments, extra keys) are kept. A value cannot hold a
+  double quote or a line break and is at most 500 characters.
+- **Apps**: open windows first, then installed apps, then icons in the pack that no listed app uses. Each row shows the icon it gets now and
+  whether it is the pack's or the system's. **Filter apps** narrows the list.
+- **Choose image** opens Omarchy's file chooser (`omarchy file select`); the settings window steps aside while it is open and comes back after.
+  The picture must be a PNG or a plain SVG within the [limits](#size-advice); it is checked with the same rules as a shared pack before it is
+  copied into `icons/` as `<app id>.png` or `.svg` (the type is read from the file, not its name). An older picture for the same app is replaced.
+  If the chooser cannot open, a field asks for the file's full path instead.
+- **Remove** deletes the pack's picture for that app (a link inside the pack is removed, never the file it points to).
+- **Export** writes `~/<folder>.omahop-pack.zip`; if that file exists the page asks before replacing it.
+- **Import a zip** opens the chooser for a `.zip`, checks it (every rule in the table below), shows name, author, licence, icon count and
+  where it goes, and installs only after **Install** (or **Replace**, when a pack of that name is installed).
+
+Every result and every refusal is shown under the pack buttons, with the reason the check gave. The editor tells the switcher to rescan the
+chosen Icon pack, so a change should show at the next Alt+Tab (not yet checked in a live session; if not, set Icon pack empty and back); a picture replaced under the same file name may still show the old one until
+`omarchy restart shell`. A pack folder that is a link to a folder kept elsewhere (a git clone) can be exported, not edited: edit it where it lives.
+
+The editor writes nothing itself. Every change runs `tools/pack-edit.sh`, which also works by hand:
+
+```bash
+bash $OMAHOP/tools/pack-edit.sh init "My pack" "Your name" CC0-1.0 "One line"   # prints the folder, my-pack
+bash $OMAHOP/tools/pack-edit.sh add my-pack firefox ~/Pictures/fox.svg           # prints firefox.svg
+bash $OMAHOP/tools/pack-edit.sh remove my-pack firefox.svg
+bash $OMAHOP/tools/pack-edit.sh meta my-pack "My pack" "Your name" MIT
+bash $OMAHOP/tools/pack-edit.sh list
+```
+
+It only writes inside `~/.config/omahop/packs/<folder>/`, through a hidden temporary name and one rename, and refuses anything else with a reason.
+
 ## Share a pack as one zip
 
-The commands live in the plugin folder, `~/.config/omarchy/plugins/io.github.felipecpaiva.omahop/` (below as `$OMAHOP`). No new widget: the
-settings window keeps only the Icon pack field, whose help text points here. A file picker may come later.
+The commands live in the plugin folder, `~/.config/omarchy/plugins/io.github.felipecpaiva.omahop/` (below as `$OMAHOP`). The editor runs
+the same two commands; these are for the terminal.
 
 To send a pack:
 
@@ -116,7 +152,7 @@ bash $OMAHOP/tools/pack-import.sh ~/Downloads/my-pack.omahop-pack.zip
 ```
 
 The importer checks the zip, shows the pack name, author, licence, icon count and the files it will add, and asks before installing. `--yes`
-skips the question, `--replace` replaces an installed pack of the same name (without it an installed pack is never touched). It installs into
+skips the question, `--dry-run` checks everything and shows the summary without installing, `--replace` replaces an installed pack of the same name (without it an installed pack is never touched). It installs into
 `~/.config/omahop/packs/<folder>/`, where the folder is the pack.toml `name` in lower case with every run of other characters turned into one
 `-` (`"omahop sample"` becomes `omahop-sample`), then says what to type in Icon pack. Importing never sets Icon pack by itself.
 
@@ -157,9 +193,11 @@ A pack folder can live in its own git repository; others clone it into `~/.confi
 
 ## How it works
 
-The rules live once, in `tools/pack-lib.sh`, sourced by the indexer, the exporter and the importer. `tools/pack-index.sh <name>` lists the pack's good icon files, one path per line; `Service.qml` runs it when `icon_pack` changes (a separate scan
+The rules live once, in `tools/pack-lib.sh`, sourced by the indexer, the exporter, the importer and the editor's writer `tools/pack-edit.sh`. `tools/pack-index.sh <name>` lists the pack's good icon files, one path per line; `Service.qml` runs it when `icon_pack` changes (a separate scan
 from the slow system one in `tools/icon-index.sh`) and passes the result to `IconResolve.resolve` as a layer before the system index. The
 resolver takes a list of layers, so a later per-app override folder can sit in front of the pack without changing it. Tests:
 `tests/icon_resolve.test.mjs` (pack wins, misses fall through, case, names that look like paths), `tests/pack_index.test.sh` (the sample
 pack, then links out, traversal names, huge and wrong-type files, hostile SVGs, and bad pack.toml files) and `tests/pack_zip.test.sh` (hostile
-zips built in the test, an export and import round trip in a temporary HOME, and a mutation check on the zip-slip and link rules).
+zips built in the test, an export and import round trip in a temporary HOME, and a mutation check on the zip-slip and link rules), `tests/pack_edit.test.sh` (the editor's writer with hostile names, app ids, images and
+text, each changing nothing) and `tests/pack_editor.test.mjs` (the editor page's logic: rows, commands, states). Design:
+`research/pack-editor-spike.md`.
