@@ -1,6 +1,6 @@
 .pragma library
 // omahop state file parser. The Lua side (lua/omahop.lua write_state) writes it; the overlay reads it. Pure, so Node tests it (tests/state.test.mjs).
-// Format: "key=value" lines, then one tab-separated line per window: w <address> <class> <minimized 0|1> <hint> <title> (hint: a number or letter, empty for none).
+// Format: "key=value" lines (seq, grab, linger_ms, linger_rev: see lua/omahop.lua write_state and Linger.js), then one tab-separated line per window: w <address> <class> <minimized 0|1> <hint> <title> (hint: a number or letter, empty for none).
 
 // The thumbnail_exclude setting ("kitty, 1Password") as a set of lower-case window classes. Whole classes only, never a substring match.
 function thumbnailExcludeSet(text) {
@@ -18,7 +18,7 @@ function isThumbnailExcluded(excludeSet, appId) {
 }
 
 function parse(text) {
-  var st = { open: false, revealed: false, selected: 0, style: "list", thumbnails: "snapshot", border: "auto", actions: true, query: "", entries: [] }
+  var st = { open: false, revealed: false, selected: 0, style: "list", thumbnails: "snapshot", border: "auto", actions: true, query: "", seq: 0, grab: false, lingerMs: 0, lingerRev: 0, entries: [] }
   var lines = String(text || "").split("\n")
   for (var i = 0; i < lines.length; i++) {
     var line = lines[i]
@@ -38,11 +38,16 @@ function parse(text) {
     else if (k === "border") st.border = v
     else if (k === "query") st.query = v
     else if (k === "actions") st.actions = v === "1"
+    else if (k === "seq") st.seq = parseInt(v, 10) || 0
+    else if (k === "grab") st.grab = v === "1"
+    else if (k === "linger_ms") st.lingerMs = parseInt(v, 10) || 0
+    else if (k === "linger_rev") st.lingerRev = parseInt(v, 10) || 0
   }
   // A selection outside the list means a half-written or stale file: show nothing rather than a wrong row.
   // The one exception: a search that matched nothing is an open session with an empty list (the overlay says so).
   var emptySearch = st.entries.length === 0 && st.selected === 0 && st.query !== ""
   if (!emptySearch && (st.selected < 1 || st.selected > st.entries.length)) st.open = false
+  if (!st.open) { st.grab = false; st.lingerMs = 0 } // a closed or unreadable session never holds the keyboard
   return st
 }
 

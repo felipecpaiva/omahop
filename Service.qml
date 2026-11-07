@@ -10,7 +10,8 @@ import "Paths.js" as Paths
 import "IconResolve.js" as IconResolve
 
 // omahop overlay. Watches the state file that lua/omahop.lua writes and draws the switcher while a session is revealed.
-// It never takes the keyboard (Lua owns the keys) and never takes the pointer (empty input mask), so it cannot disturb focus.
+// It takes the pointer only over its card, and the keyboard only when Lua says so (grab=1: setting search_linger_seconds, a search typed);
+// then a click anywhere else closes the list, and Lua focuses the picked window only after the grab is gone.
 Item {
   id: root
 
@@ -222,10 +223,28 @@ Item {
   OverlayWindow {
     id: window
     shown: root.st.open && root.st.revealed
-    shownKeyboardFocus: WlrKeyboardFocus.None
+    shownKeyboardFocus: root.st.grab ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     WlrLayershell.namespace: "omahop"
     // The pointer is taken only over the card (and the search line); everywhere else clicks go through to the windows below.
-    mask: Region { item: column }
+    // While the overlay holds the keyboard, the whole screen is ours (Hyprland sends every click to an exclusive layer anyway) and a click off the card cancels.
+    mask: Region { item: root.st.grab ? backdrop : column }
+
+    MouseArea {
+      id: backdrop
+      anchors.fill: parent
+      enabled: root.st.grab
+      acceptedButtons: Qt.AllButtons
+      onPressed: function (mouse) {
+        var p = mapToItem(column, mouse.x, mouse.y)
+        if (!column.contains(p)) lingerKeys.cancel()
+      }
+    }
+
+    LingerKeys {
+      id: lingerKeys
+      st: root.st
+      send: root.lua
+    }
 
     Column {
       id: column
@@ -238,6 +257,13 @@ Item {
         query: root.st.query
         empty: root.entries.length === 0
         outline: root.outline
+      }
+      CountdownLine {
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: Style.space(160)
+        visible: root.st.lingerMs > 0
+        duration: root.st.lingerMs
+        rev: root.st.lingerRev
       }
       Loader {
         id: styleLoader

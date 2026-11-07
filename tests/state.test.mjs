@@ -58,3 +58,13 @@ assert.equal(State.isThumbnailExcluded(State.thumbnailExcludeSet(undefined), "")
 assert.equal(State.isThumbnailExcluded(ex, ""), false, "no class is never excluded")
 assert.equal(State.isThumbnailExcluded(ex, "constructor"), false, "inherited object keys are not classes")
 console.log("state ok")
+
+// v1.1b linger: seq, grab and the countdown; a closed session never grabs
+const lg = State.parse("open=1\nrevealed=1\nselected=1\nseq=7\ngrab=1\nlinger_ms=3000\nlinger_rev=4\nquery=br\nw\t0xa\tk\t0\t\tbravo\n")
+assert.equal(lg.seq, 7); assert.equal(lg.grab, true); assert.equal(lg.lingerMs, 3000); assert.equal(lg.lingerRev, 4)
+const plain = State.parse(text)
+assert.equal(plain.grab, false); assert.equal(plain.lingerMs, 0); assert.equal(plain.seq, 0)
+assert.equal(State.parse("open=0\nseq=9\ngrab=1\nlinger_ms=3000\n").grab, false, "open=0 drops the grab")
+assert.equal(State.parse("open=0\nseq=9\n").seq, 9, "seq is read when closed too (a restarted shell continues from it)")
+assert.equal(State.parse("open=1\nrevealed=1\nselected=5\ngrab=1\nw\t0xa\tk\t0\t\tt\n").grab, false, "a stale file never grabs")
+console.log("state linger ok")

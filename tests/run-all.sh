@@ -8,6 +8,7 @@ lua -e 'assert(_VERSION == "Lua 5.5", "run these tests with Lua 5.5, like Hyprla
 for t in config scope windows monitors mru session search rules hints glue; do lua "lua/test_$t.lua"; done
 bash tests/scrub.sh
 node tests/state.test.mjs
+node tests/linger.test.mjs
 node tests/config_io.test.mjs
 node tests/peek_model.test.mjs
 node tests/icon_resolve.test.mjs
