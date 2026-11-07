@@ -7,6 +7,8 @@
 set -euo pipefail
 
 readonly flag=tabs.enabled ignore=tabs.ignore
+# A site name or an fnmatch glob over one (the helper's rule: a plain name also hides subdomains, a glob must match the whole host).
+readonly site_re='^[[a-z0-9*?][][a-z0-9.*?!-]*$'   # same characters as Tabs.ignore_list in lua/tabs.lua
 
 { [ $# -ge 2 ] && [[ $1 == /* ]]; } || exit 2
 dir=$1 mode=$2
@@ -19,7 +21,8 @@ case $mode in
     tmp="$dir/.$ignore.tmp"
     : > "$tmp"
     for site in "$@"; do
-      if [[ $site =~ ^[A-Za-z0-9][A-Za-z0-9.-]*$ ]]; then printf '%s\n' "$site" >> "$tmp"; fi
+      site=${site,,}
+      if [[ $site =~ $site_re ]]; then printf '%s\n' "$site" >> "$tmp"; fi
     done
     mv -f -- "$tmp" "$dir/$ignore"
     : > "$dir/$flag"

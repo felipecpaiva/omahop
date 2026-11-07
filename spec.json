@@ -425,7 +425,7 @@
       "type": "bool"
     }, {
       "default": "",
-      "help": "Site names, comma separated, for example: bank.example.com, mail.example.org. A name also covers its subdomains. Empty (the default) hides nothing. Those tabs are never written by the helper and never shown.",
+      "help": "Site names, comma separated, for example: bank.example.com, mail.example.org. A name also covers its subdomains; * and ? are wildcards that must match the whole site name (*.corp.example). Empty (the default) hides nothing. Those tabs are never written by the helper and never shown.",
       "hidden": false,
       "id": "top.browser_tabs_ignore",
       "key": "browser_tabs_ignore",

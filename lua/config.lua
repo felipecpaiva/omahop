@@ -51,7 +51,7 @@ C.spec = {
     browser_tabs = { default = false, group = "tabs", label = "Search browser tabs",
       help = "Off by default. When on, a search also finds the tabs of your browser windows, not only the tab each window shows, and Return opens that tab. Needs the omahop-tabs browser extension and its helper. Private: tab titles and addresses stay on this computer in a temporary folder that is emptied when you log out or turn this off; omahop never logs them." },
     browser_tabs_ignore = { default = "", group = "tabs", label = "Never list tabs from these sites",
-      help = "Site names, comma separated, for example: bank.example.com, mail.example.org. A name also covers its subdomains. Empty (the default) hides nothing. Those tabs are never written by the helper and never shown." },
+      help = "Site names, comma separated, for example: bank.example.com, mail.example.org. A name also covers its subdomains; * and ? are wildcards that must match the whole site name (*.corp.example). Empty (the default) hides nothing. Those tabs are never written by the helper and never shown." },
     same_app_key = { default = "ALT + GRAVE", group = "shortcuts", reload = true, label = "Same-app shortcut",
       help = "A second shortcut that lists only the windows of the app you are in, like Cmd+backtick on a Mac. It must start with the key to hold (for example ALT + GRAVE, or CTRL + GRAVE when that key is Ctrl). Leave it empty to turn it off. Applies after a Hyprland reload; a chord you already use is never taken." },
     hints = { default = "off", values = { "off", "numbers", "apps" }, group = "shortcuts", label = "Quick jump keys",

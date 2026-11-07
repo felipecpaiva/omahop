@@ -39,7 +39,7 @@ end
 
 -- ---- parse ----
 local function file(windows, extra)
-  local parts = { '"schema": 1', '"browser": "chromium"', '"pid": 4242', '"caller": "chrome-extension://abc/"', '"profile": "Default"' }
+  local parts = { '"schema": 1', '"browser": "chromium"', '"pid": 4242', '"caller": "chrome-extension://abc/"', '"profile": null' }
   for k, v in pairs(extra or {}) do parts[#parts + 1] = ('"%s": %s'):format(k, v) end
   return "{" .. table.concat(parts, ", ") .. ', "windows": [' .. table.concat(windows, ",") .. "]}"
 end
@@ -51,6 +51,9 @@ local function tab(id, active, title, url)
 end
 do
   local s = T.parse(file({ window(1, true, { tab(10, true, "Alpha page", "https://a.example.com/x?q=1"), tab(11, false, "Beta", "https://b.example.org/") }) }))
+  assert(T.parse((file({ window(1, true, {}) }):gsub('"profile": null', '"profile": "Profile 1"'))), "profile as text is fine too")
+  assert(T.parse((file({ window(1, true, {}) }):gsub('"profile": null', '"profile": 5'))) == nil, "profile of another type is not")
+  assert(T.parse(file({ window(1, true, {}) }, { later = '{"x": 1}' })), "unknown fields are ignored")
   assert(s and s.browser == "chromium" and s.pid == 4242 and #s.windows == 1 and #s.windows[1].tabs == 2, "a good file parses")
   assert(s.windows[1].tabs[1].title == "Alpha page" and s.windows[1].tabs[1].active == true, "tab fields")
   local function rejects(text, what) local r = T.parse(text); assert(r == nil, "rejected: " .. what) end
@@ -85,9 +88,16 @@ do
   h = T.url_parts("chrome://settings/")
   assert(h == "settings", "scheme urls keep their host")
   local names, bad = T.ignore_list(" Bank.Example.com, *.mail.example.org,, bad name, x;rm -rf ")
-  assert(#names == 2 and names[1] == "bank.example.com" and names[2] == "mail.example.org" and #bad == 2, "ignore list: cleaned, bad items skipped")
-  assert(T.ignored("bank.example.com", names) and T.ignored("www.bank.example.com", names), "exact and subdomain")
+  assert(#names == 2 and names[1] == "bank.example.com" and names[2] == "*.mail.example.org" and #bad == 2, "ignore list: lower case, globs kept, bad items skipped")
+  assert(T.ignored("bank.example.com", names) and T.ignored("www.bank.example.com", names), "plain name: exact and subdomain")
   assert(not T.ignored("notbank.example.com", names) and not T.ignored("example.com", names), "a longer or shorter name is not a subdomain")
+  assert(T.ignored("x.mail.example.org", names) and not T.ignored("mail.example.org", names), "a glob matches the whole host, like fnmatch")
+  local g = T.ignore_list("sh?p.example, [ab]x.example, [!c]y.example, a.b")
+  assert(T.ignored("shop.example", g) and not T.ignored("shoop.example", g), "? is one character")
+  assert(T.ignored("ax.example", g) and not T.ignored("cx.example", g), "a set")
+  assert(T.ignored("by.example", g) and not T.ignored("cy.example", g), "a negated set")
+  assert(not T.ignored("axb", g) and T.ignored("a.b", g), "a dot is literal")
+  assert(not T.ignored("", { "*" }), "a tab with no host is never hidden")
 end
 
 -- ---- matching ----

@@ -215,7 +215,9 @@ function M.sync_tabs_files()
   M.tabs_files_key = key
   if M.cfg.browser_tabs then
     for _, b in ipairs(bad) do log("config: browser_tabs_ignore: skipped a name that is not a site name: " .. b) end
-    hl.exec_cmd(("%s %s on %s"):format(sq(M.tabs_files_cmd), sq(state_dir), table.concat(names, " ")))
+    local quoted = {}
+    for i, n in ipairs(names) do quoted[i] = sq(n) end -- globs (* ? [) must reach the helper unexpanded
+    hl.exec_cmd(("%s %s on %s"):format(sq(M.tabs_files_cmd), sq(state_dir), table.concat(quoted, " ")))
   else
     local f = io.open(M.tabs_flag, "r")
     if f then f:close(); hl.exec_cmd(("%s %s off"):format(sq(M.tabs_files_cmd), sq(state_dir))) end

@@ -645,10 +645,10 @@ do
   assert(#M.entries == 0 and not read_state():find("\nt\t"), "off: no tab rows")
 
   -- on: the flag and the ignore file, made by the detached helper (run here for real to check the modes)
-  setcfg('browser_tabs = true\nbrowser_tabs_ignore = "bank.example.com, bad name"\n[windows]\nworkspaces = "current"\n')
+  setcfg('browser_tabs = true\nbrowser_tabs_ignore = "bank.example.com, *.corp.example, bad name"\n[windows]\nworkspaces = "current"\n')
   open_session()
   local cmd = ran("omahop-tabs-files")
-  assert(cmd and cmd:find(" on 'bank.example.com'$") == nil and cmd:find(" on bank.example.com$"), "on: the helper gets only valid site names: " .. tostring(cmd))
+  assert(cmd and cmd:find(" on 'bank.example.com' '%*.corp.example'$"), "on: the helper gets only valid site names, quoted: " .. tostring(cmd))
   assert(logtext():find("browser_tabs_ignore: skipped a name that is not a site name: bad name", 1, true), "a bad site name is logged")
   os.execute(cmd:sub(6) .. " >/dev/null 2>&1")
   assert(mode(run) == "700" and mode(run .. "/tabs.enabled") == "600" and mode(run .. "/tabs.ignore") == "600", "on: folder 700, flag and ignore file 600")

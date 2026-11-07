@@ -48,11 +48,11 @@ check "not a FIFO: nothing written" "\"$act\" 43 1"
 
 # ---- files ----
 rm -rf "$dir"
-"$files" "$dir" on bank.example.com 'bad name' 'x;y' mail.example.org
+"$files" "$dir" on Bank.example.com 'bad name' 'x;y' '*.corp.example' '[ab]x.example' mail.example.org '$(id)'
 check "on: folder mode 700" "[ \"\$(stat -c %a $dir)\" = 700 ]"
 check "on: flag mode 600" "[ \"\$(stat -c %a $dir/tabs.enabled)\" = 600 ]"
 check "on: ignore file mode 600" "[ \"\$(stat -c %a $dir/tabs.ignore)\" = 600 ]"
-check "on: only valid site names written" "[ \"\$(cat $dir/tabs.ignore)\" = \"\$(printf 'bank.example.com\nmail.example.org')\" ]"
+check "on: only valid names and globs written, lower case" "[ \"\$(cat $dir/tabs.ignore)\" = \"\$(printf 'bank.example.com\n*.corp.example\n[ab]x.example\nmail.example.org')\" ]"
 chmod 755 "$dir"
 "$files" "$dir" on
 check "on again: folder tightened, empty ignore file" "[ \"\$(stat -c %a $dir)\" = 700 ] && [ ! -s $dir/tabs.ignore ]"

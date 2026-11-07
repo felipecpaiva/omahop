@@ -22,7 +22,8 @@ T.limits = {
 T.window_type = "normal"  -- popups and app windows have no tab strip; their windows stay ordinary rows
 T.title_sep = " - "       -- Chromium titles a window "<active tab title> - <browser name>"
 -- Window classes per browser name, used only when no Hyprland window carries the browser's pid (a wrapper or a sandbox between them).
-T.classes = { chrome = "google-chrome", ["google-chrome"] = "google-chrome", chromium = "chromium", brave = "brave-browser", edge = "microsoft-edge", ["microsoft-edge"] = "microsoft-edge" }
+-- Keys are the helper's `browser` field: the browser's process name (/proc/<pid>/comm).
+T.classes = { chrome = "google-chrome", chromium = "chromium", brave = "brave-browser", msedge = "microsoft-edge" }
 
 -- ---- reading ----
 
@@ -60,7 +61,7 @@ local function cut(s, n)
 end
 
 local function is_int(v) return math.type(v) == "integer" and v >= 0 end
-local function opt_text(v) return v == nil or (type(v) == "string" and #v <= T.limits.text) end
+local function opt_text(v) return v == nil or v == Json.null or (type(v) == "string" and #v <= T.limits.text) end
 
 local function check_tab(t)
   if type(t) ~= "table" or not is_int(t.id) or type(t.active) ~= "boolean" or type(t.title) ~= "string" or type(t.url) ~= "string" then return nil end
@@ -90,7 +91,7 @@ function T.parse(text)
   if v.schema ~= T.schema then return nil, "unknown schema" end
   if type(v.browser) ~= "string" or #v.browser > T.limits.text or not is_int(v.pid) or not opt_text(v.caller) or not opt_text(v.profile) then return nil, "bad header" end
   if type(v.windows) ~= "table" or #v.windows > T.limits.windows then return nil, "bad windows" end
-  local snap, budget = { browser = v.browser, pid = v.pid, profile = v.profile, windows = {} }, { tabs = T.limits.tabs }
+  local snap, budget = { browser = v.browser, pid = v.pid, windows = {} }, { tabs = T.limits.tabs }
   for _, w in ipairs(v.windows) do
     local win = check_window(w, budget)
     if not win then return nil, "bad window or tab" end
@@ -110,22 +111,41 @@ function T.url_parts(url)
   return host, path or ""
 end
 
--- The browser_tabs_ignore setting ("bank.example.com, *.mail.example.org") -> a list of lower-case host names, and the items that were skipped.
--- Only letters, digits, dot and dash: the list is also written to a file the helper reads, so nothing else may pass.
+-- The browser_tabs_ignore setting ("bank.example.com, *.corp.example") -> a list of lower-case patterns, and the items that were skipped.
+-- Same rules as the helper (omahop-tabs docs/file-contract.md): a plain name hides that host and its subdomains; a glob (* ? [...], fnmatch)
+-- must match the whole host. Only letters, digits, dot, dash and the glob characters pass: the list is also handed to a helper and a file.
 function T.ignore_list(text)
   local out, bad = {}, {}
   for item in tostring(text or ""):gmatch("[^,]+") do
-    local name = item:gsub("^%s+", ""):gsub("%s+$", ""):lower():gsub("^%*%.", "")
-    if name:match("^[%w][%w.-]*$") and #name <= 253 then out[#out + 1] = name
+    local name = item:gsub("^%s+", ""):gsub("%s+$", ""):lower()
+    if name:match("^[%w*?%[][%w.%-*?%[%]!]*$") and #name <= 253 then out[#out + 1] = name
     elseif name ~= "" then bad[#bad + 1] = name end
   end
   return out, bad
 end
 
--- A host is ignored when it equals a name or is a subdomain of it.
+-- An fnmatch glob -> an anchored Lua pattern (* any run, ? one character, [abc] and [!abc] sets, anything else literal).
+function T.glob_pattern(glob)
+  local out, i = { "^" }, 1
+  while i <= #glob do
+    local c = glob:sub(i, i)
+    local close = c == "[" and glob:find("]", i + 2, true)
+    if c == "*" then out[#out + 1] = ".*"
+    elseif c == "?" then out[#out + 1] = "."
+    elseif close then
+      local body = glob:sub(i + 1, close - 1):gsub("^!", "^"):gsub("([%%%.%(%)%+%*%?%$])", "%%%1")
+      out[#out + 1] = "[" .. body .. "]"; i = close
+    else out[#out + 1] = (c:gsub("%W", "%%%0")) end
+    i = i + 1
+  end
+  return table.concat(out) .. "$"
+end
+
+-- A host is ignored when a pattern matches it whole, or it is a subdomain of a pattern. A tab with no host (data:, file:) never is.
 function T.ignored(host, names)
+  if host == "" then return false end
   for _, n in ipairs(names or {}) do
-    if host == n or host:sub(-(#n + 1)) == "." .. n then return true end
+    if host:match(T.glob_pattern(n)) or host:sub(-(#n + 1)) == "." .. n then return true end
   end
   return false
 end
