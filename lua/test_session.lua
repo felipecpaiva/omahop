@@ -80,4 +80,53 @@ assert(types(s:step(30, 1)) == "select:0" and types(s:key(30, "down")) == "selec
 assert(types(s:key(40, "return")) == "commit:0", "committing an empty list reports index 0 (the glue activates nothing)")
 s = S.new(cfg); s:resize(3, 1); assert(not s:is_open(), "resize on a closed session does nothing")
 
+-- linger (search_linger_seconds): Alt up with a search typed keeps the list open until a key, a pick or the deadline
+local cl = C.merge({ top = { search_linger_seconds = 3 } })
+-- empty query: Alt up commits as today, linger on or off
+s = S.new(cl); s:open(0, 3, 2)
+assert(ticks(s, 25, 50, GONE) == "50=commit:2", "linger on, nothing typed: Alt up commits")
+-- a query and linger 0: commits as today
+s = S.new(cfg); s:open(0, 3, 2); s:mark_query(true)
+assert(ticks(s, 25, 50, GONE) == "50=commit:2", "linger off, a query typed: Alt up commits")
+-- a query and linger 3 s: lingers (revealed at once if the delay had not passed), never commits on Alt
+s = S.new(cl); s:open(0, 3, 2); s:mark_query(true)
+assert(ticks(s, 25, 50, GONE) == "50=reveal,linger" and s:is_lingering() and s:is_revealed(), "linger: reveal and linger at the second Alt-up tick")
+local rev0 = s:linger_rev()
+assert(ticks(s, 75, 3025, GONE) == "", "nothing until the deadline (Alt up and Tab do nothing)")
+assert(ticks(s, 75, 3025, TABDOWN) == "", "Tab held while lingering does not repeat (bare Tab now reaches the overlay)")
+-- touch restarts the deadline and bumps the revision the overlay animates from
+s:touch(3000)
+assert(s:linger_rev() == rev0 + 1, "touch bumps the revision")
+assert(types(s:tick(5999, GONE)) == "" and s:is_open(), "deadline moved to 6000")
+-- timeout cancels, never commits
+assert(types(s:tick(6000, GONE)) == "cancel" and not s:is_open() and not s:is_lingering(), "timeout cancels")
+-- a key restarts the deadline too; Return commits while lingering
+s = S.new(cl); s:open(0, 3, 2); s:mark_query(true); ticks(s, 25, 50, GONE)
+assert(types(s:key(2000, "down")) == "select:3" and types(s:tick(4999, GONE)) == "", "an arrow moves and restarts the deadline")
+assert(types(s:key(4000, "return")) == "commit:3" and not s:is_open(), "Return picks while lingering")
+-- Escape clears, then cancels
+s = S.new(cl); s:open(0, 3, 2); s:mark_query(true); ticks(s, 25, 50, GONE)
+assert(types(s:key(100, "escape")) == "clear" and s:is_open() and s:is_lingering(), "first Escape clears the search, the list stays")
+assert(types(s:key(200, "escape")) == "cancel" and not s:is_open(), "second Escape cancels")
+-- cancel (a click outside the list) ends at once, search or not
+s = S.new(cl); s:open(0, 3, 2); s:mark_query(true); ticks(s, 25, 50, GONE)
+assert(types(s:key(100, "cancel")) == "cancel" and not s:is_open(), "cancel ends the session")
+-- Escape while Alt is held with a search: clears too (the old glue rule, now here)
+s = S.new(cfg); s:open(0, 3, 2); s:mark_query(true)
+assert(types(s:key(10, "escape")) == "clear" and types(s:key(20, "escape")) == "cancel", "Alt held: clear then cancel")
+-- the failsafe still ends a non-lingering session, and a lingering one is bound by its deadline only
+s = S.new(cl); s:open(0, 3, 2); s:mark_query(true)
+assert(types(s:tick(S.max_ms + 1, HELD)) == "cancel", "failsafe for a held session with linger on")
+s = S.new(cl); s:open(0, 3, 2); s:mark_query(true); s:tick(S.max_ms - 50, GONE); s:tick(S.max_ms - 25, GONE)
+assert(s:is_lingering() and types(s:tick(S.max_ms + 100, GONE)) == "" and types(s:tick(S.max_ms - 25 + 3000, GONE)) == "cancel", "lingering past max_ms: the deadline decides")
+-- a reopened session starts not lingering
+s:open(0, 3, 2); assert(not s:is_lingering(), "a new session is not lingering")
+-- touch on a session that is not lingering does nothing
+s = S.new(cl); s:open(0, 3, 2); local r = s:linger_rev(); s:touch(10); assert(s:linger_rev() == r, "touch outside lingering does nothing")
+
+-- sequence numbers from the overlay: only newer integers pass
+assert(S.newer(0, 1) == 1 and S.newer(4, "5") == 5 and S.newer(nil, 3) == 3, "newer seq accepted")
+assert(S.newer(5, 5) == nil and S.newer(5, 4) == nil, "same or older seq rejected")
+assert(S.newer(0, "x") == nil and S.newer(0, 2.5) == nil and S.newer(0, nil) == nil and S.newer(0, "1;os.exit()") == nil, "non integers rejected")
+
 print("session ok")
