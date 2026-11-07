@@ -45,6 +45,7 @@ Jump to any window fast on Omarchy's floating workspaces. Hold Alt, press Tab: a
 - **Same-app shortcut:** `Alt + backtick` lists only the windows of the app you are in (like Cmd+backtick on a Mac). It is bound after Hyprland has loaded and never takes a chord you already use.
 - **App rules:** never list windows by title fragment, list some apps first, and step aside (stock Alt+Tab) for fullscreen apps or named apps such as games and remote desktops.
 - **Keep the list open while searching (off by default):** with `search_linger_seconds` from 1 to 60, once you have typed a search, releasing Alt no longer picks. The list stays open that many seconds after your last key and takes the keyboard, so any character can be typed (capitals, accents). Return picks, Escape clears the search and then closes, a click outside the list closes it, and when the time runs out it closes without picking. With 0 (the default) releasing Alt picks, as before.
+- **Icon packs (off by default):** give apps your own icons with a hand-made pack folder (`pack.toml` plus `icons/<app>.svg` or `.png`) in `~/.config/omahop/packs/`, then set Icon pack in the settings. Files are checked before use and nothing in a pack is run. Format and a sample pack: [docs/icon-packs.md](docs/icon-packs.md).
 - **Quick jump keys:** number keys (`Alt + 1` to `9`) or letters you map to apps jump straight to a window; any other key still types into the search.
 - Adds nothing to the bar, the dock or the desktop unless you turn the peek strip on.
 
@@ -93,6 +94,7 @@ peek = "off"             # the peek strip: "off", "edge" (shows when the pointer
 peek_position = "auto"   # "auto" (a free edge), "bottom", "top", "left", "right"
 border = "auto"          # the list's outline: "auto" follows Hyprland's window border (none when you turned window borders off), "on", "off"
 icon_theme = ""         # an installed icon theme to prefer, by folder name (for example "Papirus"); "" = none. Applies after a shell restart
+icon_pack = ""          # your own icons: a folder name under ~/.config/omahop/packs (format in docs/icon-packs.md); "" = none
 
 [windows]
 workspaces = "floating"  # which workspaces' windows are listed: "current", "floating", "all"
