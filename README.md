@@ -44,6 +44,7 @@ Jump to any window fast on Omarchy's floating workspaces. Hold Alt, press Tab: a
 - **Peek strip (off by default):** a slim row of your running apps on a free screen edge (not the dock's, not the bar's). Hover an app to see a picture of each of its windows, click one to go there, close or minimize from the card. Turn it on in the settings (Peek strip): at the screen edge, or always visible.
 - **Same-app shortcut:** `Alt + backtick` lists only the windows of the app you are in (like Cmd+backtick on a Mac). It is bound after Hyprland has loaded and never takes a chord you already use.
 - **App rules:** never list windows by title fragment, list some apps first, and step aside (stock Alt+Tab) for fullscreen apps or named apps such as games and remote desktops.
+- **Keep the list open while searching (off by default):** with `search_linger_seconds` from 1 to 60, once you have typed a search, releasing Alt no longer picks. The list stays open that many seconds after your last key and takes the keyboard, so any character can be typed (capitals, accents). Return picks, Escape clears the search and then closes, a click outside the list closes it, and when the time runs out it closes without picking. With 0 (the default) releasing Alt picks, as before.
 - **Quick jump keys:** number keys (`Alt + 1` to `9`) or letters you map to apps jump straight to a window; any other key still types into the search.
 - Adds nothing to the bar, the dock or the desktop unless you turn the peek strip on.
 
@@ -78,6 +79,7 @@ schema = 1
 takeover = true          # false: leave Alt+Tab alone
 search = true            # type letters while the list is up to filter it
 search_fuzzy = true      # also match initials (gc: Google Chrome) and letters in order inside a word (chrm: chrome)
+search_linger_seconds = 0  # 1 to 60: after typing, releasing Alt keeps the list open this long (Return picks); 0 picks on release
 scope = "floating"       # "floating": only on floating workspaces, "all": everywhere
 reveal_delay_ms = 100    # a quick tap shows no overlay
 style = "list"           # "list" (plain) or "cards" (a picture of each window)

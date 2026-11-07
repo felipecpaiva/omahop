@@ -74,3 +74,11 @@ Automated checks (`tests/run-all.sh`) cover logic and the keyboard path with a v
 ## v1.1a (icon theme)
 
 - [ ] Set `icon_theme = "Papirus"` (any installed theme folder name) in the settings window or config.toml, restart the shell: the rows show that theme's icons; apps it lacks still show an icon. An empty value or a name that is not installed shows the old icons.
+
+## v1.1b (keep the list open while searching)
+
+- [ ] Settings, "Keep the list open after typing" = 5: Alt+Tab, type two letters, release Alt: the list stays, a thin line under the search runs down; type more (a capital, an accent such as `ç`), Return picks.
+- [ ] Two monitors: start the session on each monitor in turn; the list and the keyboard grab are on the focused one; move the pointer to the other monitor and click: the list closes and nothing changes focus. Type while the pointer is on the other monitor: the keys still reach the list.
+- [ ] Changing your mind: with the list lingering, start typing into the app below: the first keys go into the search (they are stolen until Escape, a click, or the timeout). Check that this is clear enough from the open list and the countdown line, and that one Escape plus one more Escape, or a click, gives the keyboard back at once.
+- [ ] Setting 0 (default): typing then releasing Alt picks at once, exactly as v1.1.0.
+- [ ] Kill the shell while lingering (`omarchy restart shell`): the keyboard comes back (the grab dies with the process) and the next Alt+Tab works.

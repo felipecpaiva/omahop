@@ -103,3 +103,38 @@ Pure and config 3 h, state and Lua glue 3 h, QML (`LingerKeys.qml`, grab, mask, 
 **Go with changes**: route B, default off, about 16 h, behind one setting. Proceed only after a 1 h follow-up measuring risks 5 (click while Exclusive, two outputs) with the virtual mouse.
 
 What would change my mind: if clicking a window while Exclusive cannot be intercepted (the user would be stuck until the timeout), or if the focus-after-drop timing proves flaky across 20 runs, fall back to route A for ASCII-only search (smaller, but capital letters and layouts are second class); if the owner prefers "release Alt picks" muscle memory over a linger, no-go and keep Alt held for search.
+
+## Result (follow-up spike and build, 2026-11-07)
+
+### Click while the overlay holds the keyboard (measured)
+
+Probe: a full-screen `PanelWindow` on the Overlay layer, `keyboardFocus: Exclusive`, a 200x100 card in the centre, a full-size `MouseArea` behind it, key and click logging; Spare workspace with A, B, C (C focused); virtual keyboard and mouse from `tests/uinput_kbd.py`; pointer placed with `hl.dsp.cursor.move`. Two masks: `card` (input region is the card only) and `full` (the whole window). Sequence per run: key, click on window A at (320, 270) outside the card, key, click on the card, key.
+
+| Check | Result (11 runs: 5 `full`, 6 `card`) |
+|---|---|
+| Click on window A outside the card, mask `full` | delivered to the overlay's backdrop at (320, 270); `activewindow` stays C; next key still reaches the overlay. 5 of 5 |
+| Same, mask `card` | **also delivered to the overlay** although outside its input region; A does not take focus; keys stay. 5 of 6 |
+| Click on the card | delivered, 11 of 11 |
+| After the probe exits | active window consistent (C) |
+
+One `card` run (the first of the session) was different: `activewindow` already read a window of the origin workspace before the click, the click on A and the following key were not seen by the probe, and the click on the card restored delivery. Not reproduced in the 10 runs after it; most likely Spare setup timing (the workspace switch not finished when the probe mapped). Recorded as unexplained, not as a design failure.
+
+Reading: Hyprland routes all pointer input on the output to an exclusive layer, whatever its input region. So the design works, and the part that makes click-outside-cancel work is the full-size `MouseArea`, not widening the mask (widened anyway while the grab is held, so the behaviour does not depend on that compositor detail). Without a handler, clicks outside the card would be swallowed and the user would wait for the timeout. Also in `docs/gotchas.md`.
+
+### Two monitors
+
+**Not measured**: one output attached, and virtual monitors are never created on this machine. Expected from the code: the overlay and its grab live on the focused output only (`OverlayWindow.focusedScreen`); whether a click on the other output reaches the exclusive layer is unknown. Hand check in `docs/validation-checklist.md` (v1.1b).
+
+### Build as done
+
+Route B as designed, with these details settled during the build:
+
+- Lua writes `grab=1` in the state file (not QML deciding): open, revealed, linger on, and lingering or a query typed. QML sets `Exclusive` from it. The grab therefore starts at the first typed letter while Alt is still held.
+- Every overlay call is `set_query(seq, text)` with the whole text, and a key is sent in the SAME `hyprctl eval` right after it (`...; _G.omahop.key(seq + 1, name)`), so a key can never overtake the text it applies to. An unchanged text is a no-op in Lua (no refilter, the selection stays) but restarts the countdown.
+- Sequence numbers: Lua keeps the last applied one across sessions and writes it to the state file as `seq`; QML continues from `max(own, seq) + 1`, so a restarted shell is not locked out and a late call from an older session is older than anything newer. A Hyprland reload starts Lua at 0, which accepts anything (and with no session open, nothing applies).
+- QML takes Lua's query as its own text only when nothing of its own is pending or unapplied (`Linger.adopt`), so Escape and letters typed with Alt held (Lua's binds) and keys typed after the release (QML) do not fight.
+- Escape with text typed is handled in QML as an edit to an empty text; only the second Escape is sent as a key. Lua keeps the same rule for `Alt + Escape`, now in `session.lua` (action `clear`).
+- Activation after commit: `open=0` written first, then the focus from a 50 ms `hl.timer`, only when the grab was held during this session (plain Alt+Tab keeps its immediate focus). Live: 5 of 5 picks landed.
+- Keys with Alt, Ctrl or Super are ignored by the overlay: Alt chords are omahop's binds, the rest are not ours.
+
+Open risks: two monitors (above); stolen keys when the user changes their mind (bounded by the countdown line, Escape, a click, and the 60 s cap); the 50 ms release delay is measured on this machine only (a slower shell could need more; `M.release_ms` is one constant).
