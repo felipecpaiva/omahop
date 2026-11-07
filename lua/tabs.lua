@@ -1,0 +1,305 @@
+-- omahop browser tabs: read the tab files the omahop-tabs helper writes, match each browser window to a Hyprland window, and build tab rows.
+-- Pure: files arrive as text, the clock, process facts and windows as plain values, so it tests without a browser or Hyprland.
+-- File contract (schema 1, docs/file-contract.md): tabs.<hostpid>.json = { schema, browser, pid, caller, profile, windows = [ { id, focused, type, tabs = [ { id, active, title, url } ] } ] }.
+-- Privacy: titles and urls are never put in an error reason, so a caller may log a reason as it is.
+local here = debug.getinfo(1, "S").source:match("^@(.*)/") or "."
+local Json = dofile(here .. "/json.lua")
+
+local T = {}
+
+T.schema = 1
+T.file_pattern = "^tabs%.(%d+)%.json$"
+T.limits = {
+  bytes = 1024 * 1024,    -- one file (200 tabs measured at 34 KB, docs/research/tabs-spike.md section 6)
+  files = 8,              -- files read per open (one per browser profile)
+  windows = 200,          -- browser windows per file
+  tabs = 2000,            -- tabs per file
+  title = 300,            -- bytes of a title kept (cut on a character boundary)
+  url = 2048,             -- bytes of a url looked at
+  text = 256,             -- bytes of browser, caller and profile
+  age_s = 24 * 3600,      -- a file not rewritten for this long is stale (the host rewrites on every tab event)
+}
+T.window_type = "normal"  -- popups and app windows have no tab strip; their windows stay ordinary rows
+T.title_sep = " - "       -- Chromium titles a window "<active tab title> - <browser name>"
+-- Window classes per browser name, used only when no Hyprland window carries the browser's pid (a wrapper or a sandbox between them).
+T.classes = { chrome = "google-chrome", ["google-chrome"] = "google-chrome", chromium = "chromium", brave = "brave-browser", edge = "microsoft-edge", ["microsoft-edge"] = "microsoft-edge" }
+
+-- ---- reading ----
+
+-- "tabs.<pid>.json" -> the host pid, else nil. Anything else in the folder (the flag, the ignore file, FIFOs, temp files) is not a tab file.
+function T.host_pid(name)
+  local pid = tostring(name or ""):match(T.file_pattern)
+  return pid and #pid <= 10 and math.tointeger(tonumber(pid)) or nil
+end
+
+-- The folder listing ("<name> <mtime seconds>" per line, as find -printf writes it) -> { { name, pid, mtime } } of tab files, newest first, at most limits.files.
+function T.listing(text)
+  local out = {}
+  for line in tostring(text or ""):gmatch("[^\n]+") do
+    local name, mtime = line:match("^(%S+) (%d+)%.?%d*$")
+    local pid = T.host_pid(name)
+    if pid then out[#out + 1] = { name = name, pid = pid, mtime = tonumber(mtime) } end
+  end
+  table.sort(out, function(a, b) return a.mtime > b.mtime end)
+  while #out > T.limits.files do out[#out] = nil end
+  return out
+end
+
+-- A file is fresh when its host process is alive and it was written within limits.age_s. alive: pid -> bool.
+function T.fresh(file, now_s, alive)
+  if not alive(file.pid) then return false, "host gone" end
+  if now_s - file.mtime > T.limits.age_s then return false, "too old" end
+  return true
+end
+
+-- Cut a string to at most n bytes without splitting a UTF-8 character.
+local function cut(s, n)
+  if #s <= n then return s end
+  local stop = utf8.offset(s, 0, n + 1) or (n + 1) -- start of the character holding byte n+1
+  return s:sub(1, stop - 1)
+end
+
+local function is_int(v) return math.type(v) == "integer" and v >= 0 end
+local function opt_text(v) return v == nil or (type(v) == "string" and #v <= T.limits.text) end
+
+local function check_tab(t)
+  if type(t) ~= "table" or not is_int(t.id) or type(t.active) ~= "boolean" or type(t.title) ~= "string" or type(t.url) ~= "string" then return nil end
+  if not utf8.len(t.title) then return nil end
+  return { id = t.id, active = t.active, title = cut(t.title:gsub("%c", " "), T.limits.title), url = t.url:sub(1, T.limits.url) }
+end
+
+local function check_window(w, budget)
+  if type(w) ~= "table" or not is_int(w.id) or type(w.focused) ~= "boolean" or type(w.type) ~= "string" or type(w.tabs) ~= "table" then return nil end
+  local out = { id = w.id, focused = w.focused, type = w.type, tabs = {} }
+  for _, t in ipairs(w.tabs) do
+    budget.tabs = budget.tabs - 1
+    if budget.tabs < 0 then return nil end
+    local tab = check_tab(t)
+    if not tab then return nil end
+    out.tabs[#out.tabs + 1] = tab
+  end
+  return out
+end
+
+-- Text of one file -> a snapshot, or nil and a reason. Any wrong type, an unknown schema or a size over a limit rejects the whole file.
+function T.parse(text)
+  if type(text) ~= "string" then return nil, "unreadable" end
+  if #text > T.limits.bytes then return nil, "too big" end
+  local v, why = Json.decode(text)
+  if type(v) ~= "table" then return nil, "not JSON: " .. tostring(why or "not an object") end
+  if v.schema ~= T.schema then return nil, "unknown schema" end
+  if type(v.browser) ~= "string" or #v.browser > T.limits.text or not is_int(v.pid) or not opt_text(v.caller) or not opt_text(v.profile) then return nil, "bad header" end
+  if type(v.windows) ~= "table" or #v.windows > T.limits.windows then return nil, "bad windows" end
+  local snap, budget = { browser = v.browser, pid = v.pid, profile = v.profile, windows = {} }, { tabs = T.limits.tabs }
+  for _, w in ipairs(v.windows) do
+    local win = check_window(w, budget)
+    if not win then return nil, "bad window or tab" end
+    snap.windows[#snap.windows + 1] = win
+  end
+  return snap
+end
+
+-- ---- urls and the ignore list ----
+
+-- A url -> its host (lower case, no user, no port) and path (no query, no fragment). Only scheme://host urls have a host; data:, about: and the like give "", "".
+function T.url_parts(url)
+  local rest = tostring(url or ""):match("^%a[%w+.-]*://(.*)$")
+  if not rest then return "", "" end
+  local authority, path = rest:match("^([^/?#]*)([^?#]*)")
+  local host = (authority or ""):gsub("^.*@", ""):gsub(":%d*$", ""):lower()
+  return host, path or ""
+end
+
+-- The browser_tabs_ignore setting ("bank.example.com, *.mail.example.org") -> a list of lower-case host names, and the items that were skipped.
+-- Only letters, digits, dot and dash: the list is also written to a file the helper reads, so nothing else may pass.
+function T.ignore_list(text)
+  local out, bad = {}, {}
+  for item in tostring(text or ""):gmatch("[^,]+") do
+    local name = item:gsub("^%s+", ""):gsub("%s+$", ""):lower():gsub("^%*%.", "")
+    if name:match("^[%w][%w.-]*$") and #name <= 253 then out[#out + 1] = name
+    elseif name ~= "" then bad[#bad + 1] = name end
+  end
+  return out, bad
+end
+
+-- A host is ignored when it equals a name or is a subdomain of it.
+function T.ignored(host, names)
+  for _, n in ipairs(names or {}) do
+    if host == n or host:sub(-(#n + 1)) == "." .. n then return true end
+  end
+  return false
+end
+
+-- ---- matching a browser window to a Hyprland window (docs/research/tabs-spike.md section 3) ----
+-- hwins: { address, class, title, pid, focus_history } for every Hyprland window. A snapshot's process ids (`pids`, a set) are its `pid`
+-- field and the host's parent process, filled in by the caller; either may be the browser's.
+
+local function active_title(bw)
+  for _, t in ipairs(bw.tabs) do if t.active then return t.title end end
+  return nil
+end
+
+-- The Hyprland windows a snapshot can belong to: same process first, then the browser's class (spike section 3, failure d).
+local function pool_of(snap, hwins)
+  local out = {}
+  for _, h in ipairs(hwins) do if h.pid and snap.pids[h.pid] then out[#out + 1] = h end end
+  if #out > 0 then return out, "pid:" .. out[1].pid end
+  local class = T.classes[tostring(snap.browser):lower()]
+  for _, h in ipairs(hwins) do if class and tostring(h.class):lower() == class then out[#out + 1] = h end end
+  return out, "class:" .. tostring(class)
+end
+
+-- Title rule: the Hyprland title is the active tab title, alone or followed by " - <browser name>". The suffix seen most often in a pool is
+-- learned and, when it narrows a window's candidates without emptying them, applied (a tab titled "a - b" must not claim the window of tab "a").
+local function title_candidates(bws, hs)
+  local cands, seen = {}, {}
+  for _, bw in ipairs(bws) do
+    cands[bw] = {}
+    local t = active_title(bw)
+    for _, h in ipairs(hs) do
+      local title = h.title or ""
+      if t and t ~= "" and (title == t or title:sub(1, #t + #T.title_sep) == t .. T.title_sep) then
+        local rest = title:sub(#t + 1)
+        cands[bw][#cands[bw] + 1] = { h = h, rest = rest }
+        seen[rest] = (seen[rest] or 0) + 1
+      end
+    end
+  end
+  local learned, best = nil, 0
+  for rest, n in pairs(seen) do
+    if n > best or (n == best and learned and #rest < #learned) then learned, best = rest, n end
+  end
+  local out = {}
+  for bw, list in pairs(cands) do
+    local narrow, all = {}, {}
+    for _, c in ipairs(list) do
+      all[#all + 1] = c.h
+      if c.rest == learned then narrow[#narrow + 1] = c.h end
+    end
+    out[bw] = #narrow > 0 and narrow or all
+  end
+  return out
+end
+
+-- Pair off windows that have exactly one free candidate, until nothing changes. Returns the number paired.
+local function eliminate(bws, cands, res, taken)
+  local paired, changed = 0, true
+  while changed do
+    changed = false
+    for _, bw in ipairs(bws) do
+      if not res[bw] then
+        local free = {}
+        for _, h in ipairs(cands[bw]) do if not taken[h] then free[#free + 1] = h end end
+        cands[bw] = free
+        if #free == 1 then res[bw] = free[1]; taken[free[1]] = true; changed = true; paired = paired + 1 end
+      end
+    end
+  end
+  return paired
+end
+
+local function free_windows(hs, taken)
+  local out = {}
+  for _, h in ipairs(hs) do if not taken[h] then out[#out + 1] = h end end
+  return out
+end
+
+-- The window the user was in most recently, of a list (Hyprland's focus history: lower is more recent).
+local function most_recent(list)
+  local best
+  for _, h in ipairs(list) do if not best or (h.focus_history or 1e9) < (best.focus_history or 1e9) then best = h end end
+  return best
+end
+
+-- Match the browser windows of one pool. res[bw] = Hyprland window; cands[bw] = what is left for an unresolved one.
+local function match_pool(bws, hs)
+  local res, taken = {}, {}
+  if #bws == 1 and #hs == 1 then res[bws[1]] = hs[1]; return res, {} end -- one window each: exact, no title involved
+  local cands = title_candidates(bws, hs)
+  eliminate(bws, cands, res, taken)
+  -- tie break by focus: the browser's focused window is the one of this pool the user was in last
+  for _, bw in ipairs(bws) do
+    if not res[bw] and bw.focused then
+      local h = most_recent(#cands[bw] > 0 and cands[bw] or free_windows(hs, taken))
+      if h then res[bw] = h; taken[h] = true; eliminate(bws, cands, res, taken) end
+    end
+  end
+  -- one browser window and one Hyprland window left over: they belong together
+  local left = {}
+  for _, bw in ipairs(bws) do if not res[bw] then left[#left + 1] = bw end end
+  local free = free_windows(hs, taken)
+  if #left == 1 and #free == 1 then res[left[1]] = free[1]; taken[free[1]] = true end
+  for _, bw in ipairs(bws) do
+    if not res[bw] then cands[bw] = #cands[bw] > 0 and free_windows(cands[bw], taken) or free_windows(hs, taken) end
+  end
+  return res, cands
+end
+
+-- snapshots -> { [browser window] = { address = <matched>, candidates = { addresses } } }; address is nil when unresolved.
+function T.match(snapshots, hwins)
+  local pools, order = {}, {}
+  for _, snap in ipairs(snapshots) do
+    local hs, key = pool_of(snap, hwins)
+    if not pools[key] then pools[key] = { hs = hs, bws = {} }; order[#order + 1] = key end
+    for _, bw in ipairs(snap.windows) do
+      if bw.type == T.window_type then table.insert(pools[key].bws, bw) end
+    end
+  end
+  local out = {}
+  for _, key in ipairs(order) do
+    local p = pools[key]
+    local res, cands = match_pool(p.bws, p.hs)
+    for _, bw in ipairs(p.bws) do
+      local list = {}
+      for _, h in ipairs(cands[bw] or {}) do list[#list + 1] = h.address end
+      out[bw] = { address = res[bw] and res[bw].address, candidates = list }
+    end
+  end
+  return out
+end
+
+-- ---- rows ----
+
+-- snapshots (each with `hostpid` and `pids`) -> tab rows { window = address, hostpid, id, title, host, path, active }, ignored hosts left out.
+-- An unresolved window's tabs go under its first candidate. shortcut: no verify-and-retry (spike section 3 step 4); add it if live checks show wrong windows.
+function T.rows(snapshots, hwins, ignore)
+  local matched, out = T.match(snapshots, hwins), {}
+  for _, snap in ipairs(snapshots) do
+    for _, bw in ipairs(snap.windows) do
+      local m = matched[bw]
+      local address = m and (m.address or m.candidates[1])
+      if address then
+        for _, t in ipairs(bw.tabs) do
+          local host, path = T.url_parts(t.url)
+          if not T.ignored(host, ignore) then
+            out[#out + 1] = { window = address, hostpid = snap.hostpid, id = t.id, title = t.title, host = host, path = path, active = t.active }
+          end
+        end
+      end
+    end
+  end
+  return out
+end
+
+-- Put each tab row right after its window's entry, as an entry of its own (same address, so focusing it focuses the window).
+-- Rows whose window is not in the list are dropped: the switcher never reaches outside its own window set.
+function T.interleave(entries, rows)
+  local by_window = {}
+  for _, r in ipairs(rows) do
+    by_window[r.window] = by_window[r.window] or {}
+    table.insert(by_window[r.window], r)
+  end
+  local out = {}
+  for _, e in ipairs(entries) do
+    if not e.tab then
+      out[#out + 1] = e
+      for _, r in ipairs(by_window[e.address] or {}) do
+        out[#out + 1] = { address = e.address, class = e.class, minimized = e.minimized, title = r.title,
+          search_extra = r.host .. " " .. r.path, tab = { hostpid = r.hostpid, id = r.id, host = r.host, active = r.active } }
+      end
+    end
+  end
+  return out
+end
+
+return T

@@ -50,6 +50,23 @@ assert(S.filter(f, "", fn) == f, "empty query, fuzzy on: unchanged")
 local r = { e("zed", "gc notes"), e("alpha", "grand cafe"), e("gcalc", "x"), e("gcc", "y"), e("beta", "gcx") }
 assert(classes(S.filter(r, "gc", nil)) == "gcalc,gcc,zed,beta,alpha", "rank order")
 assert(classes(S.filter(r, "gc", nil, { fuzzy = false })) == "gcalc,gcc,zed,beta", "fuzzy off equals the plain rule")
+-- browser tab rows: hidden with no query, matched on title and site/path, never on the browser's class
+do
+  local win = e("google-chrome", "Docs - Google Chrome")
+  local tab1 = { class = "google-chrome", title = "Ação plan", search_extra = "notes.example.com /team/q4", tab = { id = 1 } }
+  local tab2 = { class = "google-chrome", title = "Weather", search_extra = "forecast.example.org /", tab = { id = 2 } }
+  local tabs = { win, tab1, tab2, e("kitty", "shell") }
+  local function titles(list) local t = {} for i, x in ipairs(list) do t[i] = x.title end return table.concat(t, ",") end
+  assert(titles(S.filter(tabs, "", nil)) == "Docs - Google Chrome,shell", "no query: tab rows are not listed")
+  assert(titles(S.filter(tabs, "acao", nil)) == "Ação plan", "tab title matched with accents folded")
+  assert(titles(S.filter(tabs, "forecast", nil)) == "Weather", "tab matched by its site")
+  assert(titles(S.filter(tabs, "team q4", nil)) == "Ação plan", "tab matched by its path")
+  assert(titles(S.filter(tabs, "chrome", nil)) == "Docs - Google Chrome", "the browser's name lists its window, not every tab")
+  assert(titles(S.filter(tabs, "wthr", nil)) == "Weather", "fuzzy rule applies to tab titles")
+  assert(titles(S.filter(tabs, "wthr", nil, { fuzzy = false })) == "", "fuzzy off applies to tab titles")
+  local empty = { class = "google-chrome", title = "", search_extra = " ", tab = { id = 3 } }
+  assert(#S.filter({ empty }, "x", nil) == 0, "an empty tab title matches nothing and does not fail")
+end
 -- speed
 local t0 = os.clock()
 for _ = 1, 100 do S.filter({ e("x", string.rep("word ", 200)) }, "zzq", nil) end
