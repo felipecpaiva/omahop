@@ -238,6 +238,7 @@ function M.list_tab_files()
     local t = p:read("a"); p:close()
     return t
   end)
+  if not ok then log("tabs: cannot list the runtime folder") end
   return ok and text or ""
 end
 
@@ -587,7 +588,8 @@ function M.reload_config()
   for _, line in ipairs(bad) do problems[#problems + 1] = "unreadable line: " .. line end
   for _, p in ipairs(problems) do log("config: " .. p) end
   M.cfg = cfg
-  M.sync_tabs_files()
+  local synced, why = pcall(M.sync_tabs_files) -- a tabs problem must never stop the switcher loading
+  if not synced then log("tabs: cannot update the flag files: " .. tostring(why)) end
   local known = {}
   for name in pairs(M.actions) do known[name] = true end
   local keys, key_problems = ActionKeys.resolve(cfg.action_keys, known, cfg.hints, Hints.parse_keys(cfg.hint_keys))

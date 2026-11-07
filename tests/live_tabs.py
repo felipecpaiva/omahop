@@ -112,6 +112,9 @@ try:
 finally:
     if reader:
         reader.terminate(); reader.wait(2)
+        fifo = os.path.join(RUN, f"tabs.{reader.pid}.activate")  # SIGTERM skips the stand-in's own cleanup
+        if os.path.exists(fifo):
+            os.remove(fifo)
     for p in (got, tab_file):
         if p and os.path.exists(p):
             os.remove(p)
