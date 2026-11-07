@@ -128,3 +128,16 @@ Run `python3 tests/live_tabs.py` first (virtual keyboard, a fake tab file and a 
 - [ ] Delete and the quit and minimize keys on a tab row do nothing (they never close the whole browser window).
 - [ ] The omahop log (`$XDG_RUNTIME_DIR/omahop/log`) holds no tab title or address after a session with tabs.
 - [ ] Quit the browser: its tab file goes; the next search shows no rows for it.
+
+## v1.5 (audio marker)
+
+No automated live test (it would need real sound). By hand, at a low volume, with something you choose to play:
+
+- [ ] Setting off (the default): play music in the browser, Alt+Tab: no speaker anywhere. `pgrep -f audio-sample` while the list is up shows nothing.
+- [ ] Turn "Mark windows playing sound" on in the settings window. Play a video or music in the real browser, Alt+Tab: the browser's row shows a small speaker after the app name; the other rows show none. Same in the cards style.
+- [ ] Pause it, Alt+Tab again: no speaker (corked). Play again and mute the tab or the stream in the audio panel: no speaker (muted).
+- [ ] Two browser windows, sound in one: both show the speaker (known limit, one process); note it if only one does.
+- [ ] A player with its own window (mpv) and a player in a terminal (`paplay` on a sound file): mpv's row and the terminal's row are marked.
+- [ ] With the list closed, nothing runs: `pgrep -f audio-sample` is empty and the shell's CPU stays idle.
+- [ ] The omahop log (`$XDG_RUNTIME_DIR/omahop/log`) and the shell log hold no song or video title after a session with sound.
+- [ ] Note the glyph renders as a speaker with your shell font (a box means a non-Nerd font).

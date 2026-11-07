@@ -48,6 +48,7 @@ Jump to any window fast on Omarchy's floating workspaces. Hold Alt, press Tab: a
 - **Icon packs (off by default):** give apps your own icons with a hand-made pack folder (`pack.toml` plus `icons/<app>.svg` or `.png`) in `~/.config/omahop/packs/`, then set Icon pack in the settings. Files are checked before use and nothing in a pack is run. Share a pack as one zip with `tools/pack-export.sh` and install one with `tools/pack-import.sh`, which checks the zip before unpacking anything. Format, sharing and a sample pack: [docs/icon-packs.md](docs/icon-packs.md).
 - **Quick jump keys:** number keys (`Alt + 1` to `9`) or letters you map to apps jump straight to a window; any other key still types into the search.
 - **Quit and minimize by key:** set `action_keys = "q=close, m=minimize"` and, with the list up and nothing typed yet, that key closes or minimizes the selected window and the selection moves to the next row. Once you type a letter, every key types. Off by default; a key a hint already uses is left to the hint. Needs `Type to search` on, because it rides the same keys.
+- **Audio marker (off by default):** with "Mark windows playing sound" on, a small speaker shows after the app name of a window whose app is playing sound, so you can find the call or the music. It is checked once when the list opens (with `pactl`); paused or muted sound shows none, and a browser marks all its windows (one process plays every tab). Song and video titles are never logged or saved.
 - Adds nothing to the bar, the dock or the desktop unless you turn the peek strip on.
 
 ## Browser tabs (optional)
@@ -61,6 +62,7 @@ Privacy: tab titles and addresses are private, so they stay on this computer. Th
 ## Requirements and what it touches
 
 - Omarchy 4.5 or newer (the Hyprland Lua configuration and the Quickshell shell it ships). Nothing else to install: no network, no root, no packages.
+- With the audio marker on, it runs `pactl -f json list sink-inputs` and `ps` once each time the list opens, keeps only process ids and app names in memory, and never logs or saves stream titles.
 - It reads the list of windows (class, title, workspace, monitor) from Hyprland, and takes screenshots of windows through Wayland's screen-capture protocol only to draw thumbnails (nothing is saved or sent anywhere).
 - It writes small state files under `$XDG_RUNTIME_DIR/omahop` (gone at logout), its settings at `~/.config/omahop/config.toml`, and a launcher entry `~/.local/share/applications/omahop.desktop` (only one that carries its own marker is ever replaced or removed). It never edits your `hyprland.lua` or any Omarchy file.
 - Keys it takes: Alt+Tab and Alt+Shift+Tab (where it is active), the same-app chord, and Alt plus letters, digits, Delete, Escape, Return and the arrows only while the list is up, and never a chord you already use. With `modifier` set to Super or Ctrl, the same keys with that modifier instead, and Super+Tab or Ctrl+Tab is only taken when no bind of yours or Omarchy's uses it.
@@ -97,6 +99,7 @@ style = "list"           # "list" (plain) or "cards" (a picture of each window)
 thumbnails = "snapshot"  # cards only: "snapshot" (one picture when it opens), "live" (keeps updating, uses CPU), "off" (icons only)
 thumbnail_exclude = ""   # window classes never captured into a picture, comma separated (password manager, bank): they show the app icon
 actions = true           # close and minimize buttons on the hovered row or card
+audio_marker = false     # a small speaker on windows whose app plays sound, checked when the list opens
 same_app_key = "ALT + GRAVE"  # the same-app shortcut ("" turns it off, needs a Hyprland reload)
 hints = "off"            # quick jump keys: "off", "numbers", "apps" (with hint_keys = "c=google-chrome, t=kitty")
 action_keys = ""         # keys that act on the selected window while nothing is typed: "q=close, m=minimize" (empty: off)

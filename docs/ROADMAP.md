@@ -19,6 +19,7 @@ Every row must meet [engineering-standards.md](engineering-standards.md): flexib
 | v1.2 (RELEASED 2026-11-07, tag v1.2.0, was planned as v1.1b; design in `research/linger-spike.md`) | Keep the list open while searching | `search_linger_seconds` (default 0): the overlay holds the keyboard while lingering, any character can be typed, Return picks, timeout and click outside cancel. Unit, glue, Node and live tests pass with one monitor; two monitors not measured |
 | v1.3 (RELEASED 2026-11-07, tag v1.3.0, v1.3.1 drops Super; plan in `v1.1-plan.md`) | Keys and icon packs | `modifier` (alt, ctrl; Super is not offered, Omarchy owns it), `action_keys` (quit and minimize by key), `icon_pack` (hand-made packs, format in `icon-packs.md`) |
 | v1.4 (RELEASED 2026-11-08, tag v1.4.0; design in `research/tabs-spike.md`, D17 and D18) | Browser tabs and pack zips | omahop side of tab search (`browser_tabs`, off by default; the extension lives in the private repo `omahop-tabs`, not published yet) and `tools/pack-export.sh` / `tools/pack-import.sh` |
+| v1.5 (in progress, branch v1.5-audio; spike `research/audio-spike.md`, D21) | Audio marker | `audio_marker` (off by default): a speaker glyph in rows and cards of windows playing sound. Files: `AudioMarker.js`, `tools/audio-sample.sh`, `Service.qml`, `ListRow.qml`, `CardItem.qml`, the two styles. Tests: `tests/audio_marker.test.mjs`, `tests/audio_sample.test.sh` (fixtures, no real audio); hand check in `validation-checklist.md` |
 
 Rule: v0.1 stays small on purpose. A feature not in the v0.1 row waits, but the settings model (`settings.md`) and the
 Lua/QML contract are built so that later features add values and views without rewriting the key handling.
@@ -75,6 +76,8 @@ E1 `tests/scrub.sh` clean, E2 offline and live suites green, E3 branding kit, E4
 - Never create headless monitors in live tests.
 
 ## After 1.0 (ideas, not scheduled)
+
+- **Audio marker per browser window** (from the v1.5 spike): today every window of a browser playing sound gets the speaker, because one process plays all tabs. The tabs API has an `audible` flag per tab; the `omahop-tabs` extension could write it, and omahop could then mark only the window that holds the audible tab.
 
 - **Choose the trigger key and bring Super back** (Felipe, 2026-11-08): Super is not off limits, only its conflicts with Omarchy are. `docs/omarchy-key-map.md` (made by `tools/key-map.py`) maps which chords are taken. A `trigger_key` setting would make the pair (held key, trigger key) free to choose, checked against the live binds, so Super + a free key becomes possible without touching Omarchy's Super+Tab.
 - **Icon packs** (Felipe, 2026-11-07): choose or build an icon pack in the settings window and override app icons. `IconResolve.js` is the one place icons are chosen, so a pack is one more layer in front of the system index. A pack is a folder with a small name-to-icon map (author, licence, version, preview) plus images. An editor in the settings window to make one (pick an app, pick an image), and export or import as one zip that holds data only: reject paths outside the pack and any file that is not an image or the map. Off by default, no new icons added. Step 1 (hand-made pack folders) shipped in v1.3; step 2 (zip export and import) is v1.4 part C; the editor stays future.
