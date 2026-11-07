@@ -4,6 +4,7 @@
 // Privacy: the pactl text holds media titles (media.name). Only pid, binary, app name and the playing flag are kept; nothing here logs.
 
 var SEPARATOR = "--"
+var GLYPH = "\uF028" // the speaker Omarchy's own audio panel draws (Nerd Font), as text: no icon asset is shipped
 var MAX_DEPTH = 16 // parent steps from a stream's process to a window's process (a browser's audio process is one or two below the browser)
 var PROP_PID = "application.process.id"
 var PROP_BINARY = "application.process.binary"

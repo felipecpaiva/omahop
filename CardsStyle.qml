@@ -12,6 +12,7 @@ BorderSurface {
   property string thumbnails: "snapshot"
   property real screenWidth: 1280
   property bool actions: true
+  property var playing: ({})   // normalized window address -> true while its app plays sound (setting audio_marker); empty when off
 
   signal picked(int index)
   signal closeRequested(string address)
@@ -82,6 +83,7 @@ BorderSurface {
       selected: index === strip.selected - 1
       actions: strip.actions && !modelData.tab
       hint: modelData.hint || ""
+      playing: !modelData.tab && strip.playing[State.normalizeAddress(modelData.address)] === true
       onPicked: strip.picked(index + 1)
       onCloseRequested: strip.closeRequested(modelData.address)
       onMinimizeRequested: strip.minimizeRequested(modelData.address)
