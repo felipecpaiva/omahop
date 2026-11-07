@@ -2,6 +2,7 @@
 # The rules for one installed icon pack folder (format: docs/icon-packs.md), shared so they live in one place:
 # pack-index.sh uses them leniently (a bad icon is skipped with a note), pack-export.sh and pack-import.sh strictly (any note refuses the pack).
 # Sourced, never run. Packs come from other people: nothing in a pack is ever run or sourced, pack.toml is only read line by line.
+shopt -s extglob   # pack_folder_name
 
 PACK_MAX_PNG=$((2 * 1024 * 1024))
 PACK_MAX_SVG=$((256 * 1024))
@@ -22,6 +23,20 @@ declare -gA PACK_META=()
 
 # pack_name_ok <name>: the icon_pack rule for a pack folder name (no slash, no traversal, nothing a shell would read).
 pack_name_ok() { [[ $1 =~ ^[A-Za-z0-9._-]+$ && $1 != "." && $1 != ".." ]]; }
+
+# pack_folder_name <text>: the folder for a pack whose pack.toml name is <text>: lower case, every run of other characters one dash, no
+# leading or trailing dot or dash, at most PACK_MAX_FOLDER characters. Prints it, or returns 1 when nothing usable is left. ASCII rules:
+# callers run with LC_ALL=C. Shared by the importer and the editor, so a pack exported and imported lands in the folder it was made in.
+PACK_MAX_FOLDER=64
+pack_folder_name() {
+  local folder=${1,,}
+  folder=${folder//+([^a-z0-9._-])/-}
+  folder=${folder##+([.-])}
+  folder=${folder:0:PACK_MAX_FOLDER}
+  folder=${folder%%+([.-])}
+  pack_name_ok "$folder" || return 1
+  printf '%s\n' "$folder"
+}
 
 # pack_dir <name>: where the pack of that folder name lives.
 pack_dir() { printf '%s\n' "${XDG_CONFIG_HOME:-$HOME/.config}/omahop/packs/$1"; }
