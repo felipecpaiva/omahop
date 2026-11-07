@@ -46,8 +46,7 @@ for _, path in ipairs(C.order) do
   local rule = C.spec[section][key]
   local s = { id = path, section = section, key = key, type = kind(rule), default = rule.default, label = rule.label, help = rule.help,
     unit = rule.unit, min = rule.min, max = rule.max, values = rule.values, names = rule.names, reload = rule.reload or false, hidden = rule.hidden or false,
-    overridable = C.overridable(rule), choices = rule.choices }
-    unit = rule.unit, min = rule.min, max = rule.max, values = rule.values, names = rule.names, reload = rule.reload or false, hidden = rule.hidden or false, editor = rule.editor, editor_label = rule.editor_label }
+    overridable = C.overridable(rule), choices = rule.choices, editor = rule.editor, editor_label = rule.editor_label }
   local g = by_id[rule.group]
   g.settings[#g.settings + 1] = s
 end

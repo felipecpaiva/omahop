@@ -626,11 +626,11 @@ function M.on_tab(delta, list)
     return
   end
   if M.swipe then M.swipe:stop() end -- a swipe whose finish never came must not hold this keyboard session open
-  M.open_session(now, delta, profile)
+  M.open_session(now, delta, list)
 end
 
 -- Start a session on the list for the focused workspace (shared by the keyboard and the swipe). Returns false when there is nothing to switch to.
-function M.open_session(now, delta, profile)
+function M.open_session(now, delta, list)
   M.entries = M.build_entries()
   local focused = hl.get_active_window()
   if list == "same_app" then M.entries = M.same_app(M.entries, focused) end
