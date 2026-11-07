@@ -89,7 +89,8 @@ Design answer: `thumbnails = live | snapshot | off`. Default decided after spike
 overlay opens (or only the selected card live), which bounds the cost.
 
 Icons: `DesktopEntries.heuristicLookup` or `byId`, then `.icon`, then `Quickshell.iconPath(icon)`. Call it without the
-second argument (`true` returned empty here). Touch `ToplevelManager` and `DesktopEntries` early; they are lazy.
+second argument (`true` returned empty here). Since batch 15 omahop indexes the icon folders itself (`tools/icon-index.sh`, `IconResolve.js`);
+since v1.3 a hand-made icon pack (`icon_pack`, `tools/pack-index.sh`) is a layer in front of that index, see `icon-packs.md`. Touch `ToplevelManager` and `DesktopEntries` early; they are lazy.
 
 ## Hover previews
 

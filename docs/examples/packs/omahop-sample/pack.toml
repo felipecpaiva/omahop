@@ -1,0 +1,5 @@
+# A tiny sample icon pack for omahop, made for the docs and tests. Copy the folder to ~/.config/omahop/packs/omahop-sample/
+name = "omahop sample"
+author = "omahop contributors"
+license = "CC0-1.0"
+description = "Two plain shapes that show the format: a green circle for firefox and a blue square for kitty."

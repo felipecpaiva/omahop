@@ -84,6 +84,12 @@ Automated checks (`tests/run-all.sh`) cover logic and the keyboard path with a v
 - [ ] `modifier = "ctrl"`, reload: Ctrl+Tab opens the list on a floating workspace, release picks, Ctrl+letters type into the search; a browser on a tiling workspace still switches tabs with Ctrl+Tab and Ctrl+Shift+Tab goes back (checks the `CTRL SHIFT` pass-back).
 - [ ] Ctrl: start a region screenshot (the region picker enables its own Ctrl+Tab while it is open): its Ctrl+Tab still works, or note the clash.
 - [ ] Settings window: "Key to hold" shows Alt, Super and Ctrl with the warnings, a change offers the Hyprland reload. A bad value in config.toml (`modifier = "hyper"`) gives Alt and a log line.
+## v1.3 (icon packs, step 1)
+
+- [ ] Copy `docs/examples/packs/omahop-sample` to `~/.config/omahop/packs/`, set Icon pack to `omahop-sample` in the settings window (no restart): with kitty and firefox open, Alt+Tab shows the blue square for kitty and the green circle for firefox, in the list, the cards and the peek strip. Other apps keep their icons.
+- [ ] Icon pack empty again: kitty and firefox show their usual icons at once.
+- [ ] Delete `license` from the sample's pack.toml, set the pack again: the usual icons show and the shell log has a line `omahop icon pack omahop-sample: pack not used: pack.toml needs license`.
+- [ ] Icon pack `../x` or a name that does not exist: usual icons, one note in the log, nothing else happens.
 
 ## v1.1b (keep the list open while searching)
 
