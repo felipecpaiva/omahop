@@ -20,6 +20,8 @@ C.spec = {
       help = "While the list is up, typing letters filters it (hold Alt, press Tab, then type). Letters are only taken while Alt is held, and never replace a bind of your own." },
     search_fuzzy = { default = true, group = "general", label = "Fuzzy search",
       help = "Also match initials (gc finds Google Chrome) and letters in order inside a word (chrm finds chrome). These matches come after the plain ones." },
+    search_linger_seconds = { default = 0, min = 0, max = 60, group = "general", label = "Keep the list open after typing", unit = "s",
+      help = "0 (the default) keeps the usual way: releasing Alt picks. From 1 to 60: once you have typed a search, releasing Alt no longer picks. The list stays open this many seconds after your last key and takes the keyboard, so any character can be typed. Return picks, Escape clears the search and then closes, a click outside the list closes it, and when the time runs out it closes without picking." },
     style = { default = "list", values = { "list", "cards" }, group = "look", label = "Style",
       names = { list = "List", cards = "Cards with thumbnails" },
       help = "The list is plain and light. Cards show a picture of each window." },
@@ -87,7 +89,7 @@ C.groups = {
   { id = "rules", title = "App rules" },
   { id = "shortcuts", title = "Shortcuts" },
 }
-C.order = { "top.takeover", "top.scope", "top.search", "top.search_fuzzy", "windows.workspaces", "windows.monitors", "windows.minimized", "windows.specials", "windows.ignore",
+C.order = { "top.takeover", "top.scope", "top.search", "top.search_fuzzy", "top.search_linger_seconds", "windows.workspaces", "windows.monitors", "windows.minimized", "windows.specials", "windows.ignore",
   "top.style", "top.thumbnails", "top.thumbnail_exclude", "top.reveal_delay_ms", "top.border", "top.icon_theme", "top.actions", "keys.repeat_delay_ms", "keys.repeat_ms", "top.peek", "top.peek_position",
   "windows.ignore_titles", "windows.first", "top.passthrough_fullscreen", "top.passthrough", "top.same_app_key", "top.hints", "top.hint_keys" }
 

@@ -46,6 +46,19 @@
       "reload": false,
       "section": "top",
       "type": "bool"
+    }, {
+      "default": 0,
+      "help": "0 (the default) keeps the usual way: releasing Alt picks. From 1 to 60: once you have typed a search, releasing Alt no longer picks. The list stays open this many seconds after your last key and takes the keyboard, so any character can be typed. Return picks, Escape clears the search and then closes, a click outside the list closes it, and when the time runs out it closes without picking.",
+      "hidden": false,
+      "id": "top.search_linger_seconds",
+      "key": "search_linger_seconds",
+      "label": "Keep the list open after typing",
+      "max": 60,
+      "min": 0,
+      "reload": false,
+      "section": "top",
+      "type": "int",
+      "unit": "s"
     }],
     "title": "General"
   }, {

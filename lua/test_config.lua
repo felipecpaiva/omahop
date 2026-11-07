@@ -43,6 +43,13 @@ assert(c2.scope == "floating" and c2.style == "list" and c2.reveal_delay_ms == 1
 assert(c2.windows.monitors == "active" and c2.keys.repeat_ms == 40, "bad nested values use defaults")
 assert(#p2 == 5, "five problems reported, got " .. #p2)
 
+-- search_linger_seconds: 0 is off (the default), 1 to 60 is on; anything else falls back to 0
+assert(d.search_linger_seconds == 0, "linger off by default")
+assert(C.merge({ top = { search_linger_seconds = 1 } }).search_linger_seconds == 1 and C.merge({ top = { search_linger_seconds = 60 } }).search_linger_seconds == 60, "1 and 60 accepted")
+local lc_, lp_ = C.merge({ top = { search_linger_seconds = 61 } })
+assert(lc_.search_linger_seconds == 0 and #lp_ == 1, "61 falls back to 0 and is reported")
+assert(C.merge({ top = { search_linger_seconds = -1 } }).search_linger_seconds == 0 and C.merge({ top = { search_linger_seconds = "5" } }).search_linger_seconds == 0, "negative and text fall back")
+
 -- defaults are not shared with the merged copy
 local c3 = C.merge(nil)
 c3.windows.workspaces = "all"
