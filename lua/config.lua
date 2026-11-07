@@ -10,9 +10,13 @@ C.schema = 1
 -- One table describes every setting: default, allowed values, and the text the settings panel shows (label, help, names for each value, unit).
 -- The panel reads a generated copy of this table (spec.json, made by tools/gen-spec.lua, and run-all fails if the committed file drifts), so a new
 -- setting is added here once. `reload = true` marks a setting that needs a Hyprland reload to apply; `hidden = true` keeps an unfinished setting out of the panel.
+-- A profile ([profiles.<name>] tables, see C.resolve) may override any setting except those marked reload, hidden or `base_only` (C.overridable).
+-- `choices = "profiles"` marks a choice whose values are the profile names in the file, not a fixed list.
 C.spec = {
   top = {
     schema = { default = C.schema, hidden = true },
+    profile = { default = "", group = "general", base_only = true, choices = "profiles", names = { [""] = "None" }, label = "Profile",
+      help = "A named set of settings that replaces some of the ones below, for example a [profiles.work] table in ~/.config/omahop/config.toml with style = \"cards\". None uses the settings below as they are. Applies to the next Alt+Tab. A row the profile changes says so. Write a profile's values in the file (see docs/settings.md); Take over, Key to hold, the same-app shortcut and browser tabs are never changed by a profile." },
     takeover = { default = true, group = "general", reload = true, label = "Take over Alt+Tab",
       help = "Turn off to leave Alt+Tab alone, for example if you set your own Alt+Tab bind. Applies after a Hyprland reload." },
     modifier = { default = Modifier.default, values = Modifier.names, names = Modifier.labels(), group = "general", reload = true, label = "Key to hold",
@@ -48,9 +52,9 @@ C.spec = {
       help = "When the focused window is fullscreen (a game, a remote desktop, a virtual machine), Alt+Tab is left to it and works as Omarchy has it." },
     passthrough = { default = "", group = "rules", label = "Step aside for these apps",
       help = "Window classes, comma separated, for which Alt+Tab is always left alone, whatever their state." },
-    browser_tabs = { default = false, group = "tabs", label = "Search browser tabs",
+    browser_tabs = { default = false, group = "tabs", base_only = true, label = "Search browser tabs",
       help = "Off by default. When on, a search also finds the tabs of your browser windows, not only the tab each window shows, and Return opens that tab. Needs the omahop-tabs browser extension and its helper. Private: tab titles and addresses stay on this computer in a temporary folder that is emptied when you log out or turn this off; omahop never logs them." },
-    browser_tabs_ignore = { default = "", group = "tabs", label = "Never list tabs from these sites",
+    browser_tabs_ignore = { default = "", group = "tabs", base_only = true, label = "Never list tabs from these sites",
       help = "Site names, comma separated, for example: bank.example.com, mail.example.org. A name also covers its subdomains; * and ? are wildcards that must match the whole site name (*.corp.example). Empty (the default) hides nothing. Those tabs are never written by the helper and never shown." },
     same_app_key = { default = "ALT + GRAVE", group = "shortcuts", reload = true, label = "Same-app shortcut",
       help = "A second shortcut that lists only the windows of the app you are in, like Cmd+backtick on a Mac. It must start with the key to hold (for example ALT + GRAVE, or CTRL + GRAVE when that key is Ctrl). Leave it empty to turn it off. Applies after a Hyprland reload; a chord you already use is never taken." },
@@ -102,7 +106,7 @@ C.groups = {
   { id = "shortcuts", title = "Shortcuts" },
   { id = "tabs", title = "Browser tabs" },
 }
-C.order = { "top.takeover", "top.modifier", "top.scope", "top.search", "top.search_fuzzy", "top.search_linger_seconds", "windows.workspaces", "windows.monitors", "windows.minimized", "windows.specials", "windows.ignore",
+C.order = { "top.profile", "top.takeover", "top.modifier", "top.scope", "top.search", "top.search_fuzzy", "top.search_linger_seconds", "windows.workspaces", "windows.monitors", "windows.minimized", "windows.specials", "windows.ignore",
   "top.style", "top.thumbnails", "top.thumbnail_exclude", "top.reveal_delay_ms", "top.border", "top.icon_theme", "top.icon_pack", "top.actions", "keys.repeat_delay_ms", "keys.repeat_ms", "top.peek", "top.peek_position",
   "windows.ignore_titles", "windows.first", "top.passthrough_fullscreen", "top.passthrough", "top.same_app_key", "top.hints", "top.hint_keys", "top.action_keys",
   "top.browser_tabs", "top.browser_tabs_ignore" }
@@ -139,14 +143,19 @@ local function strip_comment(line)
   return line
 end
 
+-- A table name: words of letters, digits and underscores joined by single dots (windows, profiles.work, profiles.work.windows).
+function C.section_name_ok(name)
+  return name:match("^[%w_]+$") ~= nil or (name:match("^[%w_][%w_%.]*[%w_]$") ~= nil and not name:find("..", 1, true))
+end
+
 -- Parse text into { top = {...}, windows = {...}, ... } and a list of unreadable lines (never raises).
 function C.parse(text)
   local t, bad, section = { top = {} }, {}, "top"
   for line in (text or ""):gmatch("[^\r\n]+") do
     local l = strip_comment(line):gsub("^%s+", ""):gsub("%s+$", "")
     if l ~= "" and l:sub(1, 1) ~= "#" then
-      local name = l:match("^%[([%w_]+)%]$")
-      if name then
+      local name = l:match("^%[([%w_%.]+)%]$")
+      if name and C.section_name_ok(name) then
         section = name
         t[section] = t[section] or {}
       else
@@ -181,6 +190,66 @@ function C.merge(parsed)
   return cfg, problems
 end
 
+-- ---- profiles ----
+local PROFILES = "profiles"
+
+-- Whether a profile may set this setting: not the ones read only at load (reload), not hidden ones, not the ones kept in the base on purpose.
+function C.overridable(rule)
+  return not (rule.reload or rule.hidden or rule.base_only)
+end
+
+-- The names of the profiles in a parsed file ([profiles.<name>] or [profiles.<name>.<section>]), sorted.
+function C.profile_names(parsed)
+  local seen, names = {}, {}
+  for section in pairs(parsed or {}) do
+    local name = section:match("^" .. PROFILES .. "%.([%w_]+)")
+    if name and not seen[name] then seen[name] = true; names[#names + 1] = name end
+  end
+  table.sort(names)
+  return names
+end
+
+-- The values a profile sets for one spec section ("top" is the profile's own table), or nil.
+local function profile_bag(parsed, name, section)
+  local base = PROFILES .. "." .. name
+  return parsed[section == "top" and base or base .. "." .. section]
+end
+
+-- Lay the profile named by cfg.profile over a merged cfg: a valid overridable value wins, a bad or non-overridable one is reported and the
+-- base value stays. An unknown name is reported and the base is used (cfg.profile becomes ""). Mirrored by ConfigIO.resolve (parity test).
+function C.apply_profile(cfg, parsed, problems)
+  local name = cfg.profile
+  if name == "" then return cfg end
+  if not contains(C.profile_names(parsed), name) then
+    problems[#problems + 1] = "profile = " .. name .. ": no such profile, using the base settings"
+    cfg.profile = ""
+    return cfg
+  end
+  for section, rules in pairs(C.spec) do
+    local target = section == "top" and cfg or cfg[section]
+    local prefix = PROFILES .. "." .. name .. "." .. (section == "top" and "" or section .. ".")
+    for key, v in pairs(profile_bag(parsed, name, section) or {}) do
+      local rule = rules[key]
+      if rule and not C.overridable(rule) then
+        problems[#problems + 1] = prefix .. key .. ": not overridable in a profile, ignored"
+      elseif rule and valid(rule, v) then
+        target[key] = v
+      elseif rule then
+        problems[#problems + 1] = prefix .. key .. " = " .. tostring(v)
+      end
+    end
+  end
+  return cfg
+end
+
+-- The settings in use: the base merged over the defaults, then the active profile over that. Problems sorted.
+function C.resolve(parsed)
+  local cfg, problems = C.merge(parsed)
+  C.apply_profile(cfg, parsed or {}, problems)
+  table.sort(problems)
+  return cfg, problems
+end
+
 -- The ignore setting as a set of lower-case window classes.
 function C.ignore_set(cfg)
   local set = {}
@@ -198,7 +267,7 @@ function C.load(path)
   local text = f:read("a")
   f:close()
   local parsed, bad = C.parse(text)
-  local cfg, problems = C.merge(parsed)
+  local cfg, problems = C.resolve(parsed)
   for _, line in ipairs(bad) do problems[#problems + 1] = "unreadable line: " .. line end
   return cfg, problems
 end

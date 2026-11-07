@@ -82,6 +82,69 @@ local lc, lp = C.load(path)
 os.remove(path)
 assert(lc.scope == "all" and lc.windows.monitors == "all" and #lp == 1, "file loads and reports an unreadable line")
 
+-- profiles: dotted table names parse, the named profile is laid over the base, bad and non-overridable values keep the base and are reported
+local pt, pbad = C.parse([[
+profile = "work"
+style = "list"
+takeover = true
+[windows]
+ignore = "steam"
+monitors = "all"
+[profiles.work]
+style = "cards"
+thumbnails = "sometimes"
+takeover = false
+modifier = "ctrl"
+browser_tabs = true
+unknown_key = 1
+[profiles.work.windows]
+ignore = "slack, discord"
+[profiles.work.keys]
+repeat_ms = 20
+[profiles.gaming]
+passthrough_fullscreen = true
+[profiles..bad]
+[profiles.bad.]
+]])
+assert(pt["profiles.work"].style == "cards" and pt["profiles.work.windows"].ignore == "slack, discord", "dotted tables parse")
+assert(#pbad == 2, "empty segments are unreadable headers, got " .. #pbad)
+assert(table.concat(C.profile_names(pt), ",") == "gaming,work", "profile names, sorted")
+local pc, pp = C.resolve(pt)
+assert(pc.profile == "work" and pc.style == "cards", "the profile wins over the base")
+assert(pc.windows.ignore == "slack, discord" and pc.windows.monitors == "all", "nested profile section overrides one key, the base keeps the rest")
+assert(pc.keys.repeat_ms == 20 and pc.keys.repeat_delay_ms == 250, "keys section overridable")
+assert(pc.thumbnails == "snapshot", "a bad profile value keeps the base (here the default)")
+assert(pc.takeover == true and pc.modifier == "alt" and pc.browser_tabs == false, "reload and base_only settings are never taken from a profile")
+assert(pc.passthrough_fullscreen == false, "another profile's values are not used")
+local want = { "profiles.work.browser_tabs: not overridable in a profile, ignored", "profiles.work.modifier: not overridable in a profile, ignored",
+  "profiles.work.takeover: not overridable in a profile, ignored", "profiles.work.thumbnails = sometimes" }
+assert(table.concat(pp, "|") == table.concat(want, "|"), "problems: " .. table.concat(pp, "|"))
+-- a bad profile value falls back to the BASE value, not the default
+local fb = C.resolve(C.parse('profile = "p"\nreveal_delay_ms = 0\n[profiles.p]\nreveal_delay_ms = 5000\n'))
+assert(fb.reveal_delay_ms == 0, "bad profile value keeps the base value")
+-- no profile chosen, an unknown profile, a profile that cannot choose another profile
+local base_only = C.resolve(C.parse('style = "cards"\n[profiles.work]\nstyle = "list"\n'))
+assert(base_only.profile == "" and base_only.style == "cards", "no profile chosen: the base")
+local uc, up = C.resolve(C.parse('profile = "ghost"\nstyle = "cards"\n[profiles.work]\nstyle = "list"\n'))
+assert(uc.profile == "" and uc.style == "cards" and up[1] == "profile = ghost: no such profile, using the base settings", "unknown profile is reported, base used")
+local cc, cp = C.resolve(C.parse('profile = "a"\n[profiles.a]\nprofile = "b"\nstyle = "cards"\n[profiles.b]\nstyle = "list"\n'))
+assert(cc.profile == "a" and cc.style == "cards" and cp[1] == "profiles.a.profile: not overridable in a profile, ignored", "no profile chains")
+-- C.merge is unchanged: it ignores profiles
+assert(C.merge(pt).style == "list", "merge alone is the base")
+-- overridable: reload, hidden and base_only rules are out, everything else is in
+for section, rules in pairs(C.spec) do
+  for key, rule in pairs(rules) do
+    assert(C.overridable(rule) == not (rule.reload or rule.hidden or rule.base_only), "overridable rule for " .. section .. "." .. key)
+  end
+end
+assert(C.overridable(C.spec.top.style) and C.overridable(C.spec.windows.ignore) and not C.overridable(C.spec.top.same_app_key), "examples")
+-- a profile file round trip through load
+local ppath = os.tmpname()
+local pf = assert(io.open(ppath, "w")); pf:write('profile = "work"\n[profiles.work]\nstyle = "cards"\n'); pf:close()
+local plc = C.load(ppath)
+os.remove(ppath)
+assert(plc.style == "cards", "load applies the profile")
+
 -- the panel order lists every setting exactly once (schema is not shown), and every setting names a known group
 local seen = {}
 for _, path in ipairs(C.order) do

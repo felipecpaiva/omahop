@@ -179,6 +179,15 @@ M.session:key(clock, "cancel"); M.apply({})
 cf = io.open(cfgpath, "w"); cf:write('[windows]\nworkspaces = "current"\n'); cf:close()
 reset(); binds["ALT + TAB"]()
 assert(M.cfg.windows.workspaces == "current" and not M.session:is_open(), "second edit applied (one window left in view: nothing to switch to)")
+-- a profile: choosing it in the file applies to the next Alt+Tab, with no reload; takeover and modifier stay pinned
+cf = io.open(cfgpath, "w"); cf:write('profile = "wide"\n[windows]\nworkspaces = "current"\n[profiles.wide]\nstyle = "cards"\nmodifier = "ctrl"\n[profiles.wide.windows]\nworkspaces = "all"\n'); cf:close()
+reset(); binds["ALT + TAB"]()
+assert(M.cfg.profile == "wide" and M.cfg.style == "cards" and M.cfg.windows.workspaces == "all" and #M.entries == 2, "profile laid over the base")
+assert(M.cfg.modifier == "alt" and M.mod.bind == "ALT", "a profile never changes the modifier")
+M.session:key(clock, "cancel"); M.apply({})
+cf = io.open(cfgpath, "w"); cf:write('profile = ""\n[windows]\nworkspaces = "current"\n[profiles.wide]\nstyle = "cards"\n'); cf:close()
+reset(); binds["ALT + TAB"]()
+assert(M.cfg.profile == "" and M.cfg.style == "list" and not M.session:is_open(), "back to no profile: the base again")
 
 -- takeover off: no binds at all
 for k in pairs(binds) do binds[k] = nil end

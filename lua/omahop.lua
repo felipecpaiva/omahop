@@ -495,7 +495,7 @@ local function tick(gen)
   if M.session:is_open() then hl.timer(function() tick(gen) end, { type = "oneshot", timeout = M.tick_ms }) end
 end
 
--- The windows of the focused window's app (the same-app profile). Without a focused window the list is unchanged.
+-- The windows of the focused window's app (the same-app list). Without a focused window the list is unchanged.
 function M.same_app(entries, focused)
   if not focused or not focused.class then return entries end
   local want, out = tostring(focused.class):lower(), {}
@@ -584,7 +584,7 @@ function M.reload_config()
   if text == M.config_text then return end
   M.config_text = text
   local parsed, bad = Config.parse(text)
-  local cfg, problems = Config.merge(parsed)
+  local cfg, problems = Config.resolve(parsed) -- the base settings with the chosen profile laid over them
   for _, line in ipairs(bad) do problems[#problems + 1] = "unreadable line: " .. line end
   for _, p in ipairs(problems) do log("config: " .. p) end
   M.cfg = cfg
@@ -598,7 +598,8 @@ function M.reload_config()
   M.session = Session.new(cfg)
 end
 
-function M.on_tab(delta, profile)
+-- `list` is "same_app" for the same-app shortcut, nil for the main one (not to be confused with the `profile` setting).
+function M.on_tab(delta, list)
   if not (M.session and M.session:is_open()) then
     M.reload_config()
     -- Fullscreen apps and listed apps keep Alt+Tab to themselves: stock behaviour, decided at the press before anything opens.
@@ -606,7 +607,7 @@ function M.on_tab(delta, profile)
     if Rules.passthrough(aw and { class = aw.class, fullscreen = aw.fullscreen } or nil, M.cfg.passthrough_fullscreen, Rules.set(M.cfg.passthrough)) then return M.stock(delta) end
   end
   if not Scope.active(M.cfg.scope, M.workspace_is_floating()) then
-    if profile == "same_app" then return M.pass_chord(M.same_app_chord) end -- the chord has no stock meaning: give the key back to the app
+    if list == "same_app" then return M.pass_chord(M.same_app_chord) end -- the chord has no stock meaning: give the key back to the app
     return M.stock(delta)
   end
   inject()
@@ -617,7 +618,7 @@ function M.on_tab(delta, profile)
   end
   M.entries = M.build_entries()
   local focused = hl.get_active_window()
-  if profile == "same_app" then M.entries = M.same_app(M.entries, focused) end
+  if list == "same_app" then M.entries = M.same_app(M.entries, focused) end
   M.all_entries, M.query, M.names, M.tabs_loaded = M.entries, "", nil, false
   local first = Mru.first_pick(M.entries, focused and focused.address, delta)
   if #M.entries < 2 then M.entries = {}; return end -- nothing to switch to

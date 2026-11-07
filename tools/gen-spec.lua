@@ -33,7 +33,7 @@ end
 local function kind(rule)
   if type(rule.default) == "boolean" then return "bool" end
   if type(rule.default) == "number" then return "int" end
-  return rule.values and "enum" or "text"
+  return (rule.values or rule.choices) and "enum" or "text"
 end
 
 local groups = {}
@@ -45,7 +45,8 @@ for _, path in ipairs(C.order) do
   local section, key = path:match("^(%w+)%.([%w_]+)$")
   local rule = C.spec[section][key]
   local s = { id = path, section = section, key = key, type = kind(rule), default = rule.default, label = rule.label, help = rule.help,
-    unit = rule.unit, min = rule.min, max = rule.max, values = rule.values, names = rule.names, reload = rule.reload or false, hidden = rule.hidden or false }
+    unit = rule.unit, min = rule.min, max = rule.max, values = rule.values, names = rule.names, reload = rule.reload or false, hidden = rule.hidden or false,
+    overridable = C.overridable(rule), choices = rule.choices }
   local g = by_id[rule.group]
   g.settings[#g.settings + 1] = s
 end

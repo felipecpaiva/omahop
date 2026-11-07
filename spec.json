@@ -2,12 +2,28 @@
   "groups": [{
     "id": "general",
     "settings": [{
+      "choices": "profiles",
+      "default": "",
+      "help": "A named set of settings that replaces some of the ones below, for example a [profiles.work] table in ~/.config/omahop/config.toml with style = \"cards\". None uses the settings below as they are. Applies to the next Alt+Tab. A row the profile changes says so. Write a profile's values in the file (see docs/settings.md); Take over, Key to hold, the same-app shortcut and browser tabs are never changed by a profile.",
+      "hidden": false,
+      "id": "top.profile",
+      "key": "profile",
+      "label": "Profile",
+      "names": {
+        "": "None"
+      },
+      "overridable": false,
+      "reload": false,
+      "section": "top",
+      "type": "enum"
+    }, {
       "default": true,
       "help": "Turn off to leave Alt+Tab alone, for example if you set your own Alt+Tab bind. Applies after a Hyprland reload.",
       "hidden": false,
       "id": "top.takeover",
       "key": "takeover",
       "label": "Take over Alt+Tab",
+      "overridable": false,
       "reload": true,
       "section": "top",
       "type": "bool"
@@ -22,6 +38,7 @@
         "alt": "Alt",
         "ctrl": "Ctrl"
       },
+      "overridable": false,
       "reload": true,
       "section": "top",
       "type": "enum",
@@ -37,6 +54,7 @@
         "all": "All workspaces",
         "floating": "Floating workspaces only"
       },
+      "overridable": true,
       "reload": false,
       "section": "top",
       "type": "enum",
@@ -48,6 +66,7 @@
       "id": "top.search",
       "key": "search",
       "label": "Type to search",
+      "overridable": true,
       "reload": false,
       "section": "top",
       "type": "bool"
@@ -58,6 +77,7 @@
       "id": "top.search_fuzzy",
       "key": "search_fuzzy",
       "label": "Fuzzy search",
+      "overridable": true,
       "reload": false,
       "section": "top",
       "type": "bool"
@@ -70,6 +90,7 @@
       "label": "Keep the list open after typing",
       "max": 60,
       "min": 0,
+      "overridable": true,
       "reload": false,
       "section": "top",
       "type": "int",
@@ -89,6 +110,7 @@
         "current": "This workspace",
         "floating": "Floating workspaces"
       },
+      "overridable": true,
       "reload": false,
       "section": "windows",
       "type": "enum",
@@ -103,6 +125,7 @@
         "active": "The monitor with focus",
         "all": "All monitors"
       },
+      "overridable": true,
       "reload": false,
       "section": "windows",
       "type": "enum",
@@ -117,6 +140,7 @@
         "back": "Listed last",
         "hide": "Not listed"
       },
+      "overridable": true,
       "reload": false,
       "section": "windows",
       "type": "enum",
@@ -131,6 +155,7 @@
         "hide": "Not listed",
         "show": "Listed"
       },
+      "overridable": true,
       "reload": false,
       "section": "windows",
       "type": "enum",
@@ -142,6 +167,7 @@
       "id": "windows.ignore",
       "key": "ignore",
       "label": "Never list these apps",
+      "overridable": true,
       "reload": false,
       "section": "windows",
       "type": "text"
@@ -160,6 +186,7 @@
         "cards": "Cards with thumbnails",
         "list": "List"
       },
+      "overridable": true,
       "reload": false,
       "section": "top",
       "type": "enum",
@@ -176,6 +203,7 @@
         "off": "Off (icons only)",
         "snapshot": "Snapshot when it opens"
       },
+      "overridable": true,
       "reload": false,
       "section": "top",
       "type": "enum",
@@ -187,6 +215,7 @@
       "id": "top.thumbnail_exclude",
       "key": "thumbnail_exclude",
       "label": "Never take a picture of these apps",
+      "overridable": true,
       "reload": false,
       "section": "top",
       "type": "text"
@@ -199,6 +228,7 @@
       "label": "Delay before the list shows",
       "max": 1000,
       "min": 0,
+      "overridable": true,
       "reload": false,
       "section": "top",
       "type": "int",
@@ -215,6 +245,7 @@
         "off": "Never",
         "on": "Always"
       },
+      "overridable": true,
       "reload": false,
       "section": "top",
       "type": "enum",
@@ -226,6 +257,7 @@
       "id": "top.icon_theme",
       "key": "icon_theme",
       "label": "Icon theme",
+      "overridable": true,
       "reload": false,
       "section": "top",
       "type": "text"
@@ -236,6 +268,7 @@
       "id": "top.icon_pack",
       "key": "icon_pack",
       "label": "Icon pack",
+      "overridable": true,
       "reload": false,
       "section": "top",
       "type": "text"
@@ -246,6 +279,7 @@
       "id": "top.actions",
       "key": "actions",
       "label": "Close and minimize buttons",
+      "overridable": true,
       "reload": false,
       "section": "top",
       "type": "bool"
@@ -261,6 +295,7 @@
       "label": "Hold Tab: wait before repeating",
       "max": 2000,
       "min": 50,
+      "overridable": true,
       "reload": false,
       "section": "keys",
       "type": "int",
@@ -273,6 +308,7 @@
       "label": "Hold Tab: repeat every",
       "max": 1000,
       "min": 10,
+      "overridable": true,
       "reload": false,
       "section": "keys",
       "type": "int",
@@ -293,6 +329,7 @@
         "edge": "Show when the pointer touches the screen edge",
         "off": "Off"
       },
+      "overridable": true,
       "reload": false,
       "section": "top",
       "type": "enum",
@@ -311,6 +348,7 @@
         "right": "Right",
         "top": "Top"
       },
+      "overridable": true,
       "reload": false,
       "section": "top",
       "type": "enum",
@@ -326,6 +364,7 @@
       "id": "windows.ignore_titles",
       "key": "ignore_titles",
       "label": "Never list windows whose title contains",
+      "overridable": true,
       "reload": false,
       "section": "windows",
       "type": "text"
@@ -336,6 +375,7 @@
       "id": "windows.first",
       "key": "first",
       "label": "List these apps first",
+      "overridable": true,
       "reload": false,
       "section": "windows",
       "type": "text"
@@ -346,6 +386,7 @@
       "id": "top.passthrough_fullscreen",
       "key": "passthrough_fullscreen",
       "label": "Step aside for fullscreen apps",
+      "overridable": true,
       "reload": false,
       "section": "top",
       "type": "bool"
@@ -356,6 +397,7 @@
       "id": "top.passthrough",
       "key": "passthrough",
       "label": "Step aside for these apps",
+      "overridable": true,
       "reload": false,
       "section": "top",
       "type": "text"
@@ -370,6 +412,7 @@
       "id": "top.same_app_key",
       "key": "same_app_key",
       "label": "Same-app shortcut",
+      "overridable": false,
       "reload": true,
       "section": "top",
       "type": "text"
@@ -385,6 +428,7 @@
         "numbers": "Number keys (1 to 9, with the key held)",
         "off": "Off"
       },
+      "overridable": true,
       "reload": false,
       "section": "top",
       "type": "enum",
@@ -396,6 +440,7 @@
       "id": "top.hint_keys",
       "key": "hint_keys",
       "label": "App letters",
+      "overridable": true,
       "reload": false,
       "section": "top",
       "type": "text"
@@ -406,6 +451,7 @@
       "id": "top.action_keys",
       "key": "action_keys",
       "label": "Quit and minimize keys",
+      "overridable": true,
       "reload": false,
       "section": "top",
       "type": "text"
@@ -420,6 +466,7 @@
       "id": "top.browser_tabs",
       "key": "browser_tabs",
       "label": "Search browser tabs",
+      "overridable": false,
       "reload": false,
       "section": "top",
       "type": "bool"
@@ -430,6 +477,7 @@
       "id": "top.browser_tabs_ignore",
       "key": "browser_tabs_ignore",
       "label": "Never list tabs from these sites",
+      "overridable": false,
       "reload": false,
       "section": "top",
       "type": "text"
