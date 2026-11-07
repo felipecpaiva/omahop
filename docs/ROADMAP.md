@@ -15,6 +15,7 @@ Every row must meet [engineering-standards.md](engineering-standards.md): flexib
 | v0.3 (RELEASED 2026-11-06, tag v0.3.0; plan in `v0.3-plan.md`) | Pointer, quick actions, peek strip | Phase 4 hover previews (needs D8), minimized and special windows (B4), quick actions close and minimize (B6) |
 | v0.4 (RELEASED 2026-11-07, tag v0.4.0; plan in `v0.4-plan.md`) | Power features | Profiles, letter hints, per-app rules, ignore-when-fullscreen (BetterCmdTab ideas, see its reference) |
 | v1.0 (RELEASED 2026-11-07, tag v1.0.0; plan in `v1.0-plan.md`) | Release polish | Requirements and privacy in the README, launch material in `docs/launch/`. submitted to the marketplace (issue 14254) |
+| v1.1 (RELEASED 2026-11-07, tag v1.1.0; plan in `v1.1-plan.md`) | Search and icons | accent and fuzzy search, `icon_theme`, `thumbnail_exclude` |
 
 Rule: v0.1 stays small on purpose. A feature not in the v0.1 row waits, but the settings model (`settings.md`) and the
 Lua/QML contract are built so that later features add values and views without rewriting the key handling.
