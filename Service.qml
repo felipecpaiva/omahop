@@ -8,6 +8,7 @@ import qs.Ui
 import "State.js" as State
 import "Paths.js" as Paths
 import "IconResolve.js" as IconResolve
+import "AudioMarker.js" as AudioMarker
 
 // omahop overlay. Watches the state file that lua/omahop.lua writes and draws the switcher while a session is revealed.
 // It takes the pointer only over its card, and the keyboard only when Lua says so (grab=1: setting search_linger_seconds, a search typed);
@@ -44,9 +45,37 @@ Item {
   }
   Connections {
     target: root
-    function onStChanged() { if (root.st.open && !root.wasOpen) { root.refreshBorder(); Hyprland.refreshToplevels() }; root.wasOpen = root.st.open }
+    function onStChanged() {
+      if (root.st.open && !root.wasOpen) { root.refreshBorder(); Hyprland.refreshToplevels() }
+      if (root.st.open && root.st.revealed && root.audioSample === null) root.sampleAudio() // once per shown list; a quick tap shows none and samples nothing
+      if (!root.st.open) root.audioSample = null // a closed list forgets the sample, so the next one never flashes a stale speaker
+      root.wasOpen = root.st.open
+    }
   }
   property bool wasOpen: false
+
+  // ---- audio marker (setting audio_marker, off by default, D21): one pactl sample when the list shows, nothing while it is closed or on a quick tap.
+  // The sample's text holds media titles: it is parsed in memory (AudioMarker.js keeps pids and app names only) and never logged or written.
+  readonly property bool audioMarker: configReader.value("top", "audio_marker") === true
+  property var audioSample: null
+  function sampleAudio() { if (root.audioMarker && !audioProc.running) audioProc.running = true }
+  Process {
+    id: audioProc
+    command: ["bash", Paths.fromUrl(Qt.resolvedUrl("tools/audio-sample.sh"))]
+    stdout: StdioCollector {
+      onStreamFinished: if (root.st.open && root.audioMarker) root.audioSample = AudioMarker.parseSample(text)
+    }
+  }
+  // The windows that own a playing stream, by normalized address. Re-evaluated when the sample or Hyprland's window list (pid, class) changes.
+  readonly property var audioPlaying: root.audioMarker && root.audioSample ? AudioMarker.playingAddresses(root.audioSample, root.audioWindows(), State.normalizeAddress) : ({})
+  function audioWindows() {
+    var all = Hyprland.toplevels.values, out = []
+    for (var i = 0; i < all.length; i++) {
+      var ipc = all[i].lastIpcObject || {}
+      out.push({ address: all[i].address, pid: ipc.pid, appId: ipc.class })
+    }
+    return out
+  }
 
   function apply(text) {
     var next = State.parse(text)
@@ -328,6 +357,7 @@ Item {
         resolve: root.resolve
         outline: root.outline
         actions: root.st.actions
+        playing: root.audioPlaying
         onPicked: function (index) { root.pick(index) }
         onCloseRequested: function (address) { root.closeWindow(address) }
         onMinimizeRequested: function (address) { root.minimizeWindow(address) }
@@ -347,6 +377,7 @@ Item {
         toplevelFor: root.toplevelFor
         outline: root.outline
         actions: root.st.actions
+        playing: root.audioPlaying
         onPicked: function (index) { root.pick(index) }
         onCloseRequested: function (address) { root.closeWindow(address) }
         onMinimizeRequested: function (address) { root.minimizeWindow(address) }

@@ -3,6 +3,7 @@ import Quickshell.Widgets
 import Quickshell.Wayland
 import qs.Commons
 import qs.Ui
+import "AudioMarker.js" as AudioMarker
 
 // One card of the cards style: a window thumbnail with the app icon and title under it. Pure presentation: the caller resolves icon, name and the toplevel to capture.
 Item {
@@ -17,6 +18,7 @@ Item {
   property bool minimized: false
   property bool actions: true   // show the close and minimize buttons while the pointer is over the card
   property string hint: ""      // a number or letter that jumps here (empty for none)
+  property bool playing: false  // its app is playing sound (setting audio_marker): a small speaker after the app name
   readonly property bool hovered: hover.hovered
 
   signal picked()
@@ -119,16 +121,30 @@ Item {
     Column {
       anchors.verticalCenter: parent.verticalCenter
       width: parent.width - Style.space(28)
-      Text {
+      Row {
         width: parent.width
-        textFormat: Text.PlainText
-        text: card.appName
-        color: Color.popups.text
-        font.family: Style.font.family
-        font.pixelSize: Style.font.caption
-        font.bold: true
-        elide: Text.ElideRight
-        maximumLineCount: 1
+        spacing: Style.space(4)
+        Text {
+          width: Math.min(implicitWidth, parent.width - (speaker.visible ? speaker.width + parent.spacing : 0))
+          textFormat: Text.PlainText
+          text: card.appName
+          color: Color.popups.text
+          font.family: Style.font.family
+          font.pixelSize: Style.font.caption
+          font.bold: true
+          elide: Text.ElideRight
+          maximumLineCount: 1
+        }
+        Text {
+          id: speaker
+          visible: card.playing
+          anchors.verticalCenter: parent.verticalCenter
+          textFormat: Text.PlainText
+          text: AudioMarker.GLYPH
+          color: Util.alpha(Color.popups.text, 0.8)
+          font.family: Style.font.family
+          font.pixelSize: Style.font.caption
+        }
       }
       Text {
         width: parent.width

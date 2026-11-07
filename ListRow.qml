@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell.Widgets
 import qs.Commons
 import qs.Ui
+import "AudioMarker.js" as AudioMarker
 
 // One row of the list style: app icon, app name, window title. Pure presentation: the caller resolves icon and name.
 Item {
@@ -14,6 +15,7 @@ Item {
   property bool minimized: false
   property bool actions: true   // show the close and minimize buttons while the pointer is over the row
   property string hint: ""      // a number or letter that jumps here (empty for none); shown in the place of the buttons until the pointer arrives
+  property bool playing: false  // its app is playing sound (setting audio_marker): a small speaker after the app name
   readonly property bool hovered: hover.hovered
 
   signal picked()
@@ -72,16 +74,30 @@ Item {
     anchors.rightMargin: Style.space(12) + (row.actions ? Style.space(60) : 0)
     anchors.verticalCenter: parent.verticalCenter
 
-    Text {
+    Row {
       width: parent.width
-      textFormat: Text.PlainText
-      text: row.appName
-      color: Color.popups.text
-      font.family: Style.font.family
-      font.pixelSize: Style.font.body
-      font.bold: true
-      elide: Text.ElideRight
-      maximumLineCount: 1
+      spacing: Style.space(6)
+      Text {
+        width: Math.min(implicitWidth, parent.width - (speaker.visible ? speaker.width + parent.spacing : 0))
+        textFormat: Text.PlainText
+        text: row.appName
+        color: Color.popups.text
+        font.family: Style.font.family
+        font.pixelSize: Style.font.body
+        font.bold: true
+        elide: Text.ElideRight
+        maximumLineCount: 1
+      }
+      Text {
+        id: speaker
+        visible: row.playing
+        anchors.verticalCenter: parent.verticalCenter
+        textFormat: Text.PlainText
+        text: AudioMarker.GLYPH
+        color: Util.alpha(Color.popups.text, 0.8)
+        font.family: Style.font.family
+        font.pixelSize: Style.font.body
+      }
     }
     Text {
       width: parent.width

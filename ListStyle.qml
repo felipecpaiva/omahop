@@ -11,6 +11,7 @@ BorderSurface {
   property int selected: 1
   property real screenHeight: 1080
   property bool actions: true
+  property var playing: ({})   // normalized window address -> true while its app plays sound (setting audio_marker); empty when off
 
   signal picked(int index)
   signal closeRequested(string address)
@@ -85,6 +86,7 @@ BorderSurface {
           selected: slot.isSelected
           actions: card.actions
           hint: slot.modelData.hint || ""
+          playing: card.playing[State.normalizeAddress(slot.modelData.address)] === true
           onPicked: card.picked(slot.index + 1)
           onCloseRequested: card.closeRequested(slot.modelData.address)
           onMinimizeRequested: card.minimizeRequested(slot.modelData.address)
