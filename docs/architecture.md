@@ -57,14 +57,15 @@ The settings app exposes it. Design consequences:
         |  small state file in $XDG_RUNTIME_DIR + a shell IPC call   (UNVERIFIED: exact IPC, spike S3)
         v
  Quickshell plugin  (repo root is the plugin, manifest.json at root, like omagnet)
-   - overlay: one PanelWindow per screen, WlrLayer.Overlay, WlrKeyboardFocus.None (Lua owns the keys)
+   - overlay: one PanelWindow per screen, WlrLayer.Overlay, WlrKeyboardFocus.None (Lua owns the keys); the one exception is
+     `search_linger_seconds` (D15): Exclusive while the state says grab=1, typed text sent back as set_query(seq, text)
    - cards or list view, ScreencopyView thumbnails, icons, theme from `import qs.Commons` (Color.*, Style.*)
    - hover panel (phase 4)
    - settings panel -> ~/.config/omahop/config.toml
 ```
 
-Status: the split below is decided on evidence (D5, `research/spikes.md`). Why Lua owns the keys and QML only draws: the overlay must never take keyboard focus (focus changes would change the
-window list order and fight the switch), and omagnet already proved the hold/release poll. The in-flight core PR
+Status: the split below is decided on evidence (D5, `research/spikes.md`). Why Lua owns the keys and QML only draws: the overlay must never take keyboard focus while Alt is held (focus changes would change the
+window list order and fight the switch), and omagnet already proved the hold/release poll. Exception (D15, off by default): with `search_linger_seconds` on and a search typed, the overlay holds the keyboard from the first typed letter until the list closes; Lua writes `open=0` first and focuses the picked window from a short timer, because a focus call is ignored while a layer holds the keyboard. State file keys for it: `seq`, `grab`, `linger_ms`, `linger_rev`. The in-flight core PR
 (omacom/omarchy#16548) and the marketplace plugin `omarchy-altswitch` split the work the same way (UNVERIFIED for the second).
 
 ## Window list
