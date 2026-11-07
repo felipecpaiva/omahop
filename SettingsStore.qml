@@ -6,7 +6,7 @@ import "Paths.js" as Paths
 
 // Reads spec.json (the one definition of every setting) and reads and writes ~/.config/omahop/config.toml.
 // The file text is the model: a change edits one line (ConfigIO.set), so comments and unknown keys survive every save.
-// omahop re-reads the file when the next Alt+Tab starts, so nothing needs telling; only `takeover` needs a Hyprland reload.
+// omahop re-reads the file when the next Alt+Tab starts, so nothing needs telling; only settings marked `reload` in the spec (takeover, modifier, same_app_key) need a Hyprland reload.
 Item {
   id: store
 

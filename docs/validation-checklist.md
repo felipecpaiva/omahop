@@ -75,6 +75,16 @@ Automated checks (`tests/run-all.sh`) cover logic and the keyboard path with a v
 
 - [ ] Set `icon_theme = "Papirus"` (any installed theme folder name) in the settings window or config.toml, restart the shell: the rows show that theme's icons; apps it lacks still show an icon. An empty value or a name that is not installed shows the old icons.
 
+## v1.3 (modifier)
+
+- [ ] First, in a terminal: `hyprctl eval 'return tostring(hl.is_key_down("Super_L")) .. tostring(hl.is_key_down("Control_L"))'` prints `falsefalse` (names resolve) and not `nilnil` (wrong names would never notice the release).
+- [ ] `modifier = "super"` with stock bindings, `hyprctl reload`: Super+Tab still goes to the next workspace, Alt+Tab is Omarchy's stock one, and `$XDG_RUNTIME_DIR/omahop/log` says `SUPER + TAB or SUPER + SHIFT + TAB is already used`.
+- [ ] Unbind Super+Tab and Super+Shift+Tab in `bindings.lua`, reload: Super+Tab opens the list on a floating workspace; releasing Super (left, then the right one) picks; Super+Shift+Tab starts at the end; Super+Escape cancels. Holding Alt meanwhile does not keep it open. Note which Super letters still type (most are Omarchy's and stay theirs).
+- [ ] Super on a tiling workspace: Super+Tab reaches the app (no workspace change, no list). Also check that a bare Super tap after a switch opens nothing.
+- [ ] `modifier = "ctrl"`, reload: Ctrl+Tab opens the list on a floating workspace, release picks, Ctrl+letters type into the search; a browser on a tiling workspace still switches tabs with Ctrl+Tab and Ctrl+Shift+Tab goes back (checks the `CTRL SHIFT` pass-back).
+- [ ] Ctrl: start a region screenshot (the region picker enables its own Ctrl+Tab while it is open): its Ctrl+Tab still works, or note the clash.
+- [ ] Settings window: "Key to hold" shows Alt, Super and Ctrl with the warnings, a change offers the Hyprland reload. A bad value in config.toml (`modifier = "hyper"`) gives Alt and a log line.
+
 ## v1.1b (keep the list open while searching)
 
 - [ ] Settings, "Keep the list open after typing" = 5: Alt+Tab, type two letters, release Alt: the list stays, a thin line under the search runs down; type more (a capital, an accent such as `ç`), Return picks.
