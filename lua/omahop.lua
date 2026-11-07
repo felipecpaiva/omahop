@@ -5,9 +5,12 @@
 local here = debug.getinfo(1, "S").source:match("^@(.*)/") or "."
 local function mod(name) return dofile(here .. "/" .. name .. ".lua") end
 local Config, Scope, Windows, Mru, Session, Search, Rules, Hints, Modifier, ActionKeys = mod("config"), mod("scope"), mod("windows"), mod("mru"), mod("session"), mod("search"), mod("rules"), mod("hints"), mod("modifier"), mod("action_keys")
-local Tabs = mod("tabs")
+local Tabs, Swipe = mod("tabs"), mod("swipe")
 
 local M = {}
+-- A gesture cannot be unregistered or registered twice (Hyprland refuses the second with a config error), and a reload makes a new
+-- Lua state with no gestures. So a second load in the same state (eval-based) inherits the flag; the gesture calls whatever _G.omahop is.
+M.swipe_registered = type(_G.omahop) == "table" and _G.omahop.swipe_registered == true
 _G.omahop = M
 
 M.tick_ms = 16 -- key polling interval: shorter means the modifier's release is noticed sooner (a tick costs about 8 microseconds, measured)
@@ -20,6 +23,7 @@ M.trigger_key = "TAB"
 -- user's own bind on the same chord: shortcut, none exist in the stock set; upgrade by reading the bind list if one appears.)
 M.session_keys = { DELETE = "delete", ESCAPE = "escape", RETURN = "return", LEFT = "left", RIGHT = "right", UP = "up", DOWN = "down" }
 M.mod = Modifier.get(Modifier.default) -- pinned in setup: the chords and the polled keys must stay the ones that were bound
+M.swipe_direction = "horizontal" -- hl.gesture axis for the swipe trigger: left and right (the sign of each update's delta.x picks the way)
 
 local state_dir = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/omahop"
 M.state_path = state_dir .. "/state"
@@ -370,6 +374,7 @@ end
 local function keys_down()
   local ok, tab = pcall(hl.is_key_down, "Tab")
   if not ok then tab = nil end
+  if M.swipe and M.swipe:is_active() then return { mod = true, tab = tab } end -- fingers on the touchpad hold the session, as the modifier does
   return { mod = Modifier.held(M.mod, hl.is_key_down), tab = tab }
 end
 
@@ -486,7 +491,11 @@ end
 -- Chained one-shot timers: hl.timer has no stop handle, a generation number does.
 local function tick(gen)
   if gen ~= M.gen or not M.session:is_open() then return end
-  local ok, err = pcall(function() M.apply(M.session:tick(M.now(), keys_down())) end)
+  local ok, err = pcall(function()
+    local now = M.now()
+    if M.swipe and M.swipe:expired(now) then M.swipe:stop(); M.apply(M.session:key(now, "cancel")); return end -- no finish event came: close, never pick
+    M.apply(M.session:tick(now, keys_down()))
+  end)
   if not ok then
     log("tick error: " .. tostring(err))
     M.session:key(M.now(), "cancel"); bind_session_keys(false); M.gen = M.gen + 1; M.write_state()
@@ -615,16 +624,77 @@ function M.on_tab(delta, profile)
     M.apply(M.session:step(now, delta))
     return
   end
+  if M.swipe then M.swipe:stop() end -- a swipe whose finish never came must not hold this keyboard session open
+  M.open_session(now, delta, profile)
+end
+
+-- Start a session on the list for the focused workspace (shared by the keyboard and the swipe). Returns false when there is nothing to switch to.
+function M.open_session(now, delta, profile)
   M.entries = M.build_entries()
   local focused = hl.get_active_window()
   if profile == "same_app" then M.entries = M.same_app(M.entries, focused) end
   M.all_entries, M.query, M.names, M.tabs_loaded = M.entries, "", nil, false
   local first = Mru.first_pick(M.entries, focused and focused.address, delta)
-  if #M.entries < 2 then M.entries = {}; return end -- nothing to switch to
+  if #M.entries < 2 then M.entries = {}; return false end -- nothing to switch to
   M.gen = M.gen + 1
   bind_session_keys(true)
   M.apply(M.session:open(now, #M.entries, first))
   hl.timer(function() tick(M.gen) end, { type = "oneshot", timeout = M.tick_ms })
+  return true
+end
+
+-- ---- touchpad swipe (setting swipe_trigger, off by default; docs/research/swipe-spike.md) ----
+-- Hyprland calls start, update and finish for a swipe of `swipe_fingers` fingers left or right. The first row of travel opens the list
+-- (no Alt is involved, so nothing is injected), each further row steps, lifting picks. Lifting on the window the swipe started from, or a
+-- swipe Hyprland reports as cancelled, closes without switching. Where omahop is not active the swipe does nothing (it has no stock meaning).
+
+function M.swipe_start()
+  if M.session and M.session:is_open() then return end -- a keyboard session is running: this swipe is not ours
+  M.reload_config()
+  if not M.cfg.swipe_trigger then return end -- turned off in the settings since the last reload: the gesture stays registered but idle
+  local aw = hl.get_active_window()
+  if Rules.passthrough(aw and { class = aw.class, fullscreen = aw.fullscreen } or nil, M.cfg.passthrough_fullscreen, Rules.set(M.cfg.passthrough)) then return end
+  if not Scope.active(M.cfg.scope, M.workspace_is_floating()) then return end
+  M.swipe, M.swipe_from = Swipe.new(M.cfg.swipe_distance), aw and aw.address
+  M.swipe:start(M.now())
+end
+
+function M.swipe_update(e)
+  local sw = M.swipe
+  if not (sw and sw:is_active()) then return end
+  local now = M.now()
+  local rows, first = sw:update(now, type(e) == "table" and type(e.delta) == "table" and e.delta.x or nil)
+  if rows == 0 then return end
+  if first then
+    local dir = rows > 0 and 1 or -1
+    if M.session:is_open() or not M.open_session(now, dir) then sw:stop(); return end
+    rows = rows - dir
+  end
+  if rows ~= 0 and M.session:is_open() then M.apply(M.session:step(now, rows)) end
+end
+
+function M.swipe_finish(e)
+  local sw = M.swipe
+  if not (sw and sw:is_active()) then return end
+  if not (sw:finish() and M.session:is_open()) then return end
+  local sel = M.entries[M.session:selected()]
+  local back = sel ~= nil and sel.address == M.swipe_from
+  local cancelled = type(e) == "table" and e.cancelled == true
+  M.apply(M.session:key(M.now(), (cancelled or back) and "cancel" or "return"))
+end
+
+-- Register the swipe once per Lua state. The callbacks go through _G.omahop, so a second load in the same state is served by the new module.
+-- Registered at load, after the user's own config lines (omahop's dofile is the last line): a swipe they already use keeps working and
+-- Hyprland reports ours as a config error instead (it is not a Lua error, so pcall only guards an older Hyprland without hl.gesture).
+function M.bind_swipe()
+  if not M.cfg.swipe_trigger or M.swipe_registered then return end
+  local ok, err = pcall(hl.gesture, { fingers = M.cfg.swipe_fingers, direction = M.swipe_direction, action = {
+    start = function() _G.omahop.swipe_start() end,
+    update = function(e) _G.omahop.swipe_update(e) end,
+    finish = function(e) _G.omahop.swipe_finish(e) end,
+  } })
+  if not ok then log("swipe: hl.gesture failed, swipe trigger off: " .. tostring(err)); return end
+  M.swipe_registered = true
 end
 
 local function seed_order()
@@ -655,6 +725,7 @@ function M.setup()
   pcall(hl.on, "window.active", function(w) if w and w.address then M.order = Mru.touch(M.order, w.address) end end)
   pcall(hl.on, "window.close", function(w) if w and w.address then M.on_window_closed(w.address) end end)
   if M.mod.replaces then bind_trigger_now() end -- at once, unconditionally: it replaces Omarchy's own Alt+Tab (M.stock runs that out of scope)
+  M.bind_swipe()
   return M
 end
 

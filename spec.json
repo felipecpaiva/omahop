@@ -435,6 +435,45 @@
       "type": "text"
     }],
     "title": "Browser tabs"
+  }, {
+    "id": "swipe",
+    "settings": [{
+      "default": false,
+      "help": "Off by default. When on, a swipe left or right with several fingers on the touchpad opens the list and moves the selection one row per stretch of travel; lifting the fingers picks. Swipe back to the window you started on and lift to close without switching. Touchpads only: a touchscreen swipe cannot reach omahop. Works where omahop takes over Alt+Tab. Applies after a Hyprland reload.",
+      "hidden": false,
+      "id": "top.swipe_trigger",
+      "key": "swipe_trigger",
+      "label": "Swipe on the touchpad to switch",
+      "reload": true,
+      "section": "top",
+      "type": "bool"
+    }, {
+      "default": 4,
+      "help": "3 or 4. Omarchy's example config uses 3 fingers left and right to change workspace; a swipe Hyprland already uses is never taken (Hyprland reports the clash as a config error and keeps the first one). Applies after a Hyprland reload.",
+      "hidden": false,
+      "id": "top.swipe_fingers",
+      "key": "swipe_fingers",
+      "label": "Fingers",
+      "max": 4,
+      "min": 3,
+      "reload": true,
+      "section": "top",
+      "type": "int"
+    }, {
+      "default": 100,
+      "help": "How far the fingers travel to move one row. Lower moves faster. Applies at once.",
+      "hidden": false,
+      "id": "top.swipe_distance",
+      "key": "swipe_distance",
+      "label": "Swipe distance per row",
+      "max": 600,
+      "min": 20,
+      "reload": false,
+      "section": "top",
+      "type": "int",
+      "unit": "px"
+    }],
+    "title": "Touchpad swipe"
   }],
   "schema": 1
 }

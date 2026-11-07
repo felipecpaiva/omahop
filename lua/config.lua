@@ -65,6 +65,12 @@ C.spec = {
       help = "Type the folder name of an installed icon theme, such as Papirus, to prefer its icons. Empty uses whichever installed theme the scan finds first. An app the theme has no icon for still gets one from the others. " },
     icon_pack = { default = "", group = "look", label = "Icon pack",
       help = "Type the folder name of an icon pack in ~/.config/omahop/packs, such as omahop-sample. Its icons come first; an app the pack has no icon for keeps its usual one. Empty uses no pack. A pack you made yourself or copied from someone: see docs/icon-packs.md for the format. Applies at once. To share a pack as one zip or install one, run tools/pack-export.sh <name> or tools/pack-import.sh <file.zip> from the plugin folder (~/.config/omarchy/plugins/io.github.felipecpaiva.omahop)." },
+    swipe_trigger = { default = false, group = "swipe", reload = true, label = "Swipe on the touchpad to switch",
+      help = "Off by default. When on, a swipe left or right with several fingers on the touchpad opens the list and moves the selection one row per stretch of travel; lifting the fingers picks. Swipe back to the window you started on and lift to close without switching. Touchpads only: a touchscreen swipe cannot reach omahop. Works where omahop takes over Alt+Tab. Applies after a Hyprland reload." },
+    swipe_fingers = { default = 4, min = 3, max = 4, group = "swipe", reload = true, label = "Fingers",
+      help = "3 or 4. Omarchy's example config uses 3 fingers left and right to change workspace; a swipe Hyprland already uses is never taken (Hyprland reports the clash as a config error and keeps the first one). Applies after a Hyprland reload." },
+    swipe_distance = { default = 100, min = 20, max = 600, group = "swipe", label = "Swipe distance per row", unit = "px",
+      help = "How far the fingers travel to move one row. Lower moves faster. Applies at once." },
     border = { default = "auto", values = { "auto", "on", "off" }, group = "look", label = "Outline",
       names = { auto = "Follow Hyprland's window border", on = "Always", off = "Never" },
       help = "Auto draws no outline when you turned window borders off." },
@@ -101,11 +107,12 @@ C.groups = {
   { id = "rules", title = "App rules" },
   { id = "shortcuts", title = "Shortcuts" },
   { id = "tabs", title = "Browser tabs" },
+  { id = "swipe", title = "Touchpad swipe" },
 }
 C.order = { "top.takeover", "top.modifier", "top.scope", "top.search", "top.search_fuzzy", "top.search_linger_seconds", "windows.workspaces", "windows.monitors", "windows.minimized", "windows.specials", "windows.ignore",
   "top.style", "top.thumbnails", "top.thumbnail_exclude", "top.reveal_delay_ms", "top.border", "top.icon_theme", "top.icon_pack", "top.actions", "keys.repeat_delay_ms", "keys.repeat_ms", "top.peek", "top.peek_position",
   "windows.ignore_titles", "windows.first", "top.passthrough_fullscreen", "top.passthrough", "top.same_app_key", "top.hints", "top.hint_keys", "top.action_keys",
-  "top.browser_tabs", "top.browser_tabs_ignore" }
+  "top.browser_tabs", "top.browser_tabs_ignore", "top.swipe_trigger", "top.swipe_fingers", "top.swipe_distance" }
 
 local function contains(list, v)
   for _, x in ipairs(list) do if x == v then return true end end
