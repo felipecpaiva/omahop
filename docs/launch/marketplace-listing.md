@@ -1,4 +1,4 @@
-# Marketplace listing (draft, do not submit without the maintainer's go)
+# Marketplace listing (SUBMITTED 2026-11-07, issue 14254 in omacom/omarchy-plugin-marketplace; waiting for a maintainer)
 
 The marketplace is `omacom/omarchy-plugin-marketplace`. It reads `manifest.json` and the root `preview.png`. Rules are in its `SUBMISSION.md` (the omagnet notes of 2026-11-05 list the same checks). Not submitted: a submission is outward-facing and is Felipe's call. Submitting needs a public listing request, and a listing is bound to the commit the bot validates (an earlier plugin took weeks to be reviewed): keep `main` frozen at the submitted commit until it is approved, work on a branch.
 
