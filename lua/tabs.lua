@@ -9,7 +9,7 @@ local T = {}
 
 T.schema = 1
 T.icon_digits = 16 -- length of an icon file name key (helper: ICON_KEY_DIGITS)
-T.picture_max = 64 -- bytes of a page picture name: <hosthash>/<urlkey>-<n> (helper): 16 lower-case hex digits, a slash, 16 hex digits, a dash, up to 12 digits
+T.picture_max = 64 -- bytes of a page picture name: <hosthash>/<urlkey>-<n>[d] (helper): 16 lower-case hex digits, a slash, 16 hex digits, a dash, up to 12 digits, optional d
 T.file_pattern = "^tabs%.(%d+)%.json$"
 T.limits = {
   bytes = 1024 * 1024,    -- one file (200 tabs measured at 34 KB, docs/research/tabs-spike.md section 6)
@@ -62,10 +62,11 @@ local function cut(s, n)
   return s:sub(1, stop - 1)
 end
 
--- A page picture name -> itself when it is exactly 16 lower-case hex digits, a slash, 16 hex digits, a dash and 1 to 12 digits; else nil.
+-- A page picture name -> itself when it is exactly 16 lower-case hex digits, a slash, 16 hex digits, a dash, 1 to 12 digits and
+-- optionally one trailing "d" (a drawn picture, approximate; without it the picture is a shot, exact); else nil.
 function T.picture_name(v)
   if type(v) ~= "string" or #v > T.picture_max then return nil end
-  local site, page, n = v:match("^(%x+)/(%x+)%-(%d+)$")
+  local site, page, n = v:match("^(%x+)/(%x+)%-(%d+)d?$")
   if not site or #site ~= 16 or #page ~= 16 or #n > 12 or v:find("%u") then return nil end
   return v
 end

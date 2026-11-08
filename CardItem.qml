@@ -13,6 +13,7 @@ Item {
   property string thumbnails: "snapshot"  // "live", "snapshot" or "off"
   property string iconSource: ""
   property string picture: ""   // a tab card (setting browser_tab_previews): the picture of its page, a file url; empty for none
+  property bool drawn: false    // its picture was drawn from the page's content, not photographed: approximate, marked so
   property string appName: ""
   property string title: ""
   property bool selected: false
@@ -83,6 +84,19 @@ Item {
       cache: false
       fillMode: Image.PreserveAspectCrop
       horizontalAlignment: Image.AlignTop
+    }
+
+    // A drawn picture (setting browser_tab_previews_draw) is a rough render of the page, so it says so; a photographed one carries nothing.
+    Rectangle {
+      visible: card.drawn && page.visible
+      anchors.left: parent.left
+      anchors.bottom: parent.bottom
+      anchors.margins: Style.space(4)
+      width: approx.implicitWidth + Style.space(10); height: approx.implicitHeight + Style.space(4)
+      radius: Style.cornerRadius
+      color: Util.alpha(Color.background, 0.85)
+      border.width: 1; border.color: Util.alpha(Color.popups.text, 0.3)
+      Text { id: approx; anchors.centerIn: parent; textFormat: Text.PlainText; text: qsTr("approximate"); color: Color.popups.text; font.family: Style.font.family; font.pixelSize: Style.font.caption }
     }
 
     // No picture (icons only, a window that cannot be captured, or a frame not here yet): the app icon in the middle.

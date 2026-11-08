@@ -75,10 +75,17 @@ function tabIcon(entry, dir, fallback) {
   return /^[0-9a-f]{16}$/.test(key) && dir ? "file://" + dir + "/" + key + ".png" : fallback
 }
 
-// The page picture of a tab card: its file when the helper wrote one (<hosthash>/<urlkey>-<n>: 16 hex digits, a slash, 16 hex digits, a dash, digits; nothing else is ever a path), else empty.
+// The page picture of a tab card: its file when the helper wrote one (<hosthash>/<urlkey>-<n>[d]: 16 hex digits, a slash, 16 hex digits, a dash, digits, an optional d; nothing else is ever a path), else empty.
+var pictureName = /^[0-9a-f]{16}\/[0-9a-f]{16}-[0-9]{1,12}d?$/
 function tabPicture(entry, dir) {
   var name = String(entry && entry.picture || "")
-  return /^[0-9a-f]{16}\/[0-9a-f]{16}-[0-9]{1,12}$/.test(name) && dir ? "file://" + dir + "/" + name + ".jpg" : ""
+  return pictureName.test(name) && dir ? "file://" + dir + "/" + name + ".jpg" : ""
+}
+
+// How a tab's picture was made: "shot" (exact, the browser photographed the tab), "drawn" (approximate, the page drawn from its content, name ends in d), "" for none.
+function tabPictureKind(entry) {
+  var name = String(entry && entry.picture || "")
+  return !pictureName.test(name) ? "" : name.slice(-1) === "d" ? "drawn" : "shot"
 }
 
 // The caption of a tab card or row: its site, and a note when it is the tab its window shows.

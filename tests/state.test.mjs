@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs"
 import assert from "node:assert/strict"
 const src = readFileSync(new URL("../State.js", import.meta.url), "utf8").replace(".pragma library", "")
-const State = new Function(src + "; return { thumbnailExcludeSet, isThumbnailExcluded, parse, visibleRows, borderWidth, normalizeAddress, visibleCards, listHeight, tabCaption, tabIcon, tabPicture }")()
+const State = new Function(src + "; return { thumbnailExcludeSet, isThumbnailExcluded, parse, visibleRows, borderWidth, normalizeAddress, visibleCards, listHeight, tabCaption, tabIcon, tabPicture, tabPictureKind }")()
 
 const text = "version=1\nopen=1\nrevealed=1\nselected=2\nstyle=list\nthumbnails=snapshot\nw\t0xa\tkitty\t0\t1\tfirst title\nw\t0xb\tgoogle-chrome\t1\t\tsecond\ttitle with a tab\n"
 const s = State.parse(text)
@@ -93,6 +93,15 @@ console.log("state linger ok")
   assert.equal(State.tabPicture(st.entries[1], "/run/user/1/omahop/tabpics"), "file:///run/user/1/omahop/tabpics/0123456789abcdef/fedcba9876543210-17.jpg")
   assert.equal(State.tabPicture(st.entries[2], "/d"), "", "no picture: empty")
   for (const bad of ["../../etc/passwd", "4242-17-3", "0123456789abcdef/fedcba9876543210", "0123456789abcdef/fedcba9876543210-", "0123456789abcdef/fedcba9876543210-17.jpg", "0123456789abcde/fedcba9876543210-17", "0123456789ABCDEF/fedcba9876543210-17", "0123456789abcdef/fedcba9876543210-" + "9".repeat(13), "../0123456789abcdef/fedcba9876543210-17", "0123456789abcdef//fedcba9876543210-17", ""]) assert.equal(State.tabPicture({ picture: bad }, "/d"), "", "a name that is not <hosthash>/<urlkey>-<n> is never a path: " + bad)
+  assert.equal(State.tabPicture({ picture: "0123456789abcdef/fedcba9876543210-17d" }, "/d"), "file:///d/0123456789abcdef/fedcba9876543210-17d.jpg", "a drawn picture is a path too")
+  for (const bad of ["0123456789abcdef/fedcba9876543210-17dd", "0123456789abcdef/fedcba9876543210-17D", "0123456789abcdef/fedcba9876543210-d", "0123456789abcdef/fedcba9876543210-17d/x", "0123456789abcdef/fedcba9876543210-17d.jpg", "../0123456789abcdef/fedcba9876543210-17d", "0123456789abcdef/fedcba9876543210-" + "9".repeat(12) + "dd", "0123456789abcdef/fedcba9876543210-" + "9".repeat(13) + "d"]) {
+    assert.equal(State.tabPicture({ picture: bad }, "/d"), "", "not a picture name: " + bad)
+    assert.equal(State.tabPictureKind({ picture: bad }), "", "no kind for: " + bad)
+  }
+  assert.equal(State.tabPictureKind({ picture: "0123456789abcdef/fedcba9876543210-17d" }), "drawn")
+  assert.equal(State.tabPictureKind({ picture: "0123456789abcdef/fedcba9876543210-17" }), "shot")
+  assert.equal(State.tabPictureKind({}), "")
+  assert.equal(State.tabPictureKind(null), "")
   assert.equal(State.tabPicture(st.entries[1], ""), "")
   assert.equal(State.tabPicture(null, "/d"), "")
   console.log("state tabs ok")

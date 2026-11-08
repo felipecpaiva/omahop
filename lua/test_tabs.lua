@@ -63,6 +63,13 @@ do -- icon: only a 16 digit hex file name key passes; anything else is dropped (
     return s and s.windows[1].tabs[1].picture
   end
   assert(picture_of('"0123456789abcdef/fedcba9876543210-17"') == "0123456789abcdef/fedcba9876543210-17", "a good picture name is kept")
+  assert(picture_of('"0123456789abcdef/fedcba9876543210-17d"') == "0123456789abcdef/fedcba9876543210-17d", "a drawn picture name (trailing d) is kept")
+  assert(picture_of('"0123456789abcdef/fedcba9876543210-' .. ("9"):rep(12) .. 'd"'), "12 digits and a d is the longest name")
+  for _, bad in ipairs({ '"0123456789abcdef/fedcba9876543210-17dd"', '"0123456789abcdef/fedcba9876543210-17D"', '"0123456789abcdef/fedcba9876543210-d"', '"0123456789abcdef/fedcba9876543210-17d/x"',
+    '"0123456789abcdef/fedcba9876543210-17d.jpg"', '"0123456789abcdef/fedcba9876543210d/x"', '"0123456789abcdefd/fedcba9876543210-17"', '"../0123456789abcdef/fedcba9876543210-17d"',
+    '"0123456789ABCDEF/fedcba9876543210-17d"', '"0123456789abcdef/fedcba9876543210-' .. ("9"):rep(13) .. 'd"', '"d"', '"0123456789abcdef/fedcba9876543210-17 d"' }) do
+    assert(picture_of(bad) == nil, "drawn-style name dropped: " .. bad)
+  end
   for _, bad in ipairs({ '"../../etc/passwd"', '"4242-17-3"', '"0123456789abcdef/fedcba9876543210"', '"0123456789abcdef/fedcba9876543210-"', '"0123456789abcdef/fedcba9876543210-17.jpg"',
     '"0123456789abcde/fedcba9876543210-17"', '"0123456789abcdef/fedcba98765432100-17"', '"0123456789ABCDEF/fedcba9876543210-17"', '"0123456789abcdef/fedcba9876543210-' .. ("9"):rep(13) .. '"',
     '"../0123456789abcdef/fedcba9876543210-17"', '"0123456789abcdef//fedcba9876543210-17"', '""', "5", "null" }) do
