@@ -10,7 +10,9 @@ Everything lives in `$XDG_RUNTIME_DIR/omahop` (tmpfs, gone at logout). omahop ma
 |---|---|---|
 | `tabs.enabled` | omahop | Exists while `browser_tabs` is on (mode 600). Removed when it goes off. The helper writes nothing without it and deletes its own file within about a second. |
 | `tabs.ignore` | omahop | `browser_tabs_ignore`, one pattern per line, lower case, mode 600. Written through a temporary file and a rename. |
-| `tabs.<hostpid>.json` | helper | Read once per switcher session, at the first typed letter, only while the setting is on. Removed by omahop when the setting goes off. |
+| `tabs.pictures` | omahop | Exists only while `browser_tab_previews` AND `browser_tabs` are both on (mode 600), made and removed by `tools/omahop-tabs-files pictures-on` and `pictures-off`. Without it the helper keeps and writes no page picture and deletes the ones it wrote. |
+| `tabpics/<name>.jpg` | helper | Small jpeg of a tab's page (folder mode 700), shown on the tab's card. `<name>` is `<hostpid>-<tabid>-<n>`: three groups of digits, at most 40 bytes, and nothing else is ever turned into a path. omahop only reads it. `pictures-off` and `off` delete the folder. |
+| `tabs.<hostpid>.json` | helper | Read once per switcher session, at the first typed letter, only while the setting is on. A tab object may carry `icon` (the site icon file name in `tabicons/`) and `picture` (the page picture name in `tabpics/`, only with `tabs.pictures`); both are checked and dropped when they are not exactly the expected shape. Removed by omahop when the setting goes off. |
 | `tabs.<hostpid>.activate` | helper (FIFO) | Written by `tools/omahop-tabs-activate` only, never opened by the Lua glue. Left alone when the setting goes off (the helper owns it). |
 | `.tabs.*.tmp` | helper | Never read (the listing only takes `tabs.<digits>.json`, regular files, not links). |
 

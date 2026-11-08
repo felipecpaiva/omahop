@@ -198,3 +198,7 @@ No live test drives the touchpad (no fake pointer or touch input is injected), s
 ## Open, 2026-11-08: install the browser tab search (hand check)
 
 Felipe found that searching for a page in a background browser tab finds nothing. That is expected until `browser_tabs` is on and the `omahop-tabs` extension and helper are installed (neither is yet). Steps: Chrome `chrome://extensions`, Developer mode, Load unpacked `omahop-tabs/extension`, run the installer from the `omahop-tabs` repo (see its README for the exact name), turn on Search browser tabs in the settings window, then search for a title of a tab that is not showing. Also the first real test of the extension in a visible Chrome (window match by pid, focus).
+
+## Open, 2026-11-08: page pictures on found tab cards (hand check, D25)
+
+Needs the extension build with page pictures (omahop-tabs). Steps: turn on `browser_tabs` and `browser_tab_previews` in the settings window (cards style); open the extension's Options page and press Enable page pictures (Chrome asks for the permission); view a few tabs for a moment each; search for one of them in omahop: its card shows a picture of the page, the site icon stays in the footer. Check: a site on the ignore list never gets a picture; turning `browser_tab_previews` off removes `$XDG_RUNTIME_DIR/omahop/tabpics` within a second; the permission alone (setting off) captures nothing; a tab never shown since the setting went on shows the big site icon.

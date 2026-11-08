@@ -32,6 +32,7 @@ BorderSurface {
   property int outline: Math.max(1, Style.space(2))
   // The owner supplies these, so this file needs no desktop-entry or Hyprland knowledge.
   property string tabIconDir: ""   // folder of the site icons the helper writes (setting browser_tabs)
+  property string tabPictureDir: ""   // folder of the page pictures the helper writes (setting browser_tab_previews)
   property var resolve: function (appId) { return { icon: "", name: appId } }
   property var toplevelFor: function (address, appId) { return null }
 
@@ -75,6 +76,7 @@ BorderSurface {
       height: view.height
       readonly property var info: strip.resolve(modelData.appId)
       iconSource: modelData.tab ? State.tabIcon(modelData, strip.tabIconDir, info.icon) : info.icon
+      picture: modelData.tab ? State.tabPicture(modelData, strip.tabPictureDir) : ""
       // a browser tab (setting browser_tabs) is a card with the browser icon, its site as the caption, no picture and no buttons
       appName: modelData.tab ? State.tabCaption(modelData, qsTr("shown")) : info.name
       title: modelData.title

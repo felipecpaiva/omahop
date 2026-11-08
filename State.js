@@ -1,6 +1,6 @@
 .pragma library
 // omahop state file parser. The Lua side (lua/omahop.lua write_state) writes it; the overlay reads it. Pure, so Node tests it (tests/state.test.mjs).
-// Format: "key=value" lines (seq, grab, linger_ms, linger_rev: see lua/omahop.lua write_state and Linger.js), then one tab-separated line per window: w <address> <class> <minimized 0|1> <hint> <title> (hint: a number or letter, empty for none), and while a search is typed with browser_tabs on, tab rows: t <address> <class> <minimized> <active> <icon> <site> <title> (icon: the file name key of the site icon in tabicons/, empty for none).
+// Format: "key=value" lines (seq, grab, linger_ms, linger_rev: see lua/omahop.lua write_state and Linger.js), then one tab-separated line per window: w <address> <class> <minimized 0|1> <hint> <title> (hint: a number or letter, empty for none), and while a search is typed with browser_tabs on, tab rows: t <address> <class> <minimized> <active> <icon> <picture> <site> <title> (icon: the file name key of the site icon in tabicons/, picture: the name of the page picture in tabpics/, each empty for none).
 
 // The thumbnail_exclude setting ("kitty, 1Password") as a set of lower-case window classes. Whole classes only, never a substring match.
 function thumbnailExcludeSet(text) {
@@ -27,9 +27,9 @@ function parse(text) {
       if (f.length >= 6) st.entries.push({ address: f[1], appId: f[2], minimized: f[3] === "1", hint: f[4], title: f.slice(5).join("\t") })
       continue
     }
-    if (line.indexOf("t\t") === 0) { // a browser tab row (setting browser_tabs): t <address> <class> <minimized> <active 0|1> <icon> <site> <title>
+    if (line.indexOf("t\t") === 0) { // a browser tab row (setting browser_tabs): t <address> <class> <minimized> <active 0|1> <icon> <picture> <site> <title>
       var t = line.split("\t")
-      if (t.length >= 8) st.entries.push({ address: t[1], appId: t[2], minimized: t[3] === "1", hint: "", tab: true, active: t[4] === "1", icon: t[5], host: t[6], title: t.slice(7).join("\t") })
+      if (t.length >= 9) st.entries.push({ address: t[1], appId: t[2], minimized: t[3] === "1", hint: "", tab: true, active: t[4] === "1", icon: t[5], picture: t[6], host: t[7], title: t.slice(8).join("\t") })
       continue
     }
     var eq = line.indexOf("=")
@@ -73,6 +73,12 @@ function listHeight(entries, rowHeight, tabHeight, maxRows) {
 function tabIcon(entry, dir, fallback) {
   var key = String(entry && entry.icon || "")
   return /^[0-9a-f]{16}$/.test(key) && dir ? "file://" + dir + "/" + key + ".png" : fallback
+}
+
+// The page picture of a tab card: its file when the helper wrote one (a name of three groups of digits, nothing else is ever a path), else empty.
+function tabPicture(entry, dir) {
+  var name = String(entry && entry.picture || "")
+  return /^[0-9]+-[0-9]+-[0-9]+$/.test(name) && name.length <= 40 && dir ? "file://" + dir + "/" + name + ".jpg" : ""
 }
 
 // The caption of a tab card or row: its site, and a note when it is the tab its window shows.

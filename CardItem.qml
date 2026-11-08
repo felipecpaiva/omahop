@@ -12,6 +12,7 @@ Item {
   property var toplevel: null          // a Wayland Toplevel to capture, or null (icon only)
   property string thumbnails: "snapshot"  // "live", "snapshot" or "off"
   property string iconSource: ""
+  property string picture: ""   // a tab card (setting browser_tab_previews): the picture of its page, a file url; empty for none
   property string appName: ""
   property string title: ""
   property bool selected: false
@@ -72,10 +73,22 @@ Item {
       }
     }
 
+    // A browser tab's page picture (a file the helper keeps in memory, a small jpeg): shown while it is loaded; until then, and when there is none, the icon below.
+    Image {
+      id: page
+      anchors.fill: parent
+      visible: status === Image.Ready
+      source: card.picture
+      asynchronous: true
+      cache: false
+      fillMode: Image.PreserveAspectCrop
+      horizontalAlignment: Image.AlignTop
+    }
+
     // No picture (icons only, a window that cannot be captured, or a frame not here yet): the app icon in the middle.
     IconImage {
       anchors.centerIn: parent
-      visible: !capture.visible
+      visible: !capture.visible && !page.visible
       implicitSize: Math.min(thumb.width, thumb.height) * 0.4
       source: card.iconSource
     }

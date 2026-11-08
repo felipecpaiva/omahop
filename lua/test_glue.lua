@@ -680,8 +680,11 @@ do
   type_word("hidden")
   assert(#M.entries == 1 and M.entries[1].tab and M.entries[1].title == "Hidden notes" and M.entries[1].address == "0xb6", "a hidden tab is found by its title, under its window")
   local st = read_state()
-  assert(st:find("\nt\t0xb6\tchromium\t0\t0\t\tnotes.example.com\tHidden notes\n", 1, true), "state line for the tab: window, class, minimized, active, icon (empty here), site, title: " .. st)
+  assert(st:find("\nt\t0xb6\tchromium\t0\t0\t\t\tnotes.example.com\tHidden notes\n", 1, true), "state line for the tab: window, class, minimized, active, icon and picture (empty here), site, title: " .. st)
   assert(not st:find("https://", 1, true) and not st:find("private/path", 1, true) and not st:find("token", 1, true), "the state file carries the site, never the address")
+  M.entries[1].tab.picture = "7-8-9"; M.write_state()
+  assert(read_state():find("\nt\t0xb6\tchromium\t0\t0\t\t7-8-9\tnotes.example.com\tHidden notes\n", 1, true), "a page picture name is written in its own field")
+  M.entries[1].tab.picture = nil; M.write_state()
   M.query = "bank"; M.refilter()
   assert(#M.entries == 0, "an ignored site is dropped by omahop too")
   M.query = "stale"; M.refilter()
@@ -728,6 +731,20 @@ do
   setcfg('[windows]\nworkspaces = "current"\nsearch = true\n'); open_session()
   assert(not ran("omahop-tabs"), "off and no flag: no helper run")
   M.session:key(clock, "cancel"); M.apply({})
+  -- page pictures (browser_tab_previews): a second helper call, only with tab search on as well; turning it off removes them
+  local function ran_all(word) local out = {} for _, e in ipairs(events) do if e:find(word, 1, true) then out[#out + 1] = e end end return out end
+  local function count_cmd(word) return #ran_all(word) end
+  setcfg('browser_tab_previews = true\n[windows]\nworkspaces = "current"\n'); open_session()
+  assert(count_cmd("pictures-on") == 0 and not ran("omahop-tabs-files"), "previews on but tab search off: nothing is made")
+  M.session:key(clock, "cancel"); M.apply({})
+  setcfg('browser_tabs = true\nbrowser_tab_previews = true\n[windows]\nworkspaces = "current"\n'); open_session()
+  assert(count_cmd(" pictures-on") == 1 and count_cmd(" pictures-off") == 0, "both on: the helper makes the pictures flag")
+  M.session:key(clock, "cancel"); M.apply({})
+  os.execute(("touch '%s/tabs.pictures'"):format(run))
+  setcfg('browser_tabs = true\n[windows]\nworkspaces = "current"\n'); open_session()
+  assert(count_cmd(" pictures-off") == 1, "previews off while the flag exists: the helper removes pictures")
+  M.session:key(clock, "cancel"); M.apply({})
+  os.execute(("rm -f '%s/tabs.pictures'"):format(run))
   io.open, hl.exec_cmd, hl.dispatch = real_open, real_exec, real_dispatch
   os.execute(("rm -f '%s'/tabs.*"):format(run))
   setcfg('[windows]\nworkspaces = "all"\n')

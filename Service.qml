@@ -270,6 +270,7 @@ Item {
   // The Lua side does the same at a Hyprland reload and at the next Alt+Tab; the helper is idempotent. Off with nothing on: nothing runs.
   readonly property bool browserTabs: configReader.value("top", "browser_tabs") === true
   readonly property string browserTabsIgnore: String(configReader.value("top", "browser_tabs_ignore") || "")
+  readonly property bool browserTabPreviews: root.browserTabs && configReader.value("top", "browser_tab_previews") === true
   readonly property string runtimeDir: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/omahop"
   property bool tabFilesOn: false
   function syncTabFiles() {
@@ -279,6 +280,14 @@ Item {
     var sites = root.browserTabs ? root.browserTabsIgnore.split(",").map(function (x) { return x.trim() }).filter(function (x) { return x !== "" }) : []
     Quickshell.execDetached(["bash", Paths.fromUrl(Qt.resolvedUrl("tools/omahop-tabs-files")), root.runtimeDir, root.browserTabs ? "on" : "off"].concat(sites))
   }
+  // The pictures flag follows the setting (and tab search) at once; pictures-off also removes every picture. Idempotent, like the call above.
+  property bool tabPicturesOn: false
+  function syncTabPictures() {
+    if (!root.browserTabPreviews && !root.tabPicturesOn) return
+    root.tabPicturesOn = root.browserTabPreviews
+    Quickshell.execDetached(["bash", Paths.fromUrl(Qt.resolvedUrl("tools/omahop-tabs-files")), root.runtimeDir, root.browserTabPreviews ? "pictures-on" : "pictures-off"])
+  }
+  onBrowserTabPreviewsChanged: root.syncTabPictures()
   onBrowserTabsChanged: root.syncTabFiles()
   onBrowserTabsIgnoreChanged: if (root.browserTabs) root.syncTabFiles()
 
@@ -387,6 +396,7 @@ Item {
         screenWidth: window.width
         resolve: root.resolve
         tabIconDir: root.runtimeDir + "/tabicons"
+        tabPictureDir: root.runtimeDir + "/tabpics"
         toplevelFor: root.toplevelFor
         outline: root.outline
         actions: root.st.actions

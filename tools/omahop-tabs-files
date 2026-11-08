@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 # The files omahop owns for browser tabs (setting browser_tabs), in its runtime folder:
 #   omahop-tabs-files <dir> on [site ...]   folder mode 700; tabs.ignore (one site per line) and the flag tabs.enabled, both mode 600
-#   omahop-tabs-files <dir> off             remove the flag, the ignore file and every tab file, so nothing lingers
+#   omahop-tabs-files <dir> off             remove the flag, the ignore file, the pictures flag, every tab file and tabpics/, so nothing lingers
+#   omahop-tabs-files <dir> pictures-on     the flag tabs.pictures (setting browser_tab_previews), mode 600: the helper may write page pictures into tabpics/
+#   omahop-tabs-files <dir> pictures-off    remove that flag and every picture (tabpics/) at once
 # Called detached from lua/omahop.lua and Service.qml; idempotent, so both may call it. Site names are checked again here (letters, digits,
 # dot and dash), so nothing else ever reaches the file. The helper's FIFOs belong to the helper and are left alone.
 set -euo pipefail
 
-readonly flag=tabs.enabled ignore=tabs.ignore
+readonly flag=tabs.enabled ignore=tabs.ignore pictures=tabs.pictures pics=tabpics
 # A site name or an fnmatch glob over one (the helper's rule: a plain name also hides subdomains, a glob must match the whole host).
 readonly site_re='^[[a-z0-9*?][][a-z0-9.*?!-]*$'   # same characters as Tabs.ignore_list in lua/tabs.lua
 
@@ -30,7 +32,20 @@ case $mode in
     ;;
   off)
     [ -d "$dir" ] || exit 0
-    rm -f -- "$dir/$flag" "$dir/$ignore" "$dir/.$ignore.tmp" "$dir"/tabs.*.json
+    rm -f -- "$dir/$flag" "$dir/$ignore" "$dir/.$ignore.tmp" "$dir/$pictures" "$dir"/tabs.*.json
+    rm -rf -- "${dir:?}/$pics"
+    ;;
+  pictures-on)
+    umask 077
+    mkdir -p -- "$dir"
+    chmod 700 -- "$dir"
+    : > "$dir/$pictures"
+    chmod 600 -- "$dir/$pictures"
+    ;;
+  pictures-off)
+    [ -d "$dir" ] || exit 0
+    rm -f -- "$dir/$pictures"
+    rm -rf -- "${dir:?}/$pics"
     ;;
   *) exit 2 ;;
 esac

@@ -32,6 +32,7 @@ M.config_path = config_home .. "/omahop/config.toml"
 M.tabs_activate_cmd = here .. "/../tools/omahop-tabs-activate" -- detached helpers for browser tabs (setting browser_tabs)
 M.tabs_files_cmd = here .. "/../tools/omahop-tabs-files"
 M.tabs_flag = state_dir .. "/tabs.enabled"
+M.tabs_pictures_flag = state_dir .. "/tabs.pictures" -- setting browser_tab_previews: the helper may keep page pictures only while it exists
 local layouts_dir = (os.getenv("XDG_STATE_HOME") or ((os.getenv("HOME") or "") .. "/.local/state")) .. "/omarchy/workspace-layouts"
 
 M.order = {}
@@ -164,7 +165,7 @@ function M.write_state()
     local clean = function(v) return (tostring(v):gsub("[%c]", " ")) end
     for i, e in ipairs(M.entries) do
       if e.tab then -- a browser tab row: only what the overlay draws (the title and the site), never the address
-        lines[#lines + 1] = table.concat({ "t", e.address, clean(e.class), e.minimized and 1 or 0, e.tab.active and 1 or 0, e.tab.icon or "", clean(e.tab.host), clean(e.title) }, "\t")
+        lines[#lines + 1] = table.concat({ "t", e.address, clean(e.class), e.minimized and 1 or 0, e.tab.active and 1 or 0, e.tab.icon or "", e.tab.picture or "", clean(e.tab.host), clean(e.title) }, "\t")
       else
         lines[#lines + 1] = table.concat({ "w", e.address, clean(e.class), e.minimized and 1 or 0, labels[i] or "", clean(e.title) }, "\t")
       end
@@ -214,7 +215,8 @@ end
 -- exists, nothing runs at all.
 function M.sync_tabs_files()
   local names, bad = Tabs.ignore_list(M.cfg.browser_tabs_ignore)
-  local key = M.cfg.browser_tabs and ("on " .. table.concat(names, " ")) or "off"
+  local pictures = M.cfg.browser_tabs and M.cfg.browser_tab_previews == true -- page pictures need tab search on as well
+  local key = M.cfg.browser_tabs and ("on " .. table.concat(names, " ") .. (pictures and " pictures" or "")) or "off"
   if key == M.tabs_files_key then return end
   M.tabs_files_key = key
   if M.cfg.browser_tabs then
@@ -222,6 +224,12 @@ function M.sync_tabs_files()
     local quoted = {}
     for i, n in ipairs(names) do quoted[i] = sq(n) end -- globs (* ? [) must reach the helper unexpanded
     hl.exec_cmd(("%s %s on %s"):format(sq(M.tabs_files_cmd), sq(state_dir), table.concat(quoted, " ")))
+    if pictures then
+      hl.exec_cmd(("%s %s pictures-on"):format(sq(M.tabs_files_cmd), sq(state_dir)))
+    else
+      local f = io.open(M.tabs_pictures_flag, "r") -- nothing runs when there is no flag
+      if f then f:close(); hl.exec_cmd(("%s %s pictures-off"):format(sq(M.tabs_files_cmd), sq(state_dir))) end
+    end
   else
     local f = io.open(M.tabs_flag, "r")
     if f then f:close(); hl.exec_cmd(("%s %s off"):format(sq(M.tabs_files_cmd), sq(state_dir))) end

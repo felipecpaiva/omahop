@@ -58,6 +58,8 @@ C.spec = {
       help = "Off by default. When on, a search also finds the tabs of your browser windows, not only the tab each window shows, and Return opens that tab. Needs the omahop-tabs browser extension and its helper. Private: tab titles and addresses stay on this computer in a temporary folder that is emptied when you log out or turn this off; omahop never logs them." },
     browser_tabs_ignore = { default = "", group = "tabs", base_only = true, label = "Never list tabs from these sites",
       help = "Site names, comma separated, for example: bank.example.com, mail.example.org. A name also covers its subdomains; * and ? are wildcards that must match the whole site name (*.corp.example). Empty (the default) hides nothing. Those tabs are never written by the helper and never shown." },
+    browser_tab_previews = { default = false, group = "tabs", base_only = true, label = "Show a picture of the page on found tabs (needs the extension's permission)",
+      help = "Off by default, and it works in the cards style. A found tab card shows a picture of its page instead of the site logo. This is a second opt in: turn it on here, and also open the extension's options page (the omahop tabs extension, Options) and press Enable page pictures, which asks Chrome for the extra permission to take pictures. Neither alone does anything. Chrome only photographs the tab you are looking at, so a tab's picture is taken while it is shown and can be old by the time you search. Pictures stay in memory and in the same temporary folder as the tab list, are never taken for sites on the ignore list, and are deleted when you turn this off or log out. Needs Search browser tabs." },
     same_app_key = { default = "ALT + GRAVE", group = "shortcuts", reload = true, label = "Same-app shortcut",
       help = "A second shortcut that lists only the windows of the app you are in, like Cmd+backtick on a Mac. It must start with the key to hold (for example ALT + GRAVE, or CTRL + GRAVE when that key is Ctrl). Leave it empty to turn it off. Applies after a Hyprland reload; a chord you already use is never taken." },
     hints = { default = "off", values = { "off", "numbers", "apps" }, group = "shortcuts", label = "Quick jump keys",
@@ -118,7 +120,7 @@ C.groups = {
 C.order = { "top.profile", "top.takeover", "top.modifier", "top.scope", "top.search", "top.search_fuzzy", "top.search_linger_seconds", "windows.workspaces", "windows.monitors", "windows.minimized", "windows.specials", "windows.ignore",
   "top.style", "top.thumbnails", "top.thumbnail_exclude", "top.reveal_delay_ms", "top.border", "top.icon_theme", "top.icon_pack", "top.audio_marker", "top.actions", "keys.repeat_delay_ms", "keys.repeat_ms", "top.peek", "top.peek_position",
   "windows.ignore_titles", "windows.first", "top.passthrough_fullscreen", "top.passthrough", "top.same_app_key", "top.hints", "top.hint_keys", "top.action_keys",
-  "top.browser_tabs", "top.browser_tabs_ignore", "top.swipe_trigger", "top.swipe_fingers", "top.swipe_distance" }
+  "top.browser_tabs", "top.browser_tabs_ignore", "top.browser_tab_previews", "top.swipe_trigger", "top.swipe_fingers", "top.swipe_distance" }
 
 local function contains(list, v)
   for _, x in ipairs(list) do if x == v then return true end end

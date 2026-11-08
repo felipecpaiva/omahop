@@ -74,9 +74,9 @@ window list order and fight the switch), and omagnet already proved the hold/rel
  browser extension -> omahop-tabs helper -> $XDG_RUNTIME_DIR/omahop/tabs.<hostpid>.json   (separate repository, only while tabs.enabled exists)
  lua/omahop.lua: at the first typed letter of a session, `find` lists the folder, each fresh file is read and checked (lua/tabs.lua, lua/json.lua),
                  browser windows are matched to Hyprland windows (pid, then title and focus), and tab rows join the list after their window
- state file:     t <address> <class> <minimized> <active> <site> <title>   (QML draws TabRow in the list, an icon-only CardItem in cards)
+ state file:     t <address> <class> <minimized> <active> <icon> <picture> <site> <title>   (QML draws TabRow in the list; a CardItem in cards with the site icon, or the page picture when browser_tab_previews is on, D25)
  Return on a tab row: hl.exec_cmd(tools/omahop-tabs-activate <hostpid> <tabId>)  -> FIFO tabs.<hostpid>.activate (non-blocking), then focus and raise
- setting on/off:  tools/omahop-tabs-files <dir> on|off   (from Lua at load and config change, from Service.qml at once and at unload)
+ setting on/off:  tools/omahop-tabs-files <dir> on|off|pictures-on|pictures-off   (from Lua at load and config change, from Service.qml at once and at unload)
 ```
 
 Off: no file is read and none is made. Idle cost is zero: no watcher, no timer, nothing read on a quick Alt+Tab. The file contract as consumed: [file-contract.md](file-contract.md).

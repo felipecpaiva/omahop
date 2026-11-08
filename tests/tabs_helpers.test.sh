@@ -60,6 +60,17 @@ echo '{}' > "$dir/tabs.42.json"; echo keep > "$dir/state"; mkfifo -m 600 "$dir/t
 "$files" "$dir" off
 check "off: flag, ignore file and tab files removed" "[ ! -e $dir/tabs.enabled ] && [ ! -e $dir/tabs.ignore ] && [ ! -e $dir/tabs.42.json ]"
 check "off: other files and the helper's FIFO left alone" "[ -e $dir/state ] && [ -p $dir/tabs.42.activate ]"
+# ---- pictures ----
+"$files" "$dir" on
+"$files" "$dir" pictures-on
+check "pictures-on: flag mode 600" "[ \"\$(stat -c %a $dir/tabs.pictures)\" = 600 ]"
+mkdir -p "$dir/tabpics"; echo x > "$dir/tabpics/1-2-3.jpg"
+"$files" "$dir" pictures-off
+check "pictures-off: flag and every picture removed, the rest kept" "[ ! -e $dir/tabs.pictures ] && [ ! -e $dir/tabpics ] && [ -e $dir/tabs.enabled ] && [ -e $dir/state ]"
+"$files" "$dir" pictures-on; mkdir -p "$dir/tabpics"; echo x > "$dir/tabpics/1-2-3.jpg"
+"$files" "$dir" off
+check "off also removes the pictures flag and tabpics" "[ ! -e $dir/tabs.pictures ] && [ ! -e $dir/tabpics ] && [ ! -e $dir/tabs.enabled ]"
+check "pictures-off with no folder is fine" "\"$files\" $tmp/none pictures-off"
 check "off with no folder is fine" "\"$files\" $tmp/none off"
 rc=0; "$files" relative on || rc=$?
 check "a relative folder is refused" "[ $rc -ne 0 ] && [ ! -e relative ]"

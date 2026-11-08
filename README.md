@@ -67,6 +67,8 @@ Off by default, and new in v1.4 (in progress). With "Search browser tabs" on in 
 
 It needs a small browser extension and a helper program that live in a separate repository, `omahop-tabs` (private for now), with their own install and removal notes. Chromium browsers first (Chrome, Chromium, Brave, Edge). omahop itself installs nothing for it.
 
+Found tabs show their site's icon. Optionally (`browser_tab_previews`, off by default, cards style) a found tab card shows a picture of its page instead. That is a second opt in: turn the setting on, and also open the extension's options page and press Enable page pictures, which asks Chrome for the permission to take pictures. Chrome only photographs the tab you are looking at, so the picture is taken while a tab is shown and can be old. Pictures stay in memory and in the same private temporary folder, are never taken for sites on the ignore list, and are deleted when you turn the setting off or log out.
+
 Privacy: tab titles and addresses are private, so they stay on this computer. The helper writes them only while the setting is on, to a temporary folder (`$XDG_RUNTIME_DIR/omahop`, mode 700, emptied at logout); turning the setting off removes them. omahop reads them only when you type into the switcher, keeps only the title and the site name (never the rest of the address) for the open list, and never writes them to its log. Sites you list under "Never list tabs from these sites" (`browser_tabs_ignore`, for example a bank) are dropped by the helper before anything is written, and again by omahop. Details: [docs/file-contract.md](docs/file-contract.md).
 
 ## Requirements and what it touches
