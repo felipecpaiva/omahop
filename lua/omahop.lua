@@ -332,7 +332,7 @@ function M.refilter()
     M.tabs_loaded = true
     M.all_entries = Tabs.interleave(M.all_entries, M.load_tab_rows())
   end
-  M.entries = Search.filter(M.all_entries, M.query, M.names, { fuzzy = M.cfg.search_fuzzy })
+  M.entries = Tabs.without_copies(Search.filter(M.all_entries, M.query, M.names, { fuzzy = M.cfg.search_fuzzy }))
   M.session:resize(#M.entries, #M.entries > 0 and 1 or 0)
   M.session:mark_query(M.query ~= "")
   M.write_state()

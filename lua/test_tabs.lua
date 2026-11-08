@@ -227,4 +227,14 @@ do
   print(("tabs speed: %d KB file, parse and match %.2f ms"):format(#text // 1024, ms))
 end
 
+do -- the shown tab is the window: no copy of it in a result
+  local list = {
+    { address = "0x1", class = "chromium", title = "Amazon.com - Chromium" },
+    { address = "0x1", class = "chromium", title = "Amazon.com", tab = { id = 1, active = true, host = "amazon.com" } },
+    { address = "0x1", class = "chromium", title = "Amazon deals", tab = { id = 2, active = false, host = "amazon.com" } },
+    { address = "0x2", class = "chromium", title = "Docs", tab = { id = 3, active = true, host = "amazon.com" } },
+  }
+  local out = T.without_copies(list)
+  assert(#out == 3 and out[1].address == "0x1" and not out[1].tab and out[2].tab.id == 2 and out[3].tab.id == 3, "the active tab row goes only when its window row is there")
+end
 print("tabs ok")

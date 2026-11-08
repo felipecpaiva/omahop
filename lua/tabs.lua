@@ -328,4 +328,18 @@ function T.interleave(entries, rows)
   return out
 end
 
+-- After a search: the tab a browser window is showing is the window itself (the window row carries that tab's title), so its tab row would be a copy.
+-- Drop an active tab row when its window row is in the result too; keep it when only the tab matched (for example by its site) and the window row did not.
+function T.without_copies(entries)
+  local has_window = {}
+  for _, e in ipairs(entries) do
+    if not e.tab then has_window[e.address] = true end
+  end
+  local out = {}
+  for _, e in ipairs(entries) do
+    if not (e.tab and e.tab.active and has_window[e.address]) then out[#out + 1] = e end
+  end
+  return out
+end
+
 return T
