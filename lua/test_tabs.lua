@@ -249,10 +249,10 @@ end
 do -- draw_requests: which tabs to ask the extension to draw
   local function ent(hostpid, id, extra) local t = { hostpid = hostpid, id = id, active = false }; for k, v in pairs(extra or {}) do t[k] = v end return { tab = t } end
   local req = {}
-  local out = T.draw_requests({ { }, ent(5, 1), ent(5, 2, { active = true }), ent(5, 3, { picture = "x" }), ent(6, 1), ent(5, 4) }, req, 6, 63)
-  assert(#out == 2 and out[1].hostpid == 5 and table.concat(out[1].ids, ",") == "1,4" and out[2].hostpid == 6 and out[2].ids[1] == 1, "windows, shown and pictured tabs are skipped; one request per host")
-  assert(req["5:1"] and req["5:4"] and req["6:1"] and not req["5:2"] and not req["5:3"], "requested ids are remembered, others not")
-  assert(#T.draw_requests({ ent(5, 1), ent(5, 4) }, req, 6, 63) == 0, "asked for once per session")
+  local out = T.draw_requests({ { }, ent(5, 1), ent(5, 2, { active = true }), ent(5, 7, { active = true, picture = "y" }), ent(5, 3, { picture = "x" }), ent(6, 1), ent(5, 4) }, req, 6, 63)
+  assert(#out == 2 and out[1].hostpid == 5 and table.concat(out[1].ids, ",") == "1,2,4" and out[2].hostpid == 6 and out[2].ids[1] == 1, "window rows and pictured tabs are skipped, the shown tab is asked for; one request per host")
+  assert(req["5:1"] and req["5:2"] and req["5:4"] and req["6:1"] and not req["5:3"], "requested ids are remembered, others not")
+  assert(#T.draw_requests({ ent(5, 1), ent(5, 2), ent(5, 4) }, req, 6, 63) == 0, "asked for once per session")
   local many = {}
   for id = 1, 9 do many[id] = ent(7, id) end
   out = T.draw_requests(many, {}, 6, 63)

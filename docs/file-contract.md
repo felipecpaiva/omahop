@@ -52,6 +52,6 @@ Same rules as the helper: case insensitive against the url host; a plain name hi
 | Line | Meaning | Sent by omahop |
 |---|---|---|
 | `shown` | photograph the shown tab of each of the host's windows now (a shot) | once per switcher session, at its start, to every live host (fresh tab files, same rule as reading), only while `browser_tabs` and `browser_tab_previews` are on |
-| `draw <id> <id> ...` | draw these tabs from their page content (a drawn picture, name ends in `d`) | at search time, after the tab rows are filtered: the visible tabs that are not the shown tab of their window, have no picture yet and were not asked for in this session, at most 6 a host, one line a host; only while `browser_tab_previews_draw` is on as well |
+| `draw <id> <id> ...` | draw these tabs from their page content (a drawn picture, name ends in `d`) | at search time, after the tab rows are filtered: the visible tabs (the shown tab too, a window on another workspace cannot be photographed) that have no picture yet and were not asked for in this session, at most 6 a host, one line a host; only while `browser_tab_previews_draw` is on as well |
 
 The helper ignores `shown` unless `tabs.pictures` exists, `draw` unless `tabs.draw` exists, and removes the ids of ignored sites. While a request is under 6 s old omahop re-reads the tab files about every 400 ms (never when none is pending, files only) and copies new `picture` names into the open list; the state file is rewritten only when a name changed.
