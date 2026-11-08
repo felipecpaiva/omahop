@@ -3,7 +3,7 @@ import { readFileSync, readdirSync } from "node:fs"
 import { execFileSync } from "node:child_process"
 import assert from "node:assert/strict"
 const src = readFileSync(new URL("../ConfigIO.js", import.meta.url), "utf8").replace(".pragma library", "")
-const IO = new Function(src + "; return { parse, get, set, unset, format }")()
+const IO = new Function(src + "; return { parse, get, set, unset, format, visible, indexById, isOn }")()
 
 // parse
 const sample = `# my notes
@@ -112,3 +112,21 @@ const work = P.resolve(P.parse(readFileSync(dir + "work.toml", "utf8")), setting
 assert.equal(work.values["top.style"], "cards"); assert.equal(work.values["top.reveal_delay_ms"], 0, "bad profile value keeps the base")
 assert.equal(work.values["top.takeover"], true); assert.equal(work.values["top.browser_tabs"], false, "base-only settings are never taken from a profile")
 console.log(`config io ok (profile parity on ${fixtures.length} fixtures)`)
+
+// ---- settings window layout: dependents hide with their parent, advanced rows fold ----
+{
+  const V = IO
+  const by = V.indexById(settings)
+  const val = (vals) => (s) => (s.id in vals ? vals[s.id] : s.default)
+  const get = (key) => by["top." + key]
+  assert.equal(V.visible(get("browser_tabs_ignore"), by, val({}), false), false, "off parent hides the child")
+  assert.equal(V.visible(get("browser_tabs_ignore"), by, val({ "top.browser_tabs": true }), false), true)
+  assert.equal(V.visible(get("browser_tab_previews_draw"), by, val({ "top.browser_tabs": true }), false), false, "grandchild needs the whole chain")
+  assert.equal(V.visible(get("browser_tab_previews_draw"), by, val({ "top.browser_tabs": true, "top.browser_tab_previews": true }), false), true)
+  assert.equal(V.visible(get("peek_position"), by, val({ "top.peek": "edge" }), false), true, "a choice other than off counts as on")
+  assert.equal(V.visible(get("peek_position"), by, val({}), false), false)
+  assert.equal(V.visible(get("border"), by, val({}), false), false, "advanced is folded")
+  assert.equal(V.visible(get("border"), by, val({}), true), true)
+  assert.equal(V.visible(by["top.schema"] || { hidden: true }, by, val({}), true), false, "hidden never shows")
+  for (const s of settings) assert.ok(s.subgroup && typeof s.depth === "number", "spec.json lacks layout fields for " + s.id)
+}

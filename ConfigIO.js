@@ -196,3 +196,27 @@ function resolve(parsed, settings) {
   out.problems.sort()
   return out
 }
+
+// ---- settings window layout (fields come from spec.json: subgroup, advanced, depends) ----
+
+// A switch or choice is "on" unless it is false or "off"; a dependent setting shows only while every setting it depends on is on.
+function isOn(v) {
+  return v !== false && v !== "off"
+}
+
+// Whether a setting shows: not hidden, its whole `depends` chain on (valueOf(setting) gives the value in use), and not advanced unless advancedOpen.
+function visible(setting, byId, valueOf, advancedOpen) {
+  if (setting.hidden || (setting.advanced && !advancedOpen)) return false
+  for (var s = setting, n = 0; s.depends && n < 10; n++) {
+    s = byId[s.depends]
+    if (!s || !isOn(valueOf(s))) return false
+  }
+  return true
+}
+
+// Settings by id, for visible().
+function indexById(settings) {
+  var out = {}
+  for (var i = 0; i < settings.length; i++) out[settings[i].id] = settings[i]
+  return out
+}

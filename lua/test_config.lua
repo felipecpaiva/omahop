@@ -164,6 +164,14 @@ for section, rules in pairs(C.spec) do
       assert(seen[path], "setting missing from C.order (the panel would never show it): " .. path)
       assert(groups[rule.group], "unknown group for " .. path)
       assert(rule.label, "no label for " .. path)
+      if not rule.hidden then assert(rule.subgroup and rule.subgroup ~= "", "no subgroup for " .. path) end
+      if rule.depends then
+        local sec, k = rule.depends:match("^(%w+)%.([%w_]+)$")
+        local parent = sec and C.spec[sec][k]
+        assert(parent, path .. " depends on an unknown setting: " .. rule.depends)
+        assert(parent.group == rule.group and parent.subgroup == rule.subgroup, path .. " must sit in its parent's group and subgroup")
+        assert(type(parent.default) == "boolean" or (parent.values and parent.values[1] == "off" or parent.default == "off"), path .. ": the parent needs an off state (boolean or \"off\")")
+      end
       if rule.values then for _, v in ipairs(rule.values) do assert(rule.names and rule.names[v], "no display name for " .. path .. " = " .. v) end end
     end
   end

@@ -46,10 +46,36 @@ for _, path in ipairs(C.order) do
   local rule = C.spec[section][key]
   local s = { id = path, section = section, key = key, type = kind(rule), default = rule.default, label = rule.label, help = rule.help,
     unit = rule.unit, min = rule.min, max = rule.max, values = rule.values, names = rule.names, reload = rule.reload or false, hidden = rule.hidden or false,
-    overridable = C.overridable(rule), choices = rule.choices, editor = rule.editor, editor_label = rule.editor_label }
+    overridable = C.overridable(rule), subgroup = rule.subgroup or "", advanced = rule.advanced or false, depends = rule.depends, choices = rule.choices, editor = rule.editor, editor_label = rule.editor_label }
   local g = by_id[rule.group]
   g.settings[#g.settings + 1] = s
 end
+
+-- Inside a group: subgroups in order of first appearance, and each setting right after the setting it depends on, one level deeper (`depth`).
+local function arrange(list)
+  local titles, byTitle = {}, {}
+  for _, s in ipairs(list) do
+    if not byTitle[s.subgroup] then byTitle[s.subgroup] = {}; titles[#titles + 1] = s.subgroup end
+    table.insert(byTitle[s.subgroup], s)
+  end
+  local out = {}
+  local function place(s, depth, bag)
+    s.depth = depth
+    out[#out + 1] = s
+    for _, c in ipairs(bag) do if c.depends == s.id then place(c, depth + 1, bag) end end
+  end
+  for _, t in ipairs(titles) do
+    local bag, ids = byTitle[t], {}
+    for _, s in ipairs(bag) do ids[s.id] = true end
+    for _, s in ipairs(bag) do
+      if not s.depends then place(s, 0, bag)
+      else assert(ids[s.depends], s.id .. " depends on " .. s.depends .. ", which is not in the same subgroup") end
+    end
+  end
+  assert(#out == #list, "a dependency cycle in " .. (list[1] and list[1].id or "?"))
+  return out
+end
+for _, g in ipairs(groups) do g.settings = arrange(g.settings) end
 
 local out = enc({ schema = C.schema, groups = groups }, "") .. "\n"
 local path = root .. "/spec.json"

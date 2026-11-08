@@ -2,8 +2,10 @@
   "groups": [{
     "id": "general",
     "settings": [{
+      "advanced": false,
       "choices": "profiles",
       "default": "",
+      "depth": 0,
       "help": "A named set of settings that replaces some of the ones below, for example a [profiles.work] table in ~/.config/omahop/config.toml with style = \"cards\". None uses the settings below as they are. Applies to the next Alt+Tab. A row the profile changes says so. Write a profile's values in the file (see docs/settings.md); Take over, Key to hold, the same-app shortcut and browser tabs are never changed by a profile.",
       "hidden": false,
       "id": "top.profile",
@@ -15,9 +17,12 @@
       "overridable": false,
       "reload": false,
       "section": "top",
+      "subgroup": "Basics",
       "type": "enum"
     }, {
+      "advanced": false,
       "default": true,
+      "depth": 0,
       "help": "Turn off to leave Alt+Tab alone, for example if you set your own Alt+Tab bind. Applies after a Hyprland reload.",
       "hidden": false,
       "id": "top.takeover",
@@ -26,9 +31,12 @@
       "overridable": false,
       "reload": true,
       "section": "top",
+      "subgroup": "Basics",
       "type": "bool"
     }, {
+      "advanced": false,
       "default": "alt",
+      "depth": 0,
       "help": "The key you hold while pressing Tab: Alt (the default) or Ctrl. Applies after a Hyprland reload. Super is not offered: Omarchy owns Super + Tab and most Super chords, and omahop never takes them. Ctrl + Tab switches tabs in browsers and editors; with Ctrl it opens omahop instead where omahop is active, so leave this on Alt if you use those tabs. A chord you already use is never taken. The same-app shortcut must start with the same key.",
       "hidden": false,
       "id": "top.modifier",
@@ -41,10 +49,13 @@
       "overridable": false,
       "reload": true,
       "section": "top",
+      "subgroup": "Basics",
       "type": "enum",
       "values": ["alt", "ctrl"]
     }, {
+      "advanced": false,
       "default": "floating",
+      "depth": 0,
       "help": "On other workspaces Alt+Tab stays exactly as Omarchy has it.",
       "hidden": false,
       "id": "top.scope",
@@ -57,10 +68,13 @@
       "overridable": true,
       "reload": false,
       "section": "top",
+      "subgroup": "Basics",
       "type": "enum",
       "values": ["floating", "all"]
     }, {
+      "advanced": false,
       "default": true,
+      "depth": 0,
       "help": "While the list is up, typing letters filters it (hold Alt, press Tab, then type). Letters are only taken while Alt is held, and never replace a bind of your own.",
       "hidden": false,
       "id": "top.search",
@@ -69,9 +83,13 @@
       "overridable": true,
       "reload": false,
       "section": "top",
+      "subgroup": "Search",
       "type": "bool"
     }, {
+      "advanced": false,
       "default": true,
+      "depends": "top.search",
+      "depth": 1,
       "help": "Also match initials (gc finds Google Chrome) and letters in order inside a word (chrm finds chrome). These matches come after the plain ones.",
       "hidden": false,
       "id": "top.search_fuzzy",
@@ -80,9 +98,13 @@
       "overridable": true,
       "reload": false,
       "section": "top",
+      "subgroup": "Search",
       "type": "bool"
     }, {
+      "advanced": true,
       "default": 0,
+      "depends": "top.search",
+      "depth": 1,
       "help": "0 (the default) keeps the usual way: releasing Alt picks. From 1 to 60: once you have typed a search, releasing Alt no longer picks. The list stays open this many seconds after your last key and takes the keyboard, so any character can be typed. Return picks, Escape clears the search and then closes, a click outside the list closes it, and when the time runs out it closes without picking.",
       "hidden": false,
       "id": "top.search_linger_seconds",
@@ -93,6 +115,7 @@
       "overridable": true,
       "reload": false,
       "section": "top",
+      "subgroup": "Search",
       "type": "int",
       "unit": "s"
     }],
@@ -100,7 +123,9 @@
   }, {
     "id": "windows",
     "settings": [{
+      "advanced": false,
       "default": "floating",
+      "depth": 0,
       "hidden": false,
       "id": "windows.workspaces",
       "key": "workspaces",
@@ -113,10 +138,13 @@
       "overridable": true,
       "reload": false,
       "section": "windows",
+      "subgroup": "Which windows",
       "type": "enum",
       "values": ["current", "floating", "all"]
     }, {
+      "advanced": false,
       "default": "active",
+      "depth": 0,
       "hidden": false,
       "id": "windows.monitors",
       "key": "monitors",
@@ -128,10 +156,13 @@
       "overridable": true,
       "reload": false,
       "section": "windows",
+      "subgroup": "Which windows",
       "type": "enum",
       "values": ["active", "all"]
     }, {
+      "advanced": false,
       "default": "back",
+      "depth": 0,
       "hidden": false,
       "id": "windows.minimized",
       "key": "minimized",
@@ -143,10 +174,13 @@
       "overridable": true,
       "reload": false,
       "section": "windows",
+      "subgroup": "Which windows",
       "type": "enum",
       "values": ["back", "hide"]
     }, {
+      "advanced": false,
       "default": "hide",
+      "depth": 0,
       "hidden": false,
       "id": "windows.specials",
       "key": "specials",
@@ -158,10 +192,13 @@
       "overridable": true,
       "reload": false,
       "section": "windows",
+      "subgroup": "Which windows",
       "type": "enum",
       "values": ["hide", "show"]
     }, {
+      "advanced": false,
       "default": "",
+      "depth": 0,
       "help": "Window classes, comma separated (for example: pavucontrol, steam). Case does not matter.",
       "hidden": false,
       "id": "windows.ignore",
@@ -170,13 +207,72 @@
       "overridable": true,
       "reload": false,
       "section": "windows",
+      "subgroup": "Hide or list first",
+      "type": "text"
+    }, {
+      "advanced": true,
+      "default": "",
+      "depth": 0,
+      "help": "Fragments, comma separated (for example: picture in picture). Case does not matter.",
+      "hidden": false,
+      "id": "windows.ignore_titles",
+      "key": "ignore_titles",
+      "label": "Never list windows whose title contains",
+      "overridable": true,
+      "reload": false,
+      "section": "windows",
+      "subgroup": "Hide or list first",
+      "type": "text"
+    }, {
+      "advanced": false,
+      "default": "",
+      "depth": 0,
+      "help": "Window classes, comma separated. Their windows come before all others.",
+      "hidden": false,
+      "id": "windows.first",
+      "key": "first",
+      "label": "List these apps first",
+      "overridable": true,
+      "reload": false,
+      "section": "windows",
+      "subgroup": "Hide or list first",
+      "type": "text"
+    }, {
+      "advanced": false,
+      "default": false,
+      "depth": 0,
+      "help": "When the focused window is fullscreen (a game, a remote desktop, a virtual machine), Alt+Tab is left to it and works as Omarchy has it.",
+      "hidden": false,
+      "id": "top.passthrough_fullscreen",
+      "key": "passthrough_fullscreen",
+      "label": "Step aside for fullscreen apps",
+      "overridable": true,
+      "reload": false,
+      "section": "top",
+      "subgroup": "Step aside",
+      "type": "bool"
+    }, {
+      "advanced": true,
+      "default": "",
+      "depth": 0,
+      "help": "Window classes, comma separated, for which Alt+Tab is always left alone, whatever their state.",
+      "hidden": false,
+      "id": "top.passthrough",
+      "key": "passthrough",
+      "label": "Step aside for these apps",
+      "overridable": true,
+      "reload": false,
+      "section": "top",
+      "subgroup": "Step aside",
       "type": "text"
     }],
-    "title": "Windows in the list"
+    "title": "Windows"
   }, {
     "id": "look",
     "settings": [{
+      "advanced": false,
       "default": "list",
+      "depth": 0,
       "help": "The list is plain and light. Cards show a picture of each window.",
       "hidden": false,
       "id": "top.style",
@@ -189,10 +285,13 @@
       "overridable": true,
       "reload": false,
       "section": "top",
+      "subgroup": "Style",
       "type": "enum",
       "values": ["list", "cards"]
     }, {
+      "advanced": false,
       "default": "snapshot",
+      "depth": 0,
       "help": "Snapshot takes one picture of each window when the cards open and costs almost nothing. Live keeps them updating and uses noticeable CPU with many windows.",
       "hidden": false,
       "id": "top.thumbnails",
@@ -206,10 +305,13 @@
       "overridable": true,
       "reload": false,
       "section": "top",
+      "subgroup": "Style",
       "type": "enum",
       "values": ["live", "snapshot", "off"]
     }, {
+      "advanced": true,
       "default": "",
+      "depth": 0,
       "help": "Window classes, comma separated, that are never captured into a picture (a password manager, a bank, a private window). Cards and the peek strip show the app icon instead. Applies to Snapshot and Live alike.",
       "hidden": false,
       "id": "top.thumbnail_exclude",
@@ -218,9 +320,12 @@
       "overridable": true,
       "reload": false,
       "section": "top",
+      "subgroup": "Style",
       "type": "text"
     }, {
+      "advanced": true,
       "default": 100,
+      "depth": 0,
       "help": "A quick tap flips between your last two windows with no list. 0 shows the list at once.",
       "hidden": false,
       "id": "top.reveal_delay_ms",
@@ -231,10 +336,13 @@
       "overridable": true,
       "reload": false,
       "section": "top",
+      "subgroup": "Style",
       "type": "int",
       "unit": "ms"
     }, {
+      "advanced": true,
       "default": "auto",
+      "depth": 0,
       "help": "Auto draws no outline when you turned window borders off.",
       "hidden": false,
       "id": "top.border",
@@ -248,43 +356,13 @@
       "overridable": true,
       "reload": false,
       "section": "top",
+      "subgroup": "Style",
       "type": "enum",
       "values": ["auto", "on", "off"]
     }, {
-      "default": "",
-      "help": "Type the folder name of an installed icon theme, such as Papirus, to prefer its icons. Empty uses whichever installed theme the scan finds first. An app the theme has no icon for still gets one from the others. ",
-      "hidden": false,
-      "id": "top.icon_theme",
-      "key": "icon_theme",
-      "label": "Icon theme",
-      "overridable": true,
-      "reload": false,
-      "section": "top",
-      "type": "text"
-    }, {
-      "default": "",
-      "help": "Type the folder name of an icon pack in ~/.config/omahop/packs, such as omahop-sample. Its icons come first; an app the pack has no icon for keeps its usual one. Empty uses no pack. A pack you made yourself or copied from someone: see docs/icon-packs.md for the format. Applies at once. To share a pack as one zip or install one, run tools/pack-export.sh <name> or tools/pack-import.sh <file.zip> from the plugin folder (~/.config/omarchy/plugins/io.github.felipecpaiva.omahop).",
-      "hidden": false,
-      "id": "top.icon_pack",
-      "key": "icon_pack",
-      "label": "Icon pack",
-      "overridable": true,
-      "reload": false,
-      "section": "top",
-      "type": "text"
-    }, {
-      "default": false,
-      "help": "Off by default. When on, a small speaker shows next to the app name of a window whose app is playing sound (a call, music, a video), so you can find it. Checked once each time the list opens, with pactl; nothing runs while the list is closed, and song or video titles are never logged or saved. Paused or muted sound shows no speaker. A browser plays all its tabs through one process, so every window of that browser gets the speaker.",
-      "hidden": false,
-      "id": "top.audio_marker",
-      "key": "audio_marker",
-      "label": "Mark windows playing sound",
-      "overridable": true,
-      "reload": false,
-      "section": "top",
-      "type": "bool"
-    }, {
+      "advanced": false,
       "default": true,
+      "depth": 0,
       "help": "Show close and minimize buttons on the row or card under the pointer. Delete (with Alt held) closes the picked window either way.",
       "hidden": false,
       "id": "top.actions",
@@ -293,13 +371,121 @@
       "overridable": true,
       "reload": false,
       "section": "top",
+      "subgroup": "Style",
+      "type": "bool"
+    }, {
+      "advanced": true,
+      "default": "",
+      "depth": 0,
+      "help": "Type the folder name of an installed icon theme, such as Papirus, to prefer its icons. Empty uses whichever installed theme the scan finds first. An app the theme has no icon for still gets one from the others. ",
+      "hidden": false,
+      "id": "top.icon_theme",
+      "key": "icon_theme",
+      "label": "Icon theme",
+      "overridable": true,
+      "reload": false,
+      "section": "top",
+      "subgroup": "Icons",
+      "type": "text"
+    }, {
+      "advanced": true,
+      "default": "",
+      "depth": 0,
+      "help": "Type the folder name of an icon pack in ~/.config/omahop/packs, such as omahop-sample. Its icons come first; an app the pack has no icon for keeps its usual one. Empty uses no pack. A pack you made yourself or copied from someone: see docs/icon-packs.md for the format. Applies at once. To share a pack as one zip or install one, run tools/pack-export.sh <name> or tools/pack-import.sh <file.zip> from the plugin folder (~/.config/omarchy/plugins/io.github.felipecpaiva.omahop).",
+      "hidden": false,
+      "id": "top.icon_pack",
+      "key": "icon_pack",
+      "label": "Icon pack",
+      "overridable": true,
+      "reload": false,
+      "section": "top",
+      "subgroup": "Icons",
+      "type": "text"
+    }, {
+      "advanced": false,
+      "default": false,
+      "depth": 0,
+      "help": "Off by default. When on, a small speaker shows next to the app name of a window whose app is playing sound (a call, music, a video), so you can find it. Checked once each time the list opens, with pactl; nothing runs while the list is closed, and song or video titles are never logged or saved. Paused or muted sound shows no speaker. A browser plays all its tabs through one process, so every window of that browser gets the speaker.",
+      "hidden": false,
+      "id": "top.audio_marker",
+      "key": "audio_marker",
+      "label": "Mark windows playing sound",
+      "overridable": true,
+      "reload": false,
+      "section": "top",
+      "subgroup": "Sound",
       "type": "bool"
     }],
     "title": "Look"
   }, {
     "id": "keys",
     "settings": [{
+      "advanced": false,
+      "default": "ALT + GRAVE",
+      "depth": 0,
+      "help": "A second shortcut that lists only the windows of the app you are in, like Cmd+backtick on a Mac. It must start with the key to hold (for example ALT + GRAVE, or CTRL + GRAVE when that key is Ctrl). Leave it empty to turn it off. Applies after a Hyprland reload; a chord you already use is never taken.",
+      "hidden": false,
+      "id": "top.same_app_key",
+      "key": "same_app_key",
+      "label": "Same-app shortcut",
+      "overridable": false,
+      "reload": true,
+      "section": "top",
+      "subgroup": "Same-app shortcut",
+      "type": "text"
+    }, {
+      "advanced": false,
+      "default": "off",
+      "depth": 0,
+      "help": "While the list is up and nothing is typed yet, a hint key jumps straight to a window. Any other key still types into the search.",
+      "hidden": false,
+      "id": "top.hints",
+      "key": "hints",
+      "label": "Quick jump keys",
+      "names": {
+        "apps": "App letters (set below)",
+        "numbers": "Number keys (1 to 9, with the key held)",
+        "off": "Off"
+      },
+      "overridable": true,
+      "reload": false,
+      "section": "top",
+      "subgroup": "Quick jump keys",
+      "type": "enum",
+      "values": ["off", "numbers", "apps"]
+    }, {
+      "advanced": false,
+      "default": "",
+      "depends": "top.hints",
+      "depth": 1,
+      "help": "Pairs of letter and app class, comma separated, for example: c=google-chrome, t=kitty. Used when Quick jump keys is App letters.",
+      "hidden": false,
+      "id": "top.hint_keys",
+      "key": "hint_keys",
+      "label": "App letters",
+      "overridable": true,
+      "reload": false,
+      "section": "top",
+      "subgroup": "Quick jump keys",
+      "type": "text"
+    }, {
+      "advanced": true,
+      "default": "",
+      "depth": 0,
+      "help": "Pairs of key and action, comma separated, for example: q=close, m=minimize. While the list is up and nothing is typed yet, that key acts on the selected window and the selection moves to the next row; once you have typed a letter, every key types. Actions: close, minimize. Empty (the default) turns it off. A key a hint already uses is left to the hint.",
+      "hidden": false,
+      "id": "top.action_keys",
+      "key": "action_keys",
+      "label": "Quit and minimize keys",
+      "overridable": true,
+      "reload": false,
+      "section": "top",
+      "subgroup": "Quick jump keys",
+      "type": "text"
+    }, {
+      "advanced": true,
       "default": 250,
+      "depth": 0,
       "hidden": false,
       "id": "keys.repeat_delay_ms",
       "key": "repeat_delay_ms",
@@ -309,10 +495,13 @@
       "overridable": true,
       "reload": false,
       "section": "keys",
+      "subgroup": "Holding Tab",
       "type": "int",
       "unit": "ms"
     }, {
+      "advanced": true,
       "default": 40,
+      "depth": 0,
       "hidden": false,
       "id": "keys.repeat_ms",
       "key": "repeat_ms",
@@ -322,6 +511,7 @@
       "overridable": true,
       "reload": false,
       "section": "keys",
+      "subgroup": "Holding Tab",
       "type": "int",
       "unit": "ms"
     }],
@@ -329,7 +519,9 @@
   }, {
     "id": "peek",
     "settings": [{
+      "advanced": false,
       "default": "off",
+      "depth": 0,
       "help": "A slim row of your running apps. Hover an app to see a picture of each of its windows; click to go to one. Off by default: nothing is added to your desktop unless you turn it on.",
       "hidden": false,
       "id": "top.peek",
@@ -343,10 +535,14 @@
       "overridable": true,
       "reload": false,
       "section": "top",
+      "subgroup": "Peek strip",
       "type": "enum",
       "values": ["off", "edge", "always"]
     }, {
+      "advanced": false,
       "default": "auto",
+      "depends": "top.peek",
+      "depth": 1,
       "help": "Auto picks an edge that is not the dock's and not the bar's, so nothing competes or covers the bar.",
       "hidden": false,
       "id": "top.peek_position",
@@ -362,116 +558,17 @@
       "overridable": true,
       "reload": false,
       "section": "top",
+      "subgroup": "Peek strip",
       "type": "enum",
       "values": ["auto", "bottom", "top", "left", "right"]
     }],
     "title": "Peek strip"
   }, {
-    "id": "rules",
-    "settings": [{
-      "default": "",
-      "help": "Fragments, comma separated (for example: picture in picture). Case does not matter.",
-      "hidden": false,
-      "id": "windows.ignore_titles",
-      "key": "ignore_titles",
-      "label": "Never list windows whose title contains",
-      "overridable": true,
-      "reload": false,
-      "section": "windows",
-      "type": "text"
-    }, {
-      "default": "",
-      "help": "Window classes, comma separated. Their windows come before all others.",
-      "hidden": false,
-      "id": "windows.first",
-      "key": "first",
-      "label": "List these apps first",
-      "overridable": true,
-      "reload": false,
-      "section": "windows",
-      "type": "text"
-    }, {
-      "default": false,
-      "help": "When the focused window is fullscreen (a game, a remote desktop, a virtual machine), Alt+Tab is left to it and works as Omarchy has it.",
-      "hidden": false,
-      "id": "top.passthrough_fullscreen",
-      "key": "passthrough_fullscreen",
-      "label": "Step aside for fullscreen apps",
-      "overridable": true,
-      "reload": false,
-      "section": "top",
-      "type": "bool"
-    }, {
-      "default": "",
-      "help": "Window classes, comma separated, for which Alt+Tab is always left alone, whatever their state.",
-      "hidden": false,
-      "id": "top.passthrough",
-      "key": "passthrough",
-      "label": "Step aside for these apps",
-      "overridable": true,
-      "reload": false,
-      "section": "top",
-      "type": "text"
-    }],
-    "title": "App rules"
-  }, {
-    "id": "shortcuts",
-    "settings": [{
-      "default": "ALT + GRAVE",
-      "help": "A second shortcut that lists only the windows of the app you are in, like Cmd+backtick on a Mac. It must start with the key to hold (for example ALT + GRAVE, or CTRL + GRAVE when that key is Ctrl). Leave it empty to turn it off. Applies after a Hyprland reload; a chord you already use is never taken.",
-      "hidden": false,
-      "id": "top.same_app_key",
-      "key": "same_app_key",
-      "label": "Same-app shortcut",
-      "overridable": false,
-      "reload": true,
-      "section": "top",
-      "type": "text"
-    }, {
-      "default": "off",
-      "help": "While the list is up and nothing is typed yet, a hint key jumps straight to a window. Any other key still types into the search.",
-      "hidden": false,
-      "id": "top.hints",
-      "key": "hints",
-      "label": "Quick jump keys",
-      "names": {
-        "apps": "App letters (set below)",
-        "numbers": "Number keys (1 to 9, with the key held)",
-        "off": "Off"
-      },
-      "overridable": true,
-      "reload": false,
-      "section": "top",
-      "type": "enum",
-      "values": ["off", "numbers", "apps"]
-    }, {
-      "default": "",
-      "help": "Pairs of letter and app class, comma separated, for example: c=google-chrome, t=kitty. Used when Quick jump keys is App letters.",
-      "hidden": false,
-      "id": "top.hint_keys",
-      "key": "hint_keys",
-      "label": "App letters",
-      "overridable": true,
-      "reload": false,
-      "section": "top",
-      "type": "text"
-    }, {
-      "default": "",
-      "help": "Pairs of key and action, comma separated, for example: q=close, m=minimize. While the list is up and nothing is typed yet, that key acts on the selected window and the selection moves to the next row; once you have typed a letter, every key types. Actions: close, minimize. Empty (the default) turns it off. A key a hint already uses is left to the hint.",
-      "hidden": false,
-      "id": "top.action_keys",
-      "key": "action_keys",
-      "label": "Quit and minimize keys",
-      "overridable": true,
-      "reload": false,
-      "section": "top",
-      "type": "text"
-    }],
-    "title": "Shortcuts"
-  }, {
     "id": "tabs",
     "settings": [{
+      "advanced": false,
       "default": false,
+      "depth": 0,
       "help": "Off by default. When on, a search also finds the tabs of your browser windows, not only the tab each window shows, and Return opens that tab. Needs the omahop-tabs browser extension and its helper. Private: tab titles and addresses stay on this computer in a temporary folder that is emptied when you log out or turn this off; omahop never logs them.",
       "hidden": false,
       "id": "top.browser_tabs",
@@ -480,9 +577,13 @@
       "overridable": false,
       "reload": false,
       "section": "top",
+      "subgroup": "Search",
       "type": "bool"
     }, {
+      "advanced": false,
       "default": "",
+      "depends": "top.browser_tabs",
+      "depth": 1,
       "help": "Site names, comma separated, for example: bank.example.com, mail.example.org. A name also covers its subdomains; * and ? are wildcards that must match the whole site name (*.corp.example). Empty (the default) hides nothing. Those tabs are never written by the helper and never shown.",
       "hidden": false,
       "id": "top.browser_tabs_ignore",
@@ -491,9 +592,13 @@
       "overridable": false,
       "reload": false,
       "section": "top",
+      "subgroup": "Search",
       "type": "text"
     }, {
+      "advanced": false,
       "default": false,
+      "depends": "top.browser_tabs",
+      "depth": 1,
       "help": "Off by default, and it works in the cards style. A found tab card shows a picture of its page instead of the site logo. This is a second opt in: turn it on here, and also open the extension's options page (the omahop tabs extension, Options) and press Enable page pictures, which asks Chrome for the extra permission to take pictures. Neither alone does anything. Chrome only photographs the tab you are looking at, so pictures of tabs you have looked at are updated while you browse (every few seconds while a tab is shown, and when you open the switcher). Pictures stay in memory and in the same temporary folder as the tab list, are never taken for sites on the ignore list, and are deleted when you turn this off, close the browser, or ignore the site. Needs Search browser tabs.",
       "hidden": false,
       "id": "top.browser_tab_previews",
@@ -502,9 +607,13 @@
       "overridable": false,
       "reload": false,
       "section": "top",
+      "subgroup": "Search",
       "type": "bool"
     }, {
+      "advanced": false,
       "default": false,
+      "depends": "top.browser_tab_previews",
+      "depth": 2,
       "help": "Off by default, and it needs page pictures on. Chrome cannot photograph a tab you never looked at, so with this on the extension draws pictures of tabs you have not opened quietly in the background after they load, one at a time, so they are ready when you search. The drawing is approximate: images from some websites may be blank, and video shows its first frame. To do that it runs a small script inside the page, only to read what is on screen, locally; nothing leaves your computer. Chrome's own pages and the new tab page cannot get a picture, and sites on the ignore list are never drawn. A drawn card is marked approximate.",
       "hidden": false,
       "id": "top.browser_tab_previews_draw",
@@ -513,13 +622,16 @@
       "overridable": false,
       "reload": false,
       "section": "top",
+      "subgroup": "Search",
       "type": "bool"
     }],
     "title": "Browser tabs"
   }, {
     "id": "swipe",
     "settings": [{
+      "advanced": false,
       "default": false,
+      "depth": 0,
       "help": "Off by default. When on, a swipe left or right with several fingers on the touchpad opens the list and moves the selection one row per stretch of travel; lifting the fingers picks. Swipe back to the window you started on and lift to close without switching. Touchpads only: a touchscreen swipe cannot reach omahop. Works where omahop takes over Alt+Tab. Applies after a Hyprland reload.",
       "hidden": false,
       "id": "top.swipe_trigger",
@@ -528,9 +640,13 @@
       "overridable": false,
       "reload": true,
       "section": "top",
+      "subgroup": "Swipe",
       "type": "bool"
     }, {
+      "advanced": false,
       "default": 4,
+      "depends": "top.swipe_trigger",
+      "depth": 1,
       "help": "3 or 4. Omarchy's example config uses 3 fingers left and right to change workspace; a swipe Hyprland already uses is never taken (Hyprland reports the clash as a config error and keeps the first one). Applies after a Hyprland reload.",
       "hidden": false,
       "id": "top.swipe_fingers",
@@ -541,9 +657,13 @@
       "overridable": false,
       "reload": true,
       "section": "top",
+      "subgroup": "Swipe",
       "type": "int"
     }, {
+      "advanced": false,
       "default": 100,
+      "depends": "top.swipe_trigger",
+      "depth": 1,
       "help": "How far the fingers travel to move one row. Lower moves faster. Applies at once.",
       "hidden": false,
       "id": "top.swipe_distance",
@@ -554,6 +674,7 @@
       "overridable": true,
       "reload": false,
       "section": "top",
+      "subgroup": "Swipe",
       "type": "int",
       "unit": "px"
     }],

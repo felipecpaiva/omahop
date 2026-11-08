@@ -4,8 +4,10 @@ import Quickshell
 import Quickshell.Wayland
 import qs.Commons
 import qs.Ui
+import "ConfigIO.js" as ConfigIO
 
-// omahop settings: one scrolling page, built from spec.json (so a new setting needs no panel code). Every change is saved after a short pause,
+// omahop settings: a side list of categories and one category's settings at a time (sub headings, dependents nested under their switch and hidden while it is off,
+// rare ones folded under "Show advanced"), all built from spec.json (so a new setting needs no panel code). Every change is saved after a short pause,
 // there is no Save button, and the next Alt+Tab uses it. Layout, tokens and lifecycle follow the other third-party panels (omagnet's, Omaland's).
 Item {
   id: root
@@ -16,6 +18,21 @@ Item {
 
   property bool opened: false
   property string page: ""   // "" for the settings list, or the editor page a setting asked for ("packs")
+
+  // Categories with something to show, the chosen one (the first until a click), and which categories have their advanced settings open.
+  property string category: ""
+  property var advancedOpen: ({})
+  readonly property var categories: settings.spec.groups.filter(function (g) { return g.settings.some(function (s) { return !s.hidden }) })
+  readonly property var current: categories.find(function (g) { return g.id === root.category }) || categories[0] || null
+  readonly property var byId: ConfigIO.indexById(ConfigIO.flatSettings(settings.spec))
+  readonly property int advancedCount: current ? current.settings.filter(function (s) { return s.advanced && !s.hidden }).length : 0
+
+  function isShown(s) {
+    return ConfigIO.visible(s, root.byId, function (x) { return settings.value(x) }, !!root.advancedOpen[root.current ? root.current.id : ""])
+  }
+  function subgroupShown(title) {
+    return root.current.settings.some(function (s) { return s.subgroup === title && root.isShown(s) })
+  }
 
   property color background: Color.menu.background
   property color foreground: Color.menu.text
@@ -69,7 +86,7 @@ Item {
     BorderSurface {
       id: card
       anchors.centerIn: parent
-      width: Math.min(Style.space(560), window.width - Style.gapsOut * 4)
+      width: Math.min(Style.space(780), window.width - Style.gapsOut * 4)
       height: Math.min(Style.space(640), window.height - Style.gapsOut * 4)
       radius: Style.cornerRadius
       color: root.background
@@ -134,45 +151,95 @@ Item {
             }
           }
 
-          Flickable {
-            id: scroller
+          RowLayout {
             visible: root.page === ""
             Layout.fillWidth: true
             Layout.fillHeight: true
-            clip: true
-            contentWidth: width
-            contentHeight: column.implicitHeight
-            boundsBehavior: Flickable.StopAtBounds
+            spacing: Style.spacing.md
 
+            // Categories: one per spec group, so a new group needs no panel code.
             ColumnLayout {
-              id: column
-              width: scroller.width
-              spacing: Style.spacing.md
-
+              Layout.alignment: Qt.AlignTop
+              Layout.preferredWidth: Style.space(150)
+              Layout.minimumWidth: Style.space(150)
+              Layout.maximumWidth: Style.space(150)
+              spacing: Style.spacing.xs
               Repeater {
-                model: settings.spec.groups
-                ColumnLayout {
-                  id: group
+                model: root.categories
+                Button {
                   required property var modelData
                   Layout.fillWidth: true
+                  text: modelData.title
+                  bordered: root.current && modelData.id === root.current.id
+                  foreground: root.foreground
+                  accent: root.accent
+                  fontFamily: root.fontFamily
+                  onClicked: root.category = modelData.id
+                }
+              }
+            }
+
+            ColumnLayout {
+              Layout.fillWidth: true
+              Layout.fillHeight: true
+              Layout.preferredWidth: 1
+              spacing: Style.spacing.sm
+
+              Flickable {
+                id: scroller
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                contentWidth: width
+                contentHeight: column.implicitHeight
+                boundsBehavior: Flickable.StopAtBounds
+
+                ColumnLayout {
+                  id: column
+                  width: scroller.width
                   spacing: Style.spacing.sm
-                  // A group with nothing to show (its settings are still hidden) takes no room.
-                  readonly property var shown: modelData.settings.filter(function (s) { return !s.hidden })
-                  visible: shown.length > 0
 
-                  PanelSeparator { foreground: root.foreground; Layout.fillWidth: true }
-                  PanelSectionHeader { text: group.modelData.title; foreground: root.foreground; fontFamily: root.fontFamily }
-
+                  // One entry per setting of the chosen category, in spec order. The model only changes with the category; each row shows or hides itself.
                   Repeater {
-                    model: group.shown
-                    SettingRow {
+                    model: root.current ? root.current.settings : []
+                    ColumnLayout {
+                      id: item
                       required property var modelData
-                      setting: modelData
-                      store: settings
-                      foreground: root.foreground
-                      accent: root.accent
-                      fontFamily: root.fontFamily
-                      onEditorRequested: function (editor) { root.page = editor }
+                      required property int index
+                      readonly property bool shown: root.isShown(modelData)
+                      readonly property bool firstOfSubgroup: index === 0 || root.current.settings[index - 1].subgroup !== modelData.subgroup
+                      Layout.fillWidth: true
+                      spacing: Style.spacing.sm
+
+                      PanelSectionHeader {
+                        visible: item.firstOfSubgroup && root.subgroupShown(modelData.subgroup)
+                        text: modelData.subgroup
+                        foreground: root.foreground
+                        fontFamily: root.fontFamily
+                      }
+                      SettingRow {
+                        visible: item.shown
+                        Layout.leftMargin: modelData.depth * Style.space(16)
+                        setting: modelData
+                        store: settings
+                        foreground: root.foreground
+                        accent: root.accent
+                        fontFamily: root.fontFamily
+                        onEditorRequested: function (editor) { root.page = editor }
+                      }
+                    }
+                  }
+
+                  Button {
+                    visible: root.advancedCount > 0
+                    text: root.advancedOpen[root.current.id] ? "Hide advanced settings" : "Show advanced settings (" + root.advancedCount + ")"
+                    foreground: root.foreground
+                    accent: root.accent
+                    fontFamily: root.fontFamily
+                    onClicked: {
+                      var o = Object.assign({}, root.advancedOpen)
+                      o[root.current.id] = !o[root.current.id]
+                      root.advancedOpen = o
                     }
                   }
                 }
