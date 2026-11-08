@@ -6,7 +6,7 @@ This is the privacy policy of the "omahop tabs" browser extension and its helper
 
 The extension reads, for every open tab in normal and popup windows: the tab id, the window id,
 whether it is the selected tab, whether its window is focused, the page title and the address.
-The site icon (the small logo of the site, taken from the browser's own icon cache, one per site) is also read, to show next to a found tab. Nothing else: no page content, no history, no cookies, no form data.
+The site icon (the small logo of the site, taken from the browser's own icon cache, one per site) is also read, to show next to a found tab. It also reads whether Chrome put a tab to sleep. Nothing else: no page content, no history, no cookies, no form data.
 
 Incognito windows are never read. The manifest sets `"incognito": "not_allowed"`, so the
 extension cannot even be switched on there, and both the extension and the helper drop any

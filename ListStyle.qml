@@ -100,6 +100,7 @@ BorderSurface {
           title: slot.modelData.title
           caption: State.tabCaption(slot.modelData, qsTr("shown"))
           active: slot.modelData.active === true
+          asleep: slot.modelData.asleep === true
           selected: slot.isSelected
           onPicked: card.picked(slot.index + 1)
         }

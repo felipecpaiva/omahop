@@ -12,6 +12,7 @@ Item {
   property string title: ""
   property string caption: ""   // the site, and a note for the shown tab (State.tabCaption)
   property bool active: false
+  property bool asleep: false   // Chrome put the tab to sleep: a small dim "asleep" after the site
   property bool selected: false
   readonly property bool hovered: hover.hovered
 
@@ -64,9 +65,23 @@ Item {
   }
 
   Text {
-    id: captionText
+    id: asleepText
+    visible: row.asleep
     anchors.right: parent.right
     anchors.rightMargin: Style.space(12)
+    anchors.verticalCenter: parent.verticalCenter
+    textFormat: Text.PlainText
+    text: qsTr("asleep")
+    color: Util.alpha(Color.popups.text, 0.4)
+    font.family: Style.font.family
+    font.pixelSize: Style.font.caption
+    font.italic: true
+  }
+
+  Text {
+    id: captionText
+    anchors.right: row.asleep ? asleepText.left : parent.right
+    anchors.rightMargin: row.asleep ? Style.space(8) : Style.space(12)
     anchors.verticalCenter: parent.verticalCenter
     width: Math.min(implicitWidth, row.width * 0.35)
     textFormat: Text.PlainText

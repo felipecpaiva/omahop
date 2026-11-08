@@ -74,7 +74,7 @@ window list order and fight the switch), and omagnet already proved the hold/rel
  browser extension -> omahop-tabs helper -> $XDG_RUNTIME_DIR/omahop/tabs.<hostpid>.json   (separate repository, only while tabs.enabled exists)
  lua/omahop.lua: at the first typed letter of a session, `find` lists the folder, each fresh file is read and checked (lua/tabs.lua, lua/json.lua),
                  browser windows are matched to Hyprland windows (pid, then title and focus), and tab rows join the list after their window
- state file:     t <address> <class> <minimized> <active> <icon> <picture> <site> <title>   (QML draws TabRow in the list; a CardItem in cards with the site icon, or the page picture when browser_tab_previews is on, D25)
+ state file:     t <address> <class> <minimized> <active> <icon> <picture> <asleep 0|1> <site> <title>   (QML draws TabRow in the list; a CardItem in cards with the site icon, or the page picture when browser_tab_previews is on, D25)
  Return on a tab row: hl.exec_cmd(tools/omahop-tabs-activate <hostpid> <tabId>)  -> FIFO tabs.<hostpid>.activate (non-blocking), then focus and raise
  pictures:        session start -> tools/omahop-tabs-request <dir> <hostpid> shown (every live host); a search -> `draw <ids>` (draw setting on, visible tabs
                   without a picture, 6 a host, once a session); for 6 s after a request the tick re-reads the tab files every 400 ms and updates the picture

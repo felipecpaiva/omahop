@@ -169,7 +169,7 @@ function M.write_state()
     local clean = function(v) return (tostring(v):gsub("[%c]", " ")) end
     for i, e in ipairs(M.entries) do
       if e.tab then -- a browser tab row: only what the overlay draws (the title and the site), never the address
-        lines[#lines + 1] = table.concat({ "t", e.address, clean(e.class), e.minimized and 1 or 0, e.tab.active and 1 or 0, e.tab.icon or "", e.tab.picture or "", clean(e.tab.host), clean(e.title) }, "\t")
+        lines[#lines + 1] = table.concat({ "t", e.address, clean(e.class), e.minimized and 1 or 0, e.tab.active and 1 or 0, e.tab.icon or "", e.tab.picture or "", e.tab.asleep and 1 or 0, clean(e.tab.host), clean(e.title) }, "\t")
       else
         lines[#lines + 1] = table.concat({ "w", e.address, clean(e.class), e.minimized and 1 or 0, labels[i] or "", clean(e.title) }, "\t")
       end

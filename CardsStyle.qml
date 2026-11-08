@@ -78,6 +78,7 @@ BorderSurface {
       iconSource: modelData.tab ? State.tabIcon(modelData, strip.tabIconDir, info.icon) : info.icon
       picture: modelData.tab ? State.tabPicture(modelData, strip.tabPictureDir) : ""
       drawn: modelData.tab ? State.tabPictureKind(modelData) === "drawn" : false
+      asleep: modelData.tab ? modelData.asleep === true : false
       // a browser tab (setting browser_tabs) is a card with the browser icon, its site as the caption, no picture and no buttons
       appName: modelData.tab ? State.tabCaption(modelData, qsTr("shown")) : info.name
       title: modelData.title

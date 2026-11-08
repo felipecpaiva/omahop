@@ -58,6 +58,15 @@ do -- icon: only a 16 digit hex file name key passes; anything else is dropped (
   for _, bad in ipairs({ '"../../etc/passwd"', '"0123456789abcde"', '"0123456789abcdef0"', '"0123456789abcdeg"', "5", "null", '"/x"' }) do
     assert(icon_of(bad) == nil, "icon dropped: " .. bad)
   end
+  do -- discarded: only a boolean true counts; anything else is dropped and the file is still read
+    local function asleep_of(value)
+      local s = T.parse(file({ window(1, true, { ('{"id": 1, "active": true, "title": "t", "url": "https://a.example.com/", "discarded": %s}'):format(value) }) }))
+      assert(s and s.windows[1].tabs[1], "a bad discarded value never rejects the file or the tab")
+      return s.windows[1].tabs[1].asleep
+    end
+    assert(asleep_of("true") == true, "discarded true is kept")
+    for _, bad in ipairs({ "false", "null", '"true"', "1", "0", "[true]", "{}" }) do assert(asleep_of(bad) == nil, "not asleep for: " .. bad) end
+  end
   local function picture_of(value)
     local s = T.parse(file({ window(1, true, { ('{"id": 1, "active": true, "title": "t", "url": "https://a.example.com/", "picture": %s}'):format(value) }) }))
     return s and s.windows[1].tabs[1].picture
@@ -206,6 +215,11 @@ do
   local seen_pic = false
   for _, e in ipairs(T.interleave(entries, T.rows({ s }, { hw("0x1", 100, "Alpha - Chromium") }, {}))) do if e.tab and e.tab.picture == "4242-17-3" then seen_pic = true end end
   assert(seen_pic, "a tab picture name passes from the file to the tab entry")
+  assert(not s.windows[1].tabs[1].asleep, "no discarded field: awake")
+  s.windows[1].tabs[1].asleep = true
+  local seen_asleep = false
+  for _, e in ipairs(T.interleave(entries, T.rows({ s }, { hw("0x1", 100, "Alpha - Chromium") }, {}))) do if e.tab and e.tab.asleep == true then seen_asleep = true end end
+  assert(seen_asleep, "the asleep flag passes from the file to the tab entry")
   -- unresolved windows go under their first candidate
   local u = snap(100, { bw(1, false, "Same"), bw(2, false, "Same") })
   rows = T.rows({ u }, { hw("0x1", 100, "Same - Chromium"), hw("0x2", 100, "Same - Chromium") }, {})

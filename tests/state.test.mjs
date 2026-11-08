@@ -71,14 +71,15 @@ console.log("state linger ok")
 
 // browser tab rows (v1.4): parsed with their site and active flag, counted in the selection, sized as compact rows
 {
-  const st = State.parse("open=1\nrevealed=1\nselected=2\nquery=notes\nw\t0xa\tchromium\t0\t\tAlpha - Chromium\nt\t0xa\tchromium\t0\t1\t0123456789abcdef\t0123456789abcdef/fedcba9876543210-17\tnotes.example.com\tTeam = notes\tpart two\nt\t0xa\tchromium\t1\t0\t\t\t\t\n")
+  const st = State.parse("open=1\nrevealed=1\nselected=2\nquery=notes\nw\t0xa\tchromium\t0\t\tAlpha - Chromium\nt\t0xa\tchromium\t0\t1\t0123456789abcdef\t0123456789abcdef/fedcba9876543210-17\t1\tnotes.example.com\tTeam = notes\tpart two\nt\t0xa\tchromium\t1\t0\t\t\t0\t\t\n")
   assert.equal(st.open, true, "a tab row can be the selected one")
   assert.equal(st.entries.length, 3)
-  assert.deepEqual(st.entries[1], { address: "0xa", appId: "chromium", minimized: false, hint: "", tab: true, active: true, icon: "0123456789abcdef", picture: "0123456789abcdef/fedcba9876543210-17", host: "notes.example.com", title: "Team = notes\tpart two" })
+  assert.deepEqual(st.entries[1], { address: "0xa", appId: "chromium", minimized: false, hint: "", tab: true, active: true, icon: "0123456789abcdef", picture: "0123456789abcdef/fedcba9876543210-17", asleep: true, host: "notes.example.com", title: "Team = notes\tpart two" })
   assert.equal(st.query, "notes", "a title with = is never read as a key")
-  assert.equal(st.entries[2].host, ""); assert.equal(st.entries[2].title, ""); assert.equal(st.entries[2].minimized, true)
+  assert.equal(st.entries[2].asleep, false); assert.equal(st.entries[2].host, ""); assert.equal(st.entries[2].title, ""); assert.equal(st.entries[2].minimized, true)
   assert.equal(State.parse("open=1\nrevealed=1\nselected=1\nt\t0xa\tc\t0\t1\tnotes\ttitle\n").entries.length, 0, "a short tab line is dropped (the older format without an icon field)")
   assert.equal(State.parse("open=1\nrevealed=1\nselected=1\nt\t0xa\tc\t0\t1\t0123456789abcdef\tnotes\ttitle\n").entries.length, 0, "a tab line of the format before page pictures is dropped")
+  assert.equal(State.parse("open=1\nrevealed=1\nselected=1\nt\t0xa\tc\t0\t1\t0123456789abcdef\t0123456789abcdef/fedcba9876543210-17\tnotes\ttitle\n").entries.length, 0, "a tab line of the format before the asleep field is dropped")
   assert.equal(State.listHeight(st.entries, 46, 30, 9), 46 + 30 + 30)
   assert.equal(State.listHeight(st.entries, 46, 30, 2), 46 + 30, "only maxRows rows count")
   assert.equal(State.listHeight([], 46, 30, 9), 0)

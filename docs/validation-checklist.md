@@ -216,3 +216,11 @@ Needs a real Chrome with the new `omahop-tabs` extension and helper and the page
 - [ ] Open the switcher with no letter typed: a background tab with no picture gets one drawn within seconds (one `draw` request per host at session open).
 - [ ] Off means off: with `browser_tab_previews_draw` off, searching never produces an "approximate" card; turning it off removes `$XDG_RUNTIME_DIR/omahop/tabs.draw`; a site on the ignore list is never drawn.
 - [ ] No input or desktop side effects: no tab flickers or switches in any browser window during any of the above.
+
+## Open, 2026-11-08: asleep tabs (hand check)
+
+Needs the omahop-tabs extension 0.5.1 in a real Chrome. Open `chrome://discards` in a tab and press Toggle next to a background tab (or wait for Memory Saver), then search for that tab in omahop.
+
+- [ ] Cards style: the card of the discarded tab shows a small "asleep" label at the top left of the picture area, over its older picture if it had one, otherwise over the big site icon. Other tabs carry no label, and a drawn picture still says "approximate" at the bottom left.
+- [ ] List style: the tab row shows a dim "asleep" after its site.
+- [ ] Nothing wakes the tab: it stays discarded in `chrome://discards` after the search and after closing the switcher. Opening it with Return wakes it, and a later search shows no label.

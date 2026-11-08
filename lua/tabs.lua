@@ -1,6 +1,6 @@
 -- omahop browser tabs: read the tab files the omahop-tabs helper writes, match each browser window to a Hyprland window, and build tab rows.
 -- Pure: files arrive as text, the clock, process facts and windows as plain values, so it tests without a browser or Hyprland.
--- File contract (schema 1, docs/file-contract.md): tabs.<hostpid>.json = { schema, browser, pid, caller, profile, windows = [ { id, focused, type, tabs = [ { id, active, title, url, icon?, picture? } ] } ] }.
+-- File contract (schema 1, docs/file-contract.md): tabs.<hostpid>.json = { schema, browser, pid, caller, profile, windows = [ { id, focused, type, tabs = [ { id, active, title, url, icon?, picture?, discarded? } ] } ] }.
 -- Privacy: titles and urls are never put in an error reason, so a caller may log a reason as it is.
 local here = debug.getinfo(1, "S").source:match("^@(.*)/") or "."
 local Json = dofile(here .. "/json.lua")
@@ -81,7 +81,9 @@ local function check_tab(t)
   local icon = type(t.icon) == "string" and t.icon:match("^%x+$") and #t.icon == T.icon_digits and t.icon or nil
   -- picture: the name of a page picture in tabpics/ (<hosthash>/<urlkey>-<n>, setting browser_tab_previews); anything else is dropped, so it can never name another path
   local picture = T.picture_name(t.picture)
-  return { id = t.id, active = t.active, title = cut(t.title:gsub("%c", " "), T.limits.title), url = t.url:sub(1, T.limits.url), icon = icon, picture = picture }
+  -- discarded: Chrome put the tab to sleep (no page in memory); only a boolean true counts, anything else is dropped and never rejects the file
+  local asleep = t.discarded == true or nil
+  return { id = t.id, active = t.active, title = cut(t.title:gsub("%c", " "), T.limits.title), url = t.url:sub(1, T.limits.url), icon = icon, picture = picture, asleep = asleep }
 end
 
 local function check_window(w, budget)
@@ -307,7 +309,7 @@ function T.rows(snapshots, hwins, ignore)
         for _, t in ipairs(bw.tabs) do
           local host, path = T.url_parts(t.url)
           if not T.ignored(host, ignore) then
-            out[#out + 1] = { window = address, hostpid = snap.hostpid, id = t.id, title = t.title, host = host, path = path, active = t.active, icon = t.icon, picture = t.picture }
+            out[#out + 1] = { window = address, hostpid = snap.hostpid, id = t.id, title = t.title, host = host, path = path, active = t.active, icon = t.icon, picture = t.picture, asleep = t.asleep }
           end
         end
       end
@@ -330,7 +332,7 @@ function T.interleave(entries, rows)
       out[#out + 1] = e
       for _, r in ipairs(by_window[e.address] or {}) do
         out[#out + 1] = { address = e.address, class = e.class, minimized = e.minimized, title = r.title,
-          search_extra = r.host .. " " .. r.path, tab = { hostpid = r.hostpid, id = r.id, host = r.host, active = r.active, icon = r.icon, picture = r.picture } }
+          search_extra = r.host .. " " .. r.path, tab = { hostpid = r.hostpid, id = r.id, host = r.host, active = r.active, icon = r.icon, picture = r.picture, asleep = r.asleep } }
       end
     end
   end
