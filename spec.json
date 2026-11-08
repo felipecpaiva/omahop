@@ -505,7 +505,7 @@
       "type": "bool"
     }, {
       "default": false,
-      "help": "Off by default, and it needs page pictures on. Chrome cannot photograph a tab you never looked at, so with this on the extension draws the page from its own content, like a rough render: images from other websites come out blank and video shows its first frame. To do that it runs a small script inside that page, only to read what is on screen, locally; nothing leaves your computer. It only draws tabs that a search matched and that have no picture yet, and sites on the ignore list are never drawn. A drawn card is marked approximate.",
+      "help": "Off by default, and it needs page pictures on. Chrome cannot photograph a tab you never looked at, so with this on the extension draws pictures of tabs you have not opened quietly in the background after they load, one at a time, so they are ready when you search. The drawing is approximate: images from some websites may be blank, and video shows its first frame. To do that it runs a small script inside the page, only to read what is on screen, locally; nothing leaves your computer. Chrome's own pages and the new tab page cannot get a picture, and sites on the ignore list are never drawn. A drawn card is marked approximate.",
       "hidden": false,
       "id": "top.browser_tab_previews_draw",
       "key": "browser_tab_previews_draw",

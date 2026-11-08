@@ -41,6 +41,7 @@ M.order = {}
 M.entries = {}      -- what the session shows (filtered by the search query)
 M.all_entries = {}  -- every window of this session, before the query
 M.pic_requested = {} -- tabs already asked for a drawing in this session ("<hostpid>:<id>")
+M.pic_pending = {} -- tabs a request is still waiting for a picture of; polling ends when it is empty
 M.query = ""
 M.bound = {}        -- chords bound for the running session, unbound exactly at its end
 M.gen = 0
@@ -314,34 +315,57 @@ end
 
 -- ---- page pictures on request (docs/file-contract.md, decision D26) ----
 -- Detached again, never a FIFO opened here. `shown` (once per session, to every live host) asks the extension to photograph the tab each of its
--- windows shows; `draw` (at search time, only with browser_tab_previews_draw) asks it to draw tabs that have no picture. While a request
+-- windows shows; `draw` (at session start for the first 6 background tabs per host without a picture, then at search time for the rest, only with
+-- browser_tab_previews_draw) asks it to draw tabs that have no picture. While a request
 -- is recent the tab files are re-read about every 400 ms (files only, no hyprctl) so a picture shows as soon as it exists.
 M.pic_window_ms, M.pic_poll_ms, M.draw_max_ids, M.draw_max_line = 6000, 400, 6, 63
 
 local function pictures_on() return M.cfg.browser_tabs and M.cfg.browser_tab_previews == true end
 local function draw_on() return pictures_on() and M.cfg.browser_tab_previews_draw == true end
 
-local function send_request(hostpid, what)
+-- keys: "<hostpid>:<id>" of the tabs this request is waiting for. The tab files are polled only while some are pending (and for 6 s at most).
+local function send_request(hostpid, what, keys)
   local pid = math.tointeger(hostpid)
   if not (pid and pid > 0) then return end
   hl.exec_cmd(("%s %s %d %s"):format(sq(M.tabs_request_cmd), sq(state_dir), pid, what))
-  M.pic_until, M.pic_next = M.now() + M.pic_window_ms, nil
+  for _, key in ipairs(keys or {}) do M.pic_pending[key] = true end
+  if next(M.pic_pending) then M.pic_until, M.pic_next = M.now() + M.pic_window_ms, nil end
 end
 
--- Session start: ask every live host for a fresh picture of its shown tabs.
+-- Session start: ask every live host for a fresh picture of its shown tabs. Only the shown tabs without a picture are waited for.
 function M.request_shown()
   if not pictures_on() then return end
-  for _, file in ipairs((fresh_tab_files(true))) do send_request(file.pid, "shown") end
+  for _, snap in ipairs(tab_snapshots(true)) do
+    local keys = {}
+    for _, w in ipairs(snap.windows) do
+      for _, t in ipairs(w.tabs) do
+        if t.active and not t.picture then keys[#keys + 1] = snap.hostpid .. ":" .. t.id end
+      end
+    end
+    send_request(snap.hostpid, "shown", keys)
+  end
 end
 
--- After a search: ask for drawings of the visible tabs that have none.
+local function send_draws(requests)
+  for _, r in ipairs(requests) do
+    local ids, keys = {}, {}
+    for i, id in ipairs(r.ids) do ids[i] = ("%d"):format(id); keys[i] = r.hostpid .. ":" .. ids[i] end
+    send_request(r.hostpid, "draw " .. table.concat(ids, " "), keys)
+  end
+end
+
+-- Session start, before any letter (only with browser_tab_previews_draw): draw the first 6 background tabs of each host that have no picture.
+function M.request_open_draws()
+  if not draw_on() then return end
+  local entries = {}
+  for i, row in ipairs(M.load_tab_rows()) do entries[i] = { tab = row } end -- rows are flat; the request logic takes entries
+  send_draws(Tabs.open_draw_requests(entries, M.pic_requested, M.draw_max_ids, M.draw_max_line))
+end
+
+-- After a search: ask for drawings of the visible tabs that have none (those not asked for at session start).
 function M.request_draws()
   if not (M.tabs_loaded and draw_on()) then return end
-  for _, r in ipairs(Tabs.draw_requests(M.entries, M.pic_requested, M.draw_max_ids, M.draw_max_line)) do
-    local ids = {}
-    for i, id in ipairs(r.ids) do ids[i] = ("%d"):format(id) end
-    send_request(r.hostpid, "draw " .. table.concat(ids, " "))
-  end
+  send_draws(Tabs.draw_requests(M.entries, M.pic_requested, M.draw_max_ids, M.draw_max_line))
 end
 
 -- While a request is recent: pull new picture names from the tab files into the entries and rewrite the state only when one changed.
@@ -357,6 +381,10 @@ function M.poll_pictures(now)
         for _, t in ipairs(w.tabs) do pics[snap.hostpid .. ":" .. t.id] = t.picture or false end
       end
     end
+    for key in pairs(M.pic_pending) do
+      if pics[key] ~= false then M.pic_pending[key] = nil end -- it has a picture, or the tab is gone
+    end
+    if not next(M.pic_pending) then M.pic_until = nil end -- nothing is waited for: no more polling
     local changed = false
     for _, list in ipairs({ M.all_entries, M.entries }) do
       for _, e in ipairs(list) do
@@ -736,9 +764,11 @@ function M.open_session(now, delta, list)
   if #M.entries < 2 then M.entries = {}; return false end -- nothing to switch to
   M.gen = M.gen + 1
   bind_session_keys(true)
-  M.pic_requested, M.pic_until, M.pic_next = {}, nil, nil
-  local asked, why = pcall(M.request_shown) -- pictures must never stop the switcher opening
-  if not asked then log("tabs: cannot ask for pictures: " .. tostring(why)) end
+  M.pic_requested, M.pic_pending, M.pic_until, M.pic_next = {}, {}, nil, nil
+  for _, ask in ipairs({ M.request_shown, M.request_open_draws }) do
+    local asked, why = pcall(ask) -- pictures must never stop the switcher opening
+    if not asked then log("tabs: cannot ask for pictures: " .. tostring(why)) end
+  end
   M.apply(M.session:open(now, #M.entries, first))
   hl.timer(function() tick(M.gen) end, { type = "oneshot", timeout = M.tick_ms })
   return true

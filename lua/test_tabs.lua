@@ -246,6 +246,17 @@ do -- the shown tab is the window: no copy of it in a result
   local out = T.without_copies(list)
   assert(#out == 3 and out[1].address == "0x1" and not out[1].tab and out[2].tab.id == 2 and out[3].tab.id == 3, "the active tab row goes only when its window row is there")
 end
+do -- open_draw_requests: at session start, background tabs only, 6 a host, none that has a picture, once
+  local function row(host, id, extra) local t = { hostpid = host, id = id }; for k, v in pairs(extra or {}) do t[k] = v end; return { tab = t } end
+  local req = {}
+  local rows = { row(5, 1, { active = true }), row(5, 2), row(5, 3, { picture = "x" }) }
+  for id = 4, 12 do rows[#rows + 1] = row(5, id) end
+  local out = T.open_draw_requests(rows, req, 6, 63)
+  assert(#out == 1 and table.concat(out[1].ids, " ") == "2 4 5 6 7 8", "no shown tab, no tab with a picture, at most 6")
+  out = T.open_draw_requests(rows, req, 6, 63)
+  assert(table.concat(out[1].ids, " ") == "9 10 11 12" and #T.open_draw_requests(rows, req, 6, 63) == 0, "the rest next time, never twice")
+end
+
 do -- draw_requests: which tabs to ask the extension to draw
   local function ent(hostpid, id, extra) local t = { hostpid = hostpid, id = id, active = false }; for k, v in pairs(extra or {}) do t[k] = v end return { tab = t } end
   local req = {}

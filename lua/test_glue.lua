@@ -762,7 +762,7 @@ do
   os.execute(("rm -f '%s'/tabs.*"):format(run))
   local PIC = "0123456789abcdef/fedcba9876543210-"
   local function pagefile(pics) -- tab 10 is the shown one; 11 to 19 are background tabs "Page N"
-    local tabs = { '{"id": 10, "active": true, "title": "Alpha page", "url": "https://alpha.example.com/"}' }
+    local tabs = { ('{"id": 10, "active": true, "title": "Alpha page", "url": "https://alpha.example.com/"%s}'):format(pics[10] and (', "picture": "' .. PIC .. pics[10] .. '"') or "") }
     for id = 11, 19 do
       local pic = pics[id] and (', "picture": "' .. PIC .. pics[id] .. '"') or ""
       tabs[#tabs + 1] = ('{"id": %d, "active": false, "title": "Page %d", "url": "https://site%d.example.com/"%s}'):format(id, id, id, pic)
@@ -806,8 +806,9 @@ do
   setcfg('browser_tabs = true\nbrowser_tab_previews = true\nbrowser_tab_previews_draw = true\n[windows]\nworkspaces = "current"\n')
   put("tabs." .. hostpid .. ".json", pagefile({ [19] = "4" }))
   open_session()
-  assert(#reqs() == 1, "start: only shown so far")
+  assert(#reqs() == 2 and reqs()[2] == prefix .. "draw 11 12 13 14 15 16", "start: shown, and one draw for the first 6 background tabs without a picture, before any letter: " .. table.concat(reqs(), " | "))
   type_word("page")
+  assert(#reqs() == 3 and reqs()[3] == prefix .. "draw 17 18", "typing asks only for the rest")
   local lines, seen = {}, {}
   for i = 2, #reqs() do
     local pid, rest2 = req_line(reqs()[i]); lines[#lines + 1] = rest2
@@ -824,6 +825,26 @@ do
   -- a new session asks again
   open_session(); type_word("page")
   assert(#reqs() == 3 and reqs()[1] == prefix .. "shown", "new session: shown and the two draws again: " .. #reqs())
+  -- polling ends at the first poll where nothing is pending (all asked tabs have pictures), long before the 6 s window
+  put("tabs." .. hostpid .. ".json", pagefile({ [19] = "4" }))
+  open_session(); type_word("page")
+  local p0 = tab_reads(); advance(16, 30)
+  assert(tab_reads() > p0 and M.pic_until, "pending tabs: polling")
+  local all = {}
+  for id = 10, 19 do all[id] = "9" end
+  put("tabs." .. hostpid .. ".json", pagefile(all))
+  advance(16, 40)
+  assert(M.pic_until == nil, "every asked tab has a picture: polling ended")
+  local p1 = tab_reads(); advance(16, 100)
+  assert(tab_reads() == p1, "no read after that first poll with nothing pending: " .. (tab_reads() - p1))
+  -- shown only, and the shown tab already has a picture: nothing to wait for, no polling at all
+  setcfg('browser_tabs = true\nbrowser_tab_previews = true\n[windows]\nworkspaces = "current"\n')
+  put("tabs." .. hostpid .. ".json", pagefile(all))
+  open_session(); type_word("page")
+  assert(M.pic_until == nil, "nothing pending: never polled")
+  local p2 = tab_reads(); advance(16, 100)
+  assert(tab_reads() == p2, "no tab file read per tick while nothing is pending")
+  setcfg('browser_tabs = true\nbrowser_tab_previews = true\nbrowser_tab_previews_draw = true\n[windows]\nworkspaces = "current"\n')
   -- the closed session stops polling
   M.session:key(clock, "cancel"); M.apply({})
   local r2 = tab_reads(); advance(16, 60)

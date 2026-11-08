@@ -359,6 +359,16 @@ function T.draw_requests(entries, requested, max_ids, max_line)
   return out
 end
 
+-- At session open, before any letter: the same, for the tabs of the tab files, leaving out the tab a window shows (its shot, or the extension's
+-- own fallback, covers it). Fills `requested`, so the search time request skips them and asks for the rest.
+function T.open_draw_requests(entries, requested, max_ids, max_line)
+  local background = {}
+  for _, e in ipairs(entries) do
+    if e.tab and not e.tab.active then background[#background + 1] = e end
+  end
+  return T.draw_requests(background, requested, max_ids, max_line)
+end
+
 -- After a search: the tab a browser window is showing is the window itself (the window row carries that tab's title), so its tab row would be a copy.
 -- Drop an active tab row when its window row is in the result too; keep it when only the tab matched (for example by its site) and the window row did not.
 function T.without_copies(entries)
