@@ -9,7 +9,7 @@ local T = {}
 
 T.schema = 1
 T.icon_digits = 16 -- length of an icon file name key (helper: ICON_KEY_DIGITS)
-T.picture_max = 40 -- bytes of a page picture name: <hostpid>-<tabid>-<n> (helper), digits and two dashes
+T.picture_max = 64 -- bytes of a page picture name: <hosthash>/<urlkey>-<n> (helper): 16 lower-case hex digits, a slash, 16 hex digits, a dash, up to 12 digits
 T.file_pattern = "^tabs%.(%d+)%.json$"
 T.limits = {
   bytes = 1024 * 1024,    -- one file (200 tabs measured at 34 KB, docs/research/tabs-spike.md section 6)
@@ -62,6 +62,14 @@ local function cut(s, n)
   return s:sub(1, stop - 1)
 end
 
+-- A page picture name -> itself when it is exactly 16 lower-case hex digits, a slash, 16 hex digits, a dash and 1 to 12 digits; else nil.
+function T.picture_name(v)
+  if type(v) ~= "string" or #v > T.picture_max then return nil end
+  local site, page, n = v:match("^(%x+)/(%x+)%-(%d+)$")
+  if not site or #site ~= 16 or #page ~= 16 or #n > 12 or v:find("%u") then return nil end
+  return v
+end
+
 local function is_int(v) return math.type(v) == "integer" and v >= 0 end
 local function opt_text(v) return v == nil or v == Json.null or (type(v) == "string" and #v <= T.limits.text) end
 
@@ -70,8 +78,8 @@ local function check_tab(t)
   if not utf8.len(t.title) then return nil end
   -- icon: the name of a site icon file in tabicons/ (16 hex digits, written by the helper); anything else is dropped, so it can never name another path
   local icon = type(t.icon) == "string" and t.icon:match("^%x+$") and #t.icon == T.icon_digits and t.icon or nil
-  -- picture: the name of a page picture in tabpics/ (three groups of digits, setting browser_tab_previews); anything else is dropped, so it can never name another path
-  local picture = type(t.picture) == "string" and #t.picture <= T.picture_max and t.picture:match("^%d+%-%d+%-%d+$") and t.picture or nil
+  -- picture: the name of a page picture in tabpics/ (<hosthash>/<urlkey>-<n>, setting browser_tab_previews); anything else is dropped, so it can never name another path
+  local picture = T.picture_name(t.picture)
   return { id = t.id, active = t.active, title = cut(t.title:gsub("%c", " "), T.limits.title), url = t.url:sub(1, T.limits.url), icon = icon, picture = picture }
 end
 

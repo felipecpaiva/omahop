@@ -62,8 +62,10 @@ do -- icon: only a 16 digit hex file name key passes; anything else is dropped (
     local s = T.parse(file({ window(1, true, { ('{"id": 1, "active": true, "title": "t", "url": "https://a.example.com/", "picture": %s}'):format(value) }) }))
     return s and s.windows[1].tabs[1].picture
   end
-  assert(picture_of('"4242-17-3"') == "4242-17-3", "a good picture name is kept")
-  for _, bad in ipairs({ '"../../etc/passwd"', '"1-2"', '"1-2-3-4"', '"a-b-c"', '"1-2-3.jpg"', '"1/2/3"', '""', '"-1-2"', '"1-2-' .. ("9"):rep(40) .. '"', "5", "null" }) do
+  assert(picture_of('"0123456789abcdef/fedcba9876543210-17"') == "0123456789abcdef/fedcba9876543210-17", "a good picture name is kept")
+  for _, bad in ipairs({ '"../../etc/passwd"', '"4242-17-3"', '"0123456789abcdef/fedcba9876543210"', '"0123456789abcdef/fedcba9876543210-"', '"0123456789abcdef/fedcba9876543210-17.jpg"',
+    '"0123456789abcde/fedcba9876543210-17"', '"0123456789abcdef/fedcba98765432100-17"', '"0123456789ABCDEF/fedcba9876543210-17"', '"0123456789abcdef/fedcba9876543210-' .. ("9"):rep(13) .. '"',
+    '"../0123456789abcdef/fedcba9876543210-17"', '"0123456789abcdef//fedcba9876543210-17"', '""', "5", "null" }) do
     assert(picture_of(bad) == nil, "picture dropped: " .. bad)
   end
   assert(icon_of('"ABCDEF0123456789"') == "ABCDEF0123456789" or icon_of('"ABCDEF0123456789"') == nil, "upper case is allowed by the pattern or dropped, never altered")

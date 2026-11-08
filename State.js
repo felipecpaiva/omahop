@@ -75,10 +75,10 @@ function tabIcon(entry, dir, fallback) {
   return /^[0-9a-f]{16}$/.test(key) && dir ? "file://" + dir + "/" + key + ".png" : fallback
 }
 
-// The page picture of a tab card: its file when the helper wrote one (a name of three groups of digits, nothing else is ever a path), else empty.
+// The page picture of a tab card: its file when the helper wrote one (<hosthash>/<urlkey>-<n>: 16 hex digits, a slash, 16 hex digits, a dash, digits; nothing else is ever a path), else empty.
 function tabPicture(entry, dir) {
   var name = String(entry && entry.picture || "")
-  return /^[0-9]+-[0-9]+-[0-9]+$/.test(name) && name.length <= 40 && dir ? "file://" + dir + "/" + name + ".jpg" : ""
+  return /^[0-9a-f]{16}\/[0-9a-f]{16}-[0-9]{1,12}$/.test(name) && dir ? "file://" + dir + "/" + name + ".jpg" : ""
 }
 
 // The caption of a tab card or row: its site, and a note when it is the tab its window shows.
