@@ -224,3 +224,14 @@ Needs the omahop-tabs extension 0.5.1 in a real Chrome. Open `chrome://discards`
 - [ ] Cards style: the card of the discarded tab shows a small "asleep" label at the top left of the picture area, over its older picture if it had one, otherwise over the big site icon. Other tabs carry no label, and a drawn picture still says "approximate" at the bottom left.
 - [ ] List style: the tab row shows a dim "asleep" after its site.
 - [ ] Nothing wakes the tab: it stays discarded in `chrome://discards` after the search and after closing the switcher. Opening it with Return wakes it, and a later search shows no label.
+
+## Open, 2026-11-08: why a card has no picture (hand check)
+
+Needs omahop-tabs extension 0.6.1 or later in a real Chrome, `browser_tabs`, `browser_tab_previews` and `browser_tab_previews_draw` on, the permission granted. Nothing here was run against a real browser.
+
+- [ ] `browser`: open `chrome://extensions` in a background tab, search for it: its card (cards style) shows "Chrome page" in the top left corner, and the list row shows a dim "Chrome page". The new tab page says the same.
+- [ ] `heavy`: open a page with over 15000 elements (a very long generated table), leave it in the background, search for it: "too heavy to draw" (the options page counts it as skipped as too heavy).
+- [ ] `blocked`: open the Chrome Web Store (`chromewebstore.google.com`) or a PDF in Chrome's viewer in a background tab: "page blocks drawing".
+- [ ] `failed`: a page that takes over 8 seconds to draw (or fails twice) shows "could not draw" and is not tried again for 30 minutes; the options page counts it under "timed out" or "failed".
+- [ ] `queued` and `limit`: Ctrl+click about ten links into background tabs and search at once: those still waiting show "drawing soon" and the label turns into a picture (or stays "drawing later" if the hourly or the 20 draw cap was hit). While the switcher is open nothing polls beyond the usual 6 seconds.
+- [ ] "asleep" still wins: a discarded tab shows "asleep", never one of the others. A tab with a picture shows no such label (a drawn one still says "approximate" at the bottom left). Nothing carries a title or address in the label.

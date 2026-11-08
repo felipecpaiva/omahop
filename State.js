@@ -1,6 +1,6 @@
 .pragma library
 // omahop state file parser. The Lua side (lua/omahop.lua write_state) writes it; the overlay reads it. Pure, so Node tests it (tests/state.test.mjs).
-// Format: "key=value" lines (seq, grab, linger_ms, linger_rev: see lua/omahop.lua write_state and Linger.js), then one tab-separated line per window: w <address> <class> <minimized 0|1> <hint> <title> (hint: a number or letter, empty for none), and while a search is typed with browser_tabs on, tab rows: t <address> <class> <minimized> <active> <icon> <picture> <asleep 0|1> <site> <title> (asleep: Chrome put the tab to sleep; icon: the file name key of the site icon in tabicons/, picture: the name of the page picture in tabpics/, each empty for none).
+// Format: "key=value" lines (seq, grab, linger_ms, linger_rev: see lua/omahop.lua write_state and Linger.js), then one tab-separated line per window: w <address> <class> <minimized 0|1> <hint> <title> (hint: a number or letter, empty for none), and while a search is typed with browser_tabs on, tab rows: t <address> <class> <minimized> <active> <icon> <picture> <asleep 0|1> <nopic> <site> <title> (nopic: why the tab has no picture, one of browser heavy failed blocked queued limit, empty for none; asleep: Chrome put the tab to sleep; icon: the file name key of the site icon in tabicons/, picture: the name of the page picture in tabpics/, each empty for none).
 
 // The thumbnail_exclude setting ("kitty, 1Password") as a set of lower-case window classes. Whole classes only, never a substring match.
 function thumbnailExcludeSet(text) {
@@ -27,9 +27,9 @@ function parse(text) {
       if (f.length >= 6) st.entries.push({ address: f[1], appId: f[2], minimized: f[3] === "1", hint: f[4], title: f.slice(5).join("\t") })
       continue
     }
-    if (line.indexOf("t\t") === 0) { // a browser tab row (setting browser_tabs): t <address> <class> <minimized> <active 0|1> <icon> <picture> <asleep 0|1> <site> <title>
+    if (line.indexOf("t\t") === 0) { // a browser tab row (setting browser_tabs): t <address> <class> <minimized> <active 0|1> <icon> <picture> <asleep 0|1> <nopic> <site> <title>
       var t = line.split("\t")
-      if (t.length >= 10) st.entries.push({ address: t[1], appId: t[2], minimized: t[3] === "1", hint: "", tab: true, active: t[4] === "1", icon: t[5], picture: t[6], asleep: t[7] === "1", host: t[8], title: t.slice(9).join("\t") })
+      if (t.length >= 11) st.entries.push({ address: t[1], appId: t[2], minimized: t[3] === "1", hint: "", tab: true, active: t[4] === "1", icon: t[5], picture: t[6], asleep: t[7] === "1", nopic: t[8], host: t[9], title: t.slice(10).join("\t") })
       continue
     }
     var eq = line.indexOf("=")
@@ -86,6 +86,19 @@ function tabPicture(entry, dir) {
 function tabPictureKind(entry) {
   var name = String(entry && entry.picture || "")
   return !pictureName.test(name) ? "" : name.slice(-1) === "d" ? "drawn" : "shot"
+}
+
+// The short sentence for why a tab has no picture (its nopic code), "" for none or an unknown code.
+function nopicText(code) {
+  switch (code) {
+  case "browser": return "Chrome page"
+  case "heavy": return "too heavy to draw"
+  case "failed": return "could not draw"
+  case "blocked": return "page blocks drawing"
+  case "queued": return "drawing soon"
+  case "limit": return "drawing later"
+  default: return ""
+  }
 }
 
 // The caption of a tab card or row: its site, and a note when it is the tab its window shows.

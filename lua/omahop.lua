@@ -169,7 +169,7 @@ function M.write_state()
     local clean = function(v) return (tostring(v):gsub("[%c]", " ")) end
     for i, e in ipairs(M.entries) do
       if e.tab then -- a browser tab row: only what the overlay draws (the title and the site), never the address
-        lines[#lines + 1] = table.concat({ "t", e.address, clean(e.class), e.minimized and 1 or 0, e.tab.active and 1 or 0, e.tab.icon or "", e.tab.picture or "", e.tab.asleep and 1 or 0, clean(e.tab.host), clean(e.title) }, "\t")
+        lines[#lines + 1] = table.concat({ "t", e.address, clean(e.class), e.minimized and 1 or 0, e.tab.active and 1 or 0, e.tab.icon or "", e.tab.picture or "", e.tab.asleep and 1 or 0, e.tab.nopic or "", clean(e.tab.host), clean(e.title) }, "\t")
       else
         lines[#lines + 1] = table.concat({ "w", e.address, clean(e.class), e.minimized and 1 or 0, labels[i] or "", clean(e.title) }, "\t")
       end
@@ -375,21 +375,28 @@ function M.poll_pictures(now)
   if not M.tabs_loaded or (M.pic_next and now < M.pic_next) then return end
   M.pic_next = now + M.pic_poll_ms
   local ok, err = pcall(function()
-    local pics = {}
+    local pics, why = {}, {}
     for _, snap in ipairs(tab_snapshots(true)) do -- quiet: the same skip would be logged every 400 ms
       for _, w in ipairs(snap.windows) do
-        for _, t in ipairs(w.tabs) do pics[snap.hostpid .. ":" .. t.id] = t.picture or false end
+        for _, t in ipairs(w.tabs) do
+          pics[snap.hostpid .. ":" .. t.id] = t.picture or false
+          why[snap.hostpid .. ":" .. t.id] = t.nopic or false
+        end
       end
     end
     for key in pairs(M.pic_pending) do
-      if pics[key] ~= false then M.pic_pending[key] = nil end -- it has a picture, or the tab is gone
+      -- it has a picture, the tab is gone, or the extension gave a lasting reason (queued and limit are temporary: still waiting)
+      if pics[key] ~= false or (why[key] and why[key] ~= "queued" and why[key] ~= "limit") then M.pic_pending[key] = nil end
     end
     if not next(M.pic_pending) then M.pic_until = nil end -- nothing is waited for: no more polling
     local changed = false
     for _, list in ipairs({ M.all_entries, M.entries }) do
       for _, e in ipairs(list) do
-        local p = e.tab and pics[e.tab.hostpid .. ":" .. e.tab.id]
+        local key = e.tab and (e.tab.hostpid .. ":" .. e.tab.id)
+        local p = key and pics[key]
         if p ~= nil and (p or nil) ~= e.tab.picture then e.tab.picture = p or nil; changed = true end
+        local n = key and why[key]
+        if n ~= nil and (n or nil) ~= e.tab.nopic then e.tab.nopic = n or nil; changed = true end
       end
     end
     if changed then M.write_state() end

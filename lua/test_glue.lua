@@ -680,13 +680,16 @@ do
   type_word("hidden")
   assert(#M.entries == 1 and M.entries[1].tab and M.entries[1].title == "Hidden notes" and M.entries[1].address == "0xb6", "a hidden tab is found by its title, under its window")
   local st = read_state()
-  assert(st:find("\nt\t0xb6\tchromium\t0\t0\t\t\t0\tnotes.example.com\tHidden notes\n", 1, true), "state line for the tab: window, class, minimized, active, icon and picture (empty here), asleep, site, title: " .. st)
+  assert(st:find("\nt\t0xb6\tchromium\t0\t0\t\t\t0\t\tnotes.example.com\tHidden notes\n", 1, true), "state line for the tab: window, class, minimized, active, icon and picture (empty here), asleep, nopic (empty), site, title: " .. st)
   assert(not st:find("https://", 1, true) and not st:find("private/path", 1, true) and not st:find("token", 1, true), "the state file carries the site, never the address")
   M.entries[1].tab.picture = "0123456789abcdef/fedcba9876543210-17"; M.write_state()
-  assert(read_state():find("\nt\t0xb6\tchromium\t0\t0\t\t0123456789abcdef/fedcba9876543210-17\t0\tnotes.example.com\tHidden notes\n", 1, true), "a page picture name is written in its own field")
+  assert(read_state():find("\nt\t0xb6\tchromium\t0\t0\t\t0123456789abcdef/fedcba9876543210-17\t0\t\tnotes.example.com\tHidden notes\n", 1, true), "a page picture name is written in its own field")
   M.entries[1].tab.asleep = true; M.write_state()
-  assert(read_state():find("\nt\t0xb6\tchromium\t0\t0\t\t0123456789abcdef/fedcba9876543210-17\t1\tnotes.example.com\tHidden notes\n", 1, true), "an asleep tab writes 1 after the picture")
+  assert(read_state():find("\nt\t0xb6\tchromium\t0\t0\t\t0123456789abcdef/fedcba9876543210-17\t1\t\tnotes.example.com\tHidden notes\n", 1, true), "an asleep tab writes 1 after the picture")
   M.entries[1].tab.asleep = nil
+  M.entries[1].tab.nopic = "queued"; M.write_state()
+  assert(read_state():find("\nt\t0xb6\tchromium\t0\t0\t\t0123456789abcdef/fedcba9876543210-17\t0\tqueued\tnotes.example.com\tHidden notes\n", 1, true), "the nopic code is written after asleep")
+  M.entries[1].tab.nopic = nil
   M.entries[1].tab.picture = nil; M.write_state()
   M.query = "bank"; M.refilter()
   assert(#M.entries == 0, "an ignored site is dropped by omahop too")
@@ -768,6 +771,7 @@ do
     local tabs = { ('{"id": 10, "active": true, "title": "Alpha page", "url": "https://alpha.example.com/"%s}'):format(pics[10] and (', "picture": "' .. PIC .. pics[10] .. '"') or "") }
     for id = 11, 19 do
       local pic = pics[id] and (', "picture": "' .. PIC .. pics[id] .. '"') or ""
+      if pics.why and pics.why[id] then pic = pic .. (', "nopic": "%s"'):format(pics.why[id]) end
       tabs[#tabs + 1] = ('{"id": %d, "active": false, "title": "Page %d", "url": "https://site%d.example.com/"%s}'):format(id, id, id, pic)
     end
     return ('{"schema": 1, "browser": "chromium", "pid": %d, "caller": "chrome-extension://abc/", "profile": "Default", "windows": [{"id": 1, "focused": true, "type": "normal", "tabs": [%s]}]}'):format(browser_pid, table.concat(tabs, ","))
@@ -795,7 +799,7 @@ do
   assert(tab_reads() == r0 + 1, "one re-read in the first 400 ms: " .. (tab_reads() - r0))
   put("tabs." .. hostpid .. ".json", pagefile({ [12] = "5d", [19] = "4" }))
   advance(16, 30)
-  assert(read_state():find("\nt\t0xb6\tchromium\t0\t0\t\t" .. PIC .. "5d\t0\tsite12.example.com\tPage 12\n", 1, true), "a picture that appears while open reaches the state file")
+  assert(read_state():find("\nt\t0xb6\tchromium\t0\t0\t\t" .. PIC .. "5d\t0\t\tsite12.example.com\tPage 12\n", 1, true), "a picture that appears while open reaches the state file")
   local function tab_lines() local t = {} for l in read_state():gmatch("\nt\t[^\n]*") do t[#t + 1] = l end return table.concat(t) end
   local before_lines = tab_lines()
   advance(16, 100)
@@ -840,6 +844,24 @@ do
   assert(M.pic_until == nil, "every asked tab has a picture: polling ended")
   local p1 = tab_reads(); advance(16, 100)
   assert(tab_reads() == p1, "no read after that first poll with nothing pending: " .. (tab_reads() - p1))
+  -- why a tab has no picture: queued and limit are temporary (still pending, polled within the 6 s window); a lasting reason ends the wait
+  do
+    local function why_all(code) local w = {} for id = 11, 19 do w[id] = code end return { [10] = "9", why = w } end
+    put("tabs." .. hostpid .. ".json", pagefile({ [10] = "9" }))
+    open_session(); type_word("page")
+    assert(not read_state():find("\tqueued\t", 1, true), "no reason yet")
+    put("tabs." .. hostpid .. ".json", pagefile(why_all("queued")))
+    advance(16, 40)
+    assert(read_state():find("\t0\tqueued\tsite12.example.com\tPage 12\n", 1, true), "the nopic code is written after the asleep field: " .. read_state())
+    assert(M.pic_until, "queued is temporary: still waiting")
+    put("tabs." .. hostpid .. ".json", pagefile(why_all("browser")))
+    advance(16, 40)
+    assert(read_state():find("\t0\tbrowser\tsite12.example.com\tPage 12\n", 1, true), "the label follows the file")
+    assert(M.pic_until == nil, "a lasting reason ends the wait and the polling")
+    local q0 = tab_reads(); advance(16, 100)
+    assert(tab_reads() == q0, "no further reads")
+    put("tabs." .. hostpid .. ".json", pagefile(all))
+  end
   -- shown only, and the shown tab already has a picture: nothing to wait for, no polling at all
   setcfg('browser_tabs = true\nbrowser_tab_previews = true\n[windows]\nworkspaces = "current"\n')
   put("tabs." .. hostpid .. ".json", pagefile(all))

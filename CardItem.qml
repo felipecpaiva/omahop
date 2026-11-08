@@ -14,6 +14,7 @@ Item {
   property string iconSource: ""
   property string picture: ""   // a tab card (setting browser_tab_previews): the picture of its page, a file url; empty for none
   property bool asleep: false   // a tab Chrome put to sleep (no page in memory): marked so
+  property string nopic: ""     // why a tab card has no picture, as a short sentence (State.nopicText); empty for none. "asleep" wins when both apply
   property bool drawn: false    // its picture was drawn from the page's content, not photographed: approximate, marked so
   property string appName: ""
   property string title: ""
@@ -101,8 +102,9 @@ Item {
     }
 
     // A tab Chrome discarded (Memory Saver) has no page in memory, so it has no fresh picture; say so, with or without an older picture.
+    // The same corner says why any other tab card has no picture (a Chrome page, too heavy, queued, ...).
     Rectangle {
-      visible: card.asleep
+      visible: card.asleep || card.nopic !== ""
       anchors.left: parent.left
       anchors.top: parent.top
       anchors.margins: Style.space(4)
@@ -110,7 +112,7 @@ Item {
       radius: Style.cornerRadius
       color: Util.alpha(Color.background, 0.85)
       border.width: 1; border.color: Util.alpha(Color.popups.text, 0.3)
-      Text { id: asleepText; anchors.centerIn: parent; textFormat: Text.PlainText; text: qsTr("asleep"); color: Color.popups.text; font.family: Style.font.family; font.pixelSize: Style.font.caption }
+      Text { id: asleepText; anchors.centerIn: parent; textFormat: Text.PlainText; text: card.asleep ? qsTr("asleep") : card.nopic; color: Color.popups.text; font.family: Style.font.family; font.pixelSize: Style.font.caption }
     }
 
     // No picture (icons only, a window that cannot be captured, or a frame not here yet): the app icon in the middle.

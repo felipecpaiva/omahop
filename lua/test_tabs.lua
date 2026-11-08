@@ -67,6 +67,15 @@ do -- icon: only a 16 digit hex file name key passes; anything else is dropped (
     assert(asleep_of("true") == true, "discarded true is kept")
     for _, bad in ipairs({ "false", "null", '"true"', "1", "0", "[true]", "{}" }) do assert(asleep_of(bad) == nil, "not asleep for: " .. bad) end
   end
+  do -- nopic: only the six codes are kept; anything else is dropped and the file is still read
+    local function nopic_of(value)
+      local s = T.parse(file({ window(1, true, { ('{"id": 1, "active": true, "title": "t", "url": "https://a.example.com/", "nopic": %s}'):format(value) }) }))
+      assert(s and s.windows[1].tabs[1], "a bad nopic value never rejects the file or the tab")
+      return s.windows[1].tabs[1].nopic
+    end
+    for _, code in ipairs({ "browser", "heavy", "failed", "blocked", "queued", "limit" }) do assert(nopic_of('"' .. code .. '"') == code, "kept: " .. code) end
+    for _, bad in ipairs({ '"asleep"', '"discarded"', '"Browser"', '"browser "', '""', "null", "true", "1", "[]", '{"a":1}', '"__index"', '"../x"' }) do assert(nopic_of(bad) == nil, "dropped: " .. bad) end
+  end
   local function picture_of(value)
     local s = T.parse(file({ window(1, true, { ('{"id": 1, "active": true, "title": "t", "url": "https://a.example.com/", "picture": %s}'):format(value) }) }))
     return s and s.windows[1].tabs[1].picture
@@ -220,6 +229,10 @@ do
   local seen_asleep = false
   for _, e in ipairs(T.interleave(entries, T.rows({ s }, { hw("0x1", 100, "Alpha - Chromium") }, {}))) do if e.tab and e.tab.asleep == true then seen_asleep = true end end
   assert(seen_asleep, "the asleep flag passes from the file to the tab entry")
+  s.windows[1].tabs[1].nopic = "limit"
+  local seen_nopic = false
+  for _, e in ipairs(T.interleave(entries, T.rows({ s }, { hw("0x1", 100, "Alpha - Chromium") }, {}))) do if e.tab and e.tab.nopic == "limit" then seen_nopic = true end end
+  assert(seen_nopic, "the nopic code passes from the file to the tab entry")
   -- unresolved windows go under their first candidate
   local u = snap(100, { bw(1, false, "Same"), bw(2, false, "Same") })
   rows = T.rows({ u }, { hw("0x1", 100, "Same - Chromium"), hw("0x2", 100, "Same - Chromium") }, {})

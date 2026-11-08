@@ -13,6 +13,8 @@ Item {
   property string caption: ""   // the site, and a note for the shown tab (State.tabCaption)
   property bool active: false
   property bool asleep: false   // Chrome put the tab to sleep: a small dim "asleep" after the site
+  property string nopic: ""     // why the tab has no picture, as a short sentence (State.nopicText); shown the same way, "asleep" wins
+  readonly property string note: asleep ? qsTr("asleep") : nopic
   property bool selected: false
   readonly property bool hovered: hover.hovered
 
@@ -66,12 +68,12 @@ Item {
 
   Text {
     id: asleepText
-    visible: row.asleep
+    visible: row.note !== ""
     anchors.right: parent.right
     anchors.rightMargin: Style.space(12)
     anchors.verticalCenter: parent.verticalCenter
     textFormat: Text.PlainText
-    text: qsTr("asleep")
+    text: row.note
     color: Util.alpha(Color.popups.text, 0.4)
     font.family: Style.font.family
     font.pixelSize: Style.font.caption
@@ -80,8 +82,8 @@ Item {
 
   Text {
     id: captionText
-    anchors.right: row.asleep ? asleepText.left : parent.right
-    anchors.rightMargin: row.asleep ? Style.space(8) : Style.space(12)
+    anchors.right: row.note !== "" ? asleepText.left : parent.right
+    anchors.rightMargin: row.note !== "" ? Style.space(8) : Style.space(12)
     anchors.verticalCenter: parent.verticalCenter
     width: Math.min(implicitWidth, row.width * 0.35)
     textFormat: Text.PlainText
