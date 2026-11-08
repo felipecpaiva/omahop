@@ -675,7 +675,7 @@ do
   type_word("hidden")
   assert(#M.entries == 1 and M.entries[1].tab and M.entries[1].title == "Hidden notes" and M.entries[1].address == "0xb6", "a hidden tab is found by its title, under its window")
   local st = read_state()
-  assert(st:find("\nt\t0xb6\tchromium\t0\t0\tnotes.example.com\tHidden notes\n", 1, true), "state line for the tab: window, class, minimized, active, site, title: " .. st)
+  assert(st:find("\nt\t0xb6\tchromium\t0\t0\t\tnotes.example.com\tHidden notes\n", 1, true), "state line for the tab: window, class, minimized, active, icon (empty here), site, title: " .. st)
   assert(not st:find("https://", 1, true) and not st:find("private/path", 1, true) and not st:find("token", 1, true), "the state file carries the site, never the address")
   M.query = "bank"; M.refilter()
   assert(#M.entries == 0, "an ignored site is dropped by omahop too")

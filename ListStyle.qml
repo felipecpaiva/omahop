@@ -31,6 +31,7 @@ BorderSurface {
   // Outline width in pixels, 0 for none; the owner decides (it follows Hyprland's window border by default).
   property int outline: Math.max(1, Style.space(2))
   // Resolve an app id to { icon, name }: supplied by the owner so this file needs no desktop-entry knowledge.
+  property string tabIconDir: ""   // folder of the site icons the helper writes (setting browser_tabs)
   property var resolve: function (appId) { return { icon: "", name: appId } }
 
   readonly property int rowHeight: Style.space(46)
@@ -95,7 +96,7 @@ BorderSurface {
       Component {
         id: tabRow
         TabRow {
-          iconSource: slot.info.icon
+          iconSource: State.tabIcon(slot.modelData, card.tabIconDir, slot.info.icon)
           title: slot.modelData.title
           caption: State.tabCaption(slot.modelData, qsTr("shown"))
           active: slot.modelData.active === true

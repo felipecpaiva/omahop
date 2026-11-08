@@ -49,6 +49,17 @@ end
 local function tab(id, active, title, url)
   return ('{"id": %d, "active": %s, "title": "%s", "url": "%s"}'):format(id, tostring(active), title, url)
 end
+do -- icon: only a 16 digit hex file name key passes; anything else is dropped (never a path)
+  local function icon_of(value)
+    local s = T.parse(file({ window(1, true, { ('{"id": 1, "active": true, "title": "t", "url": "https://a.example.com/", "icon": %s}'):format(value) }) }))
+    return s and s.windows[1].tabs[1].icon
+  end
+  assert(icon_of('"0123456789abcdef"') == "0123456789abcdef", "a good icon key is kept")
+  for _, bad in ipairs({ '"../../etc/passwd"', '"0123456789abcde"', '"0123456789abcdef0"', '"0123456789abcdeg"', "5", "null", '"/x"' }) do
+    assert(icon_of(bad) == nil, "icon dropped: " .. bad)
+  end
+  assert(icon_of('"ABCDEF0123456789"') == "ABCDEF0123456789" or icon_of('"ABCDEF0123456789"') == nil, "upper case is allowed by the pattern or dropped, never altered")
+end
 do
   local s = T.parse(file({ window(1, true, { tab(10, true, "Alpha page", "https://a.example.com/x?q=1"), tab(11, false, "Beta", "https://b.example.org/") }) }))
   assert(T.parse((file({ window(1, true, {}) }):gsub('"profile": null', '"profile": "Profile 1"'))), "profile as text is fine too")
@@ -169,6 +180,11 @@ do
   assert(out[4].search_extra == "example.net /1" and out[4].tab.id == 11 and out[4].class == "chromium", "a tab entry carries what search and activation need")
   assert(#T.interleave({ entries[1] }, rows) == 1, "rows of a window outside the list are dropped")
   assert(#T.interleave(out, rows) == 4, "interleave twice does not duplicate rows")
+  s.windows[1].tabs[1].icon = "0123456789abcdef"
+  local with_icon = T.interleave(entries, T.rows({ s }, { hw("0x1", 100, "Alpha - Chromium") }, {}))
+  local seen = false
+  for _, e in ipairs(with_icon) do if e.tab and e.tab.icon == "0123456789abcdef" then seen = true end end
+  assert(seen, "a tab icon key passes from the file to the tab entry")
   -- unresolved windows go under their first candidate
   local u = snap(100, { bw(1, false, "Same"), bw(2, false, "Same") })
   rows = T.rows({ u }, { hw("0x1", 100, "Same - Chromium"), hw("0x2", 100, "Same - Chromium") }, {})

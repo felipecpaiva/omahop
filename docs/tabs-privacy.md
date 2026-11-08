@@ -6,7 +6,7 @@ This is the privacy policy of the "omahop tabs" browser extension and its helper
 
 The extension reads, for every open tab in normal and popup windows: the tab id, the window id,
 whether it is the selected tab, whether its window is focused, the page title and the address.
-Nothing else: no page content, no history, no cookies, no favicons, no form data.
+The site icon (the small logo of the site, taken from the browser's own icon cache, one per site) is also read, to show next to a found tab. Nothing else: no page content, no history, no cookies, no form data.
 
 Incognito windows are never read. The manifest sets `"incognito": "not_allowed"`, so the
 extension cannot even be switched on there, and both the extension and the helper drop any
@@ -26,6 +26,7 @@ can open, mode 700; files mode 600). That folder is in memory and is gone at log
 - Nothing is sent over the network. Neither the extension nor the helper has network code, and
   the extension has no host permissions and no content scripts.
 - Titles and addresses are never logged, not even in error messages (tests check this).
+- Site icons are written, like the tab file, only in the same private in-memory folder (`tabicons/`), only while the setting is on, never for hidden sites, and deleted when the setting goes off or the browser closes.
 - Nothing is written anywhere else, and nothing is kept on disk.
 
 ## Off by default
@@ -42,7 +43,7 @@ helper drops those tabs before writing, so they never reach any file.
 ## Permissions the browser shows
 
 `tabs` (needed to read titles and addresses; Chrome describes it as reading your browsing
-history) and `nativeMessaging` (to talk to the helper).
+history), `favicon` (to read the site icons from the browser's own icon cache, without any network request) and `nativeMessaging` (to talk to the helper).
 
 ## Removing everything
 

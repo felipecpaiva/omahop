@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs"
 import assert from "node:assert/strict"
 const src = readFileSync(new URL("../State.js", import.meta.url), "utf8").replace(".pragma library", "")
-const State = new Function(src + "; return { thumbnailExcludeSet, isThumbnailExcluded, parse, visibleRows, borderWidth, normalizeAddress, visibleCards, listHeight, tabCaption }")()
+const State = new Function(src + "; return { thumbnailExcludeSet, isThumbnailExcluded, parse, visibleRows, borderWidth, normalizeAddress, visibleCards, listHeight, tabCaption, tabIcon }")()
 
 const text = "version=1\nopen=1\nrevealed=1\nselected=2\nstyle=list\nthumbnails=snapshot\nw\t0xa\tkitty\t0\t1\tfirst title\nw\t0xb\tgoogle-chrome\t1\t\tsecond\ttitle with a tab\n"
 const s = State.parse(text)
@@ -71,13 +71,13 @@ console.log("state linger ok")
 
 // browser tab rows (v1.4): parsed with their site and active flag, counted in the selection, sized as compact rows
 {
-  const st = State.parse("open=1\nrevealed=1\nselected=2\nquery=notes\nw\t0xa\tchromium\t0\t\tAlpha - Chromium\nt\t0xa\tchromium\t0\t1\tnotes.example.com\tTeam = notes\tpart two\nt\t0xa\tchromium\t1\t0\t\t\n")
+  const st = State.parse("open=1\nrevealed=1\nselected=2\nquery=notes\nw\t0xa\tchromium\t0\t\tAlpha - Chromium\nt\t0xa\tchromium\t0\t1\t0123456789abcdef\tnotes.example.com\tTeam = notes\tpart two\nt\t0xa\tchromium\t1\t0\t\t\t\n")
   assert.equal(st.open, true, "a tab row can be the selected one")
   assert.equal(st.entries.length, 3)
-  assert.deepEqual(st.entries[1], { address: "0xa", appId: "chromium", minimized: false, hint: "", tab: true, active: true, host: "notes.example.com", title: "Team = notes\tpart two" })
+  assert.deepEqual(st.entries[1], { address: "0xa", appId: "chromium", minimized: false, hint: "", tab: true, active: true, icon: "0123456789abcdef", host: "notes.example.com", title: "Team = notes\tpart two" })
   assert.equal(st.query, "notes", "a title with = is never read as a key")
   assert.equal(st.entries[2].host, ""); assert.equal(st.entries[2].title, ""); assert.equal(st.entries[2].minimized, true)
-  assert.equal(State.parse("open=1\nrevealed=1\nselected=1\nt\t0xa\tc\t0\t1\n").entries.length, 0, "a short tab line is dropped")
+  assert.equal(State.parse("open=1\nrevealed=1\nselected=1\nt\t0xa\tc\t0\t1\tnotes\ttitle\n").entries.length, 0, "a short tab line is dropped (the older format without an icon field)")
   assert.equal(State.listHeight(st.entries, 46, 30, 9), 46 + 30 + 30)
   assert.equal(State.listHeight(st.entries, 46, 30, 2), 46 + 30, "only maxRows rows count")
   assert.equal(State.listHeight([], 46, 30, 9), 0)
@@ -85,5 +85,9 @@ console.log("state linger ok")
   assert.equal(State.tabCaption({ host: "a.example", active: false }, "shown"), "a.example")
   assert.equal(State.tabCaption({ host: "", active: true }, "shown"), "shown")
   assert.equal(State.tabCaption(null, "shown"), "")
+  assert.equal(State.tabIcon(st.entries[1], "/run/user/1/omahop/tabicons", "fallback"), "file:///run/user/1/omahop/tabicons/0123456789abcdef.png")
+  assert.equal(State.tabIcon(st.entries[2], "/d", "fallback"), "fallback", "no icon: the browser's own icon")
+  for (const bad of ["../../etc/passwd", "0123456789ABCDEF", "0123456789abcde", "0123456789abcdef0", "a/b"]) assert.equal(State.tabIcon({ icon: bad }, "/d", "fb"), "fb", "a key that is not 16 hex digits is never a path: " + bad)
+  assert.equal(State.tabIcon(st.entries[1], "", "fb"), "fb")
   console.log("state tabs ok")
 }

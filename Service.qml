@@ -366,6 +366,7 @@ Item {
         selected: root.st.selected
         screenHeight: window.height
         resolve: root.resolve
+        tabIconDir: root.runtimeDir + "/tabicons"
         outline: root.outline
         actions: root.st.actions
         playing: root.audioPlaying
@@ -385,6 +386,7 @@ Item {
         thumbnails: root.st.thumbnails
         screenWidth: window.width
         resolve: root.resolve
+        tabIconDir: root.runtimeDir + "/tabicons"
         toplevelFor: root.toplevelFor
         outline: root.outline
         actions: root.st.actions
