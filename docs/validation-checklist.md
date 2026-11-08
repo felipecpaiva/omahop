@@ -232,8 +232,8 @@ Needs omahop-tabs extension 0.6.1 or later in a real Chrome, `browser_tabs`, `br
 - [ ] `browser`: open `chrome://extensions` in a background tab, search for it: its card (cards style) shows "Chrome page" in the top left corner, and the list row shows a dim "Chrome page". The new tab page says the same.
 - [ ] `heavy`: open a page with over 15000 elements (a very long generated table), leave it in the background, search for it: "too heavy to draw" (the options page counts it as skipped as too heavy).
 - [ ] `blocked`: open the Chrome Web Store (`chromewebstore.google.com`) or a PDF in Chrome's viewer in a background tab: "page blocks drawing".
-- [ ] `failed`: a page that takes over 8 seconds to draw (or fails twice) shows "could not draw" and is not tried again for 30 minutes; the options page counts it under "timed out" or "failed".
-- [ ] `queued` and `limit`: Ctrl+click about ten links into background tabs and search at once: those still waiting show "drawing soon" and the label turns into a picture (or stays "drawing later" if the hourly or the 20 draw cap was hit). While the switcher is open nothing polls beyond the usual 6 seconds.
+- [ ] `failed`: a page that takes over 8 seconds to draw (or whose draw fails once) shows "could not draw" at the first failure and is not tried again for 30 minutes; the options page counts it under "timed out" or "failed".
+- [ ] `queued` and `limit`: Ctrl+click about ten links into background tabs and search at once: those still waiting show "drawing soon" and the label turns into a picture (or stays "drawing later" if the hourly cap of 60 draws was hit; it clears by itself as old draws age out). While the switcher is open nothing polls beyond the usual 6 seconds.
 - [ ] "asleep" still wins: a discarded tab shows "asleep", never one of the others. A tab with a picture shows no such label (a drawn one still says "approximate" at the bottom left). Nothing carries a title or address in the label.
 
 ## Open, 2026-11-08: last seen window pictures (hand check, D27)
