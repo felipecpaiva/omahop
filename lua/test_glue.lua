@@ -121,6 +121,11 @@ do
   assert(read_state():find("query=b") and read_state():find("0xb2") and not read_state():find("0xa2"), "state file carries the query and the filtered list")
   binds["ALT + BACKSPACE"]()
   assert(M.query == "" and #M.entries == 3 and M.session:selected() == 1, "backspace brings the list back, first entry selected")
+  -- a capital is Shift plus the letter: it types the same letter, and a Shift chord of the user's own is left alone
+  assert(binds["ALT + SHIFT + B"] and binds["ALT + SHIFT + Z"], "the shifted letter chords are bound during the session")
+  binds["ALT + SHIFT + B"]()
+  assert(M.query == "b" and #M.entries == 1 and M.entries[1].class == "app-b", "Shift+B types b (a capital finds the same windows)")
+  binds["ALT + BACKSPACE"]()
   binds["ALT + C"]()
   binds["ALT + ESCAPE"]()
   assert(M.query == "" and M.session:is_open() and #M.entries == 3, "first Escape clears the query and keeps the session")

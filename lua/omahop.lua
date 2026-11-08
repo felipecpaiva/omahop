@@ -367,6 +367,11 @@ local function bind_session_keys(on)
   if M.cfg.search and used ~= nil then
     for key, ch in pairs(typing_keys()) do
       if free(key) then add(key, function() M.type_key(ch) end) end
+      -- a capital is Shift plus the letter: it types the same letter (the search ignores case), unless that chord is a bind of the user's own
+      if key:match("^%a$") and Modifier.free(M.mod, used, key, true) ~= false then
+        local chord = Modifier.shift_chord(M.mod, key)
+        if pcall(hl.bind, chord, function() M.type_key(ch) end, {}) then M.bound[#M.bound + 1] = chord end
+      end
     end
   end
 end
