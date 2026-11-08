@@ -202,3 +202,14 @@ Felipe found that searching for a page in a background browser tab finds nothing
 ## Open, 2026-11-08: page pictures on found tab cards (hand check, D25)
 
 Needs the extension build with page pictures (omahop-tabs). Steps: turn on `browser_tabs` and `browser_tab_previews` in the settings window (cards style); open the extension's Options page and press Enable page pictures (Chrome asks for the permission); view a few tabs for a moment each; search for one of them in omahop: its card shows a picture of the page, the site icon stays in the footer. Check: a site on the ignore list never gets a picture; turning `browser_tab_previews` off removes `$XDG_RUNTIME_DIR/omahop/tabpics` within a second; the permission alone (setting off) captures nothing; a tab never shown since the setting went on shows the big site icon.
+
+## Open, 2026-11-08: shot and drawn pictures (hand check, D26)
+
+Needs a real Chrome with the new `omahop-tabs` extension and helper and the page pictures permission granted (Options, Enable page pictures). Nothing here was run against a real browser.
+
+- [ ] Shot, every 12 s: `browser_tabs` and `browser_tab_previews` on, `browser_tab_previews_draw` off. Open a page with a clock or a changing counter and watch the tab for about 40 s. Switch away, open the switcher, search for that tab: its card shows the page as it was when you left, and no "approximate" label.
+- [ ] Shown at session start: change the page (scroll it), then at once press Alt+Tab, type its name: the picture shows the scroll (taken when the switcher opened). While the list is open and a picture arrives late, the card updates on its own within about half a second.
+- [ ] Drawn for a never opened tab: turn `browser_tab_previews_draw` on. In Chrome open a link in a background tab (Ctrl+click) and never look at it. Search for it: first its icon, then within a second or two a rough picture with the small label "approximate" in the card's corner. Images from other websites are blank there, which is expected.
+- [ ] Shot and drawn do not mix up: the tab a window shows never gets "approximate"; a tab you looked at keeps its exact picture and is not redrawn.
+- [ ] Off means off: with `browser_tab_previews_draw` off, searching never produces an "approximate" card; turning it off removes `$XDG_RUNTIME_DIR/omahop/tabs.draw`; a site on the ignore list is never drawn.
+- [ ] No input or desktop side effects: no tab flickers or switches in any browser window during any of the above.

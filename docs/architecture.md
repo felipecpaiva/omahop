@@ -76,7 +76,10 @@ window list order and fight the switch), and omagnet already proved the hold/rel
                  browser windows are matched to Hyprland windows (pid, then title and focus), and tab rows join the list after their window
  state file:     t <address> <class> <minimized> <active> <icon> <picture> <site> <title>   (QML draws TabRow in the list; a CardItem in cards with the site icon, or the page picture when browser_tab_previews is on, D25)
  Return on a tab row: hl.exec_cmd(tools/omahop-tabs-activate <hostpid> <tabId>)  -> FIFO tabs.<hostpid>.activate (non-blocking), then focus and raise
- setting on/off:  tools/omahop-tabs-files <dir> on|off|pictures-on|pictures-off   (from Lua at load and config change, from Service.qml at once and at unload)
+ pictures:        session start -> tools/omahop-tabs-request <dir> <hostpid> shown (every live host); a search -> `draw <ids>` (draw setting on, visible tabs
+                  without a picture, 6 a host, once a session); for 6 s after a request the tick re-reads the tab files every 400 ms and updates the picture
+                  field (files only, no hyprctl). A picture name ending in d is drawn: the card says "approximate" (D26)
+ setting on/off:  tools/omahop-tabs-files <dir> on|off|pictures-on|pictures-off|draw-on|draw-off   (from Lua at load and config change, from Service.qml at once and at unload)
 ```
 
 Off: no file is read and none is made. Idle cost is zero: no watcher, no timer, nothing read on a quick Alt+Tab. The file contract as consumed: [file-contract.md](file-contract.md).

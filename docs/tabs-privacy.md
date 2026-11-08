@@ -24,7 +24,7 @@ can open, mode 700; files mode 600). That folder is in memory, not on disk.
 ## What never happens
 
 - Nothing is sent over the network. Neither the extension nor the helper has network code, and
-  the extension has no required host permissions and no content scripts (the optional all-websites permission for page pictures is described below).
+  the extension has no required host permissions and no content scripts; the drawing script is injected only on request, from a library shipped inside the extension and never from the network (the optional all-websites permission for page pictures is described below).
 - Titles and addresses are never logged, not even in error messages (tests check this).
 - Site icons are written, like the tab file, only in the same private in-memory folder (`tabicons/`), only while the setting is on, never for hidden sites, and deleted when the setting goes off or the browser closes.
 - Page pictures (optional) live in the folder `tabpics/` of the same private in-memory folder: only while both settings are on, never for hidden sites. They are kept while your browser stays open and deleted when you close it, turn the setting off, or the site is ignored.
@@ -54,6 +54,10 @@ The helper writes nothing until omahop's "Browser tabs" setting is on (omahop cr
 file `tabs.enabled`). Turning the setting off removes the flag, and the helper deletes its file
 within a second. You can keep the extension installed with the setting off and nothing is stored.
 
+## Drawn pictures of tabs you have not opened (optional, off by default)
+
+A photograph can only be taken of the tab you are looking at. A further step, off unless you turn it on, lets the extension also make a picture of a tab you have not opened lately: with omahop's setting `browser_tab_previews_draw` on (and page pictures on, and the permission allowed on the options page), omahop asks the extension to draw a few such tabs. The extension runs a small script inside that page, in the background and without showing the tab, only to read what is on screen and draw it again on your computer. The page itself is not changed and the tab is never switched to. The result is approximate: images from other sites come out blank and a video shows its first frame. The picture goes to the helper like any other and is stored the same way (marked as drawn in its name, and never replacing a photograph of the same page). Nothing about this leaves your computer, and sites on your ignore list never get a picture.
+
 ## Hiding sites
 
 The ignore list in omahop's settings (written to `tabs.ignore`) hides sites by host name. The
@@ -62,7 +66,7 @@ helper drops those tabs before writing, so they never reach any file. See `file-
 ## Permissions the browser shows
 
 `tabs` (needed to read titles and addresses; Chrome describes it as reading your browsing
-history), `favicon` (to read the site icons from the browser's own icon cache, without any network request) and `nativeMessaging` (to talk to the helper). The optional all-websites permission (`<all_urls>`) is requested only when you click the button on the options page, and is used only to take the picture of a shown tab. The optional all-websites permission is requested only when you click the button on the options page, and is used only to take the picture of a shown tab.
+history), `favicon` (to read the site icons from the browser's own icon cache, without any network request), `scripting` (to run the small drawing script in a page, only with the optional steps above) and `nativeMessaging` (to talk to the helper). The optional all-websites permission (`<all_urls>`) is requested only when you click the button on the options page, and is used only to take the picture of a shown tab and, with the drawing setting on, to draw a picture of other tabs from their own content.
 
 ## Removing everything
 
