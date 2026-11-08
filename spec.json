@@ -494,11 +494,22 @@
       "type": "text"
     }, {
       "default": false,
-      "help": "Off by default, and it works in the cards style. A found tab card shows a picture of its page instead of the site logo. This is a second opt in: turn it on here, and also open the extension's options page (the omahop tabs extension, Options) and press Enable page pictures, which asks Chrome for the extra permission to take pictures. Neither alone does anything. Chrome only photographs the tab you are looking at, so a tab's picture is taken while it is shown and can be old by the time you search. Pictures stay in memory and in the same temporary folder as the tab list, are never taken for sites on the ignore list, and are deleted when you turn this off or log out. Needs Search browser tabs.",
+      "help": "Off by default, and it works in the cards style. A found tab card shows a picture of its page instead of the site logo. This is a second opt in: turn it on here, and also open the extension's options page (the omahop tabs extension, Options) and press Enable page pictures, which asks Chrome for the extra permission to take pictures. Neither alone does anything. Chrome only photographs the tab you are looking at, so pictures of tabs you have looked at are updated while you browse (every few seconds while a tab is shown, and when you open the switcher). Pictures stay in memory and in the same temporary folder as the tab list, are never taken for sites on the ignore list, and are deleted when you turn this off, close the browser, or ignore the site. Needs Search browser tabs.",
       "hidden": false,
       "id": "top.browser_tab_previews",
       "key": "browser_tab_previews",
       "label": "Show a picture of the page on found tabs (needs the extension's permission)",
+      "overridable": false,
+      "reload": false,
+      "section": "top",
+      "type": "bool"
+    }, {
+      "default": false,
+      "help": "Off by default, and it needs page pictures on. Chrome cannot photograph a tab you never looked at, so with this on the extension draws the page from its own content, like a rough render: images from other websites come out blank and video shows its first frame. To do that it runs a small script inside that page, only to read what is on screen, locally; nothing leaves your computer. It only draws tabs that a search matched and that have no picture yet, and sites on the ignore list are never drawn. A drawn card is marked approximate.",
+      "hidden": false,
+      "id": "top.browser_tab_previews_draw",
+      "key": "browser_tab_previews_draw",
+      "label": "Also draw pictures of tabs you have not opened (approximate)",
       "overridable": false,
       "reload": false,
       "section": "top",

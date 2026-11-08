@@ -32,6 +32,7 @@ M.config_path = config_home .. "/omahop/config.toml"
 M.tabs_activate_cmd = here .. "/../tools/omahop-tabs-activate" -- detached helpers for browser tabs (setting browser_tabs)
 M.tabs_files_cmd = here .. "/../tools/omahop-tabs-files"
 M.tabs_flag = state_dir .. "/tabs.enabled"
+M.tabs_draw_flag = state_dir .. "/tabs.draw" -- setting browser_tab_previews_draw: the extension may draw pictures of tabs never shown
 M.tabs_pictures_flag = state_dir .. "/tabs.pictures" -- setting browser_tab_previews: the helper may keep page pictures only while it exists
 local layouts_dir = (os.getenv("XDG_STATE_HOME") or ((os.getenv("HOME") or "") .. "/.local/state")) .. "/omarchy/workspace-layouts"
 
@@ -216,7 +217,8 @@ end
 function M.sync_tabs_files()
   local names, bad = Tabs.ignore_list(M.cfg.browser_tabs_ignore)
   local pictures = M.cfg.browser_tabs and M.cfg.browser_tab_previews == true -- page pictures need tab search on as well
-  local key = M.cfg.browser_tabs and ("on " .. table.concat(names, " ") .. (pictures and " pictures" or "")) or "off"
+  local draw = pictures and M.cfg.browser_tab_previews_draw == true -- drawing needs page pictures on
+  local key = M.cfg.browser_tabs and ("on " .. table.concat(names, " ") .. (pictures and " pictures" or "") .. (draw and " draw" or "")) or "off"
   if key == M.tabs_files_key then return end
   M.tabs_files_key = key
   if M.cfg.browser_tabs then
@@ -229,6 +231,12 @@ function M.sync_tabs_files()
     else
       local f = io.open(M.tabs_pictures_flag, "r") -- nothing runs when there is no flag
       if f then f:close(); hl.exec_cmd(("%s %s pictures-off"):format(sq(M.tabs_files_cmd), sq(state_dir))) end
+    end
+    if draw then
+      hl.exec_cmd(("%s %s draw-on"):format(sq(M.tabs_files_cmd), sq(state_dir)))
+    else
+      local f = io.open(M.tabs_draw_flag, "r")
+      if f then f:close(); hl.exec_cmd(("%s %s draw-off"):format(sq(M.tabs_files_cmd), sq(state_dir))) end
     end
   else
     local f = io.open(M.tabs_flag, "r")

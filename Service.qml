@@ -288,6 +288,15 @@ Item {
     Quickshell.execDetached(["bash", Paths.fromUrl(Qt.resolvedUrl("tools/omahop-tabs-files")), root.runtimeDir, root.browserTabPreviews ? "pictures-on" : "pictures-off"])
   }
   onBrowserTabPreviewsChanged: root.syncTabPictures()
+  // The draw flag follows its setting, and only while page pictures are on (turning pictures off removes it as well).
+  readonly property bool browserTabDraw: root.browserTabPreviews && configReader.value("top", "browser_tab_previews_draw") === true
+  property bool tabDrawOn: false
+  function syncTabDraw() {
+    if (!root.browserTabDraw && !root.tabDrawOn) return
+    root.tabDrawOn = root.browserTabDraw
+    Quickshell.execDetached(["bash", Paths.fromUrl(Qt.resolvedUrl("tools/omahop-tabs-files")), root.runtimeDir, root.browserTabDraw ? "draw-on" : "draw-off"])
+  }
+  onBrowserTabDrawChanged: root.syncTabDraw()
   onBrowserTabsChanged: root.syncTabFiles()
   onBrowserTabsIgnoreChanged: if (root.browserTabs) root.syncTabFiles()
 

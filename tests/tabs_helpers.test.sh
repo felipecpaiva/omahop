@@ -72,6 +72,16 @@ check "pictures-off: flag and every picture removed, the rest kept" "[ ! -e $dir
 check "off also removes the pictures flag and tabpics" "[ ! -e $dir/tabs.pictures ] && [ ! -e $dir/tabpics ] && [ ! -e $dir/tabs.enabled ]"
 check "pictures-off with no folder is fine" "\"$files\" $tmp/none pictures-off"
 check "off with no folder is fine" "\"$files\" $tmp/none off"
+# ---- draw ----
+"$files" "$dir" on; "$files" "$dir" pictures-on; "$files" "$dir" draw-on
+check "draw-on: flag mode 600" "[ \"\$(stat -c %a $dir/tabs.draw)\" = 600 ]"
+"$files" "$dir" draw-off
+check "draw-off: only the draw flag removed" "[ ! -e $dir/tabs.draw ] && [ -e $dir/tabs.pictures ] && [ -e $dir/tabs.enabled ]"
+"$files" "$dir" draw-on; "$files" "$dir" pictures-off
+check "pictures-off also removes the draw flag" "[ ! -e $dir/tabs.draw ] && [ ! -e $dir/tabs.pictures ]"
+"$files" "$dir" pictures-on; "$files" "$dir" draw-on; "$files" "$dir" off
+check "off also removes the draw flag" "[ ! -e $dir/tabs.draw ]"
+check "draw-off with no folder is fine" "\"$files\" $tmp/none draw-off"
 rc=0; "$files" relative on || rc=$?
 check "a relative folder is refused" "[ $rc -ne 0 ] && [ ! -e relative ]"
 rc=0; "$files" "$dir" sideways || rc=$?
