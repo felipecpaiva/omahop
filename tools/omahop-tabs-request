@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Ask the omahop-tabs extension for pictures: writes one line to the FIFO the helper with that pid listens on.
+#   omahop-tabs-request <runtime dir> <hostpid> shown          photograph the shown tab of each of its windows now
+#   omahop-tabs-request <runtime dir> <hostpid> draw <id> ...  draw those tabs (at most 6 ids; digits only)
+# Started detached by lua/omahop.lua, like omahop-tabs-activate and for the same reason: a FIFO open for writing blocks until a reader exists.
+# Here the open is non-blocking and bounded by a timeout, so this can never hang. Bad arguments exit 2; no FIFO or no reader exits 0 quietly.
+# It prints nothing and logs nothing. The helper ignores the lines unless the flags tabs.pictures (shown) and tabs.draw (draw) exist.
+set -euo pipefail
+
+readonly max_digits=10   # a pid or a tab id; anything longer is not one
+readonly max_ids=6
+readonly max_line=63     # bytes, the newline excluded: the helper drops a line of 64 or more
+readonly open_timeout=1  # seconds, a belt on top of the non-blocking open
+
+is_id() { [[ $1 =~ ^[0-9]+$ ]] && (( ${#1} <= max_digits )); }
+
+{ [ $# -ge 3 ] && [[ $1 == /* ]] && is_id "$2"; } || exit 2
+dir=$1 pid=$2 mode=$3
+shift 3
+case $mode in
+  shown) [ $# -eq 0 ] || exit 2; line=shown ;;
+  draw)
+    { [ $# -ge 1 ] && [ $# -le $max_ids ]; } || exit 2
+    for id in "$@"; do is_id "$id" || exit 2; done
+    line="draw $*"
+    ;;
+  *) exit 2 ;;
+esac
+(( ${#line} <= max_line )) || exit 2
+fifo="$dir/tabs.$pid.activate"
+{ [ -p "$fifo" ] && [ -O "$fifo" ]; } || exit 0
+# dd opens with O_NONBLOCK (oflag=nonblock): with no reader the open fails with ENXIO instead of waiting.
+printf '%s\n' "$line" | timeout "$open_timeout" dd of="$fifo" oflag=nonblock conv=notrunc status=none 2>/dev/null || true
