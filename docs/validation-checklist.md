@@ -235,3 +235,9 @@ Needs omahop-tabs extension 0.6.1 or later in a real Chrome, `browser_tabs`, `br
 - [ ] `failed`: a page that takes over 8 seconds to draw (or fails twice) shows "could not draw" and is not tried again for 30 minutes; the options page counts it under "timed out" or "failed".
 - [ ] `queued` and `limit`: Ctrl+click about ten links into background tabs and search at once: those still waiting show "drawing soon" and the label turns into a picture (or stays "drawing later" if the hourly or the 20 draw cap was hit). While the switcher is open nothing polls beyond the usual 6 seconds.
 - [ ] "asleep" still wins: a discarded tab shows "asleep", never one of the others. A tab with a picture shows no such label (a drawn one still says "approximate" at the bottom left). Nothing carries a title or address in the label.
+
+## Open, 2026-11-08: last seen window pictures (hand check, D27)
+
+- [ ] Shell restarted. With thumbnails = snapshot, open the switcher with a window on a workspace that is not shown: a picture, or the icon marked "no picture", never a bare icon.
+- [ ] Open the switcher while a window is on the shown workspace, close it, move that window to another workspace, open again: if the live picture is missing the card shows the old picture marked "last seen".
+- [ ] Close a window: its card is gone and it never comes back with an old picture. Memory of the shell does not grow over many openings (30 pictures at most).

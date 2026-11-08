@@ -35,6 +35,8 @@ BorderSurface {
   property string tabPictureDir: ""   // folder of the page pictures the helper writes (setting browser_tab_previews)
   property var resolve: function (appId) { return { icon: "", name: appId } }
   property var toplevelFor: function (address, appId) { return null }
+  property var lastSeenFor: function (address) { return "" }   // url of the last picture seen of a window, or ""
+  property var remember: function (address, result) {}         // keep a picture grabbed from a card
 
   readonly property int cardWidth: Style.space(220)
   readonly property int cardHeight: Style.space(176)
@@ -86,6 +88,9 @@ BorderSurface {
       minimized: modelData.minimized
       thumbnails: strip.thumbnails
       toplevel: modelData.tab ? null : strip.toplevelFor(modelData.address, modelData.appId)
+      windowCard: !modelData.tab
+      lastSeen: modelData.tab ? "" : strip.lastSeenFor(modelData.address)
+      onSeen: function (result) { strip.remember(modelData.address, result) }
       selected: index === strip.selected - 1
       actions: strip.actions && !modelData.tab
       hint: modelData.hint || ""

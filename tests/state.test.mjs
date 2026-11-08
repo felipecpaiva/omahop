@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs"
 import assert from "node:assert/strict"
 const src = readFileSync(new URL("../State.js", import.meta.url), "utf8").replace(".pragma library", "")
-const State = new Function(src + "; return { thumbnailExcludeSet, isThumbnailExcluded, parse, visibleRows, borderWidth, normalizeAddress, visibleCards, listHeight, tabCaption, tabIcon, tabPicture, tabPictureKind, nopicText }")()
+const State = new Function(src + "; return { thumbnailExcludeSet, isThumbnailExcluded, parse, visibleRows, borderWidth, normalizeAddress, visibleCards, listHeight, tabCaption, tabIcon, tabPicture, tabPictureKind, nopicText, seenOrderAfter }")()
 
 const text = "version=1\nopen=1\nrevealed=1\nselected=2\nstyle=list\nthumbnails=snapshot\nw\t0xa\tkitty\t0\t1\tfirst title\nw\t0xb\tgoogle-chrome\t1\t\tsecond\ttitle with a tab\n"
 const s = State.parse(text)
@@ -110,4 +110,14 @@ console.log("state linger ok")
   assert.equal(State.tabPicture(st.entries[1], ""), "")
   assert.equal(State.tabPicture(null, "/d"), "")
   console.log("state tabs ok")
+}
+
+{
+  const live = { a: true, b: true, c: true, d: true }
+  assert.deepEqual(State.seenOrderAfter([], "a", live, 3), ["a"])
+  assert.deepEqual(State.seenOrderAfter(["a", "b"], "c", live, 3), ["a", "b", "c"])
+  assert.deepEqual(State.seenOrderAfter(["a", "b", "c"], "d", live, 3), ["b", "c", "d"], "oldest dropped at the cap")
+  assert.deepEqual(State.seenOrderAfter(["a", "b", "c"], "a", live, 3), ["b", "c", "a"], "a window seen again moves to the newest end")
+  assert.deepEqual(State.seenOrderAfter(["a", "gone", "c"], "d", live, 30), ["a", "c", "d"], "a closed window is dropped")
+  console.log("seenOrderAfter ok")
 }

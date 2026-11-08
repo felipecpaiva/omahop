@@ -13,6 +13,10 @@ Item {
   property string thumbnails: "snapshot"  // "live", "snapshot" or "off"
   property string iconSource: ""
   property string picture: ""   // a tab card (setting browser_tab_previews): the picture of its page, a file url; empty for none
+  property bool windowCard: false  // a window card (not a tab card): says so when it has no live picture
+  property string lastSeen: ""     // url of the last picture grabbed of this window (kept in memory by Service), or empty
+  property bool settled: false     // the first frame had time to arrive: before that, no note
+  signal seen(var result)          // a picture of the window, grabbed while its live view had content
   property bool asleep: false   // a tab Chrome put to sleep (no page in memory): marked so
   property string nopic: ""     // why a tab card has no picture, as a short sentence (State.nopicText); empty for none. "asleep" wins when both apply
   property bool drawn: false    // its picture was drawn from the page's content, not photographed: approximate, marked so
@@ -33,6 +37,9 @@ Item {
   readonly property int footer: Style.space(34)
   // A view is created only for a card that can show one: never for "off", never without a toplevel (L6 in docs/lessons-from-others.md).
   readonly property bool capturing: card.thumbnails !== "off" && card.toplevel !== null
+
+  // A window card with no live picture after a second: "last seen" over its older picture, or "no picture" over the icon.
+  readonly property string windowNote: card.windowCard && card.thumbnails !== "off" && card.settled && !capture.visible ? (lastPic.visible ? qsTr("last seen") : qsTr("no picture")) : ""
 
   opacity: card.minimized ? 0.7 : 1
 
@@ -71,10 +78,27 @@ Item {
       height: sh > 0 ? sh * fitScale : thumb.height
       visible: item ? item.hasContent : false
       sourceComponent: ScreencopyView {
+        id: view
         captureSource: card.toplevel
         live: card.thumbnails === "live"
+        // Keep one picture per opening of the switcher, taken once the frame is drawn (card size, so a few hundred KB at most).
+        onHasContentChanged: if (hasContent) Qt.callLater(function () {
+          if (view && view.hasContent && view.width > 0) view.grabToImage(function (r) { card.seen(r) }, Qt.size(view.width, view.height))
+        })
       }
     }
+
+    // Nothing live to show (a window the compositor gives no picture of, such as one on another workspace for some apps): its last seen picture.
+    Image {
+      id: lastPic
+      anchors.centerIn: parent
+      width: Math.min(thumb.width, thumb.height * implicitWidth / Math.max(1, implicitHeight)); height: width * implicitHeight / Math.max(1, implicitWidth)
+      visible: card.windowCard && !capture.visible && status === Image.Ready
+      source: card.windowCard ? card.lastSeen : ""
+      cache: false
+      fillMode: Image.PreserveAspectFit
+    }
+    Timer { interval: 1000; running: card.windowCard && card.thumbnails !== "off"; onTriggered: card.settled = true }
 
     // A browser tab's page picture (a file the helper keeps in memory, a small jpeg): shown while it is loaded; until then, and when there is none, the icon below.
     Image {
@@ -104,7 +128,7 @@ Item {
     // A tab Chrome discarded (Memory Saver) has no page in memory, so it has no fresh picture; say so, with or without an older picture.
     // The same corner says why any other tab card has no picture (a Chrome page, too heavy, queued, ...).
     Rectangle {
-      visible: card.asleep || card.nopic !== ""
+      visible: card.asleep || card.nopic !== "" || card.windowNote !== ""
       anchors.left: parent.left
       anchors.top: parent.top
       anchors.margins: Style.space(4)
@@ -112,13 +136,13 @@ Item {
       radius: Style.cornerRadius
       color: Util.alpha(Color.background, 0.85)
       border.width: 1; border.color: Util.alpha(Color.popups.text, 0.3)
-      Text { id: asleepText; anchors.centerIn: parent; textFormat: Text.PlainText; text: card.asleep ? qsTr("asleep") : card.nopic; color: Color.popups.text; font.family: Style.font.family; font.pixelSize: Style.font.caption }
+      Text { id: asleepText; anchors.centerIn: parent; textFormat: Text.PlainText; text: card.asleep ? qsTr("asleep") : card.nopic !== "" ? card.nopic : card.windowNote; color: Color.popups.text; font.family: Style.font.family; font.pixelSize: Style.font.caption }
     }
 
     // No picture (icons only, a window that cannot be captured, or a frame not here yet): the app icon in the middle.
     IconImage {
       anchors.centerIn: parent
-      visible: !capture.visible && !page.visible
+      visible: !capture.visible && !page.visible && !lastPic.visible
       implicitSize: Math.min(thumb.width, thumb.height) * 0.4
       source: card.iconSource
     }

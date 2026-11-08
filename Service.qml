@@ -204,6 +204,28 @@ Item {
     return null
   }
 
+  // Last seen pictures of windows (cards style): grabbed from a card that showed a live picture, kept in memory only (never on disk), at card size, at most seenMax, dropped when the window is gone.
+  // Nothing is captured while the switcher is closed; a card that cannot be captured now (a window the compositor gives no picture of) shows its last one, marked.
+  readonly property int seenMax: 30
+  property var seen: ({})      // normalized address -> QQuickItemGrabResult (its url is the picture)
+  property var seenOrder: []   // addresses, oldest first
+  function lastSeenFor(address) {
+    var r = root.seen[State.normalizeAddress(address)]
+    return r ? String(r.url) : ""
+  }
+  function remember(address, result) {
+    var key = State.normalizeAddress(address)
+    var live = {}
+    var all = Hyprland.toplevels.values
+    for (var i = 0; i < all.length; i++) live[State.normalizeAddress(all[i].address)] = true
+    var order = State.seenOrderAfter(root.seenOrder, key, live, root.seenMax)
+    var kept = {}
+    for (var j = 0; j < order.length; j++) kept[order[j]] = root.seen[order[j]]
+    kept[key] = result
+    root.seen = kept
+    root.seenOrder = order
+  }
+
   function lookup(appId) {
     var entry = DesktopEntries.heuristicLookup(appId)
     var path = IconResolve.resolve(root.iconIndex, appId, entry && entry.icon ? entry.icon : "", [root.packIndex])
@@ -407,6 +429,8 @@ Item {
         tabIconDir: root.runtimeDir + "/tabicons"
         tabPictureDir: root.runtimeDir + "/tabpics"
         toplevelFor: root.toplevelFor
+        lastSeenFor: root.lastSeenFor
+        remember: root.remember
         outline: root.outline
         actions: root.st.actions
         playing: root.audioPlaying

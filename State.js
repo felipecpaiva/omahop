@@ -101,6 +101,13 @@ function nopicText(code) {
   }
 }
 
+// The addresses to keep after a picture of `key` is added: `order` (oldest first) without `key` and without windows not in `live` (a map of addresses), then the newest `max - 1` of them,
+// then `key` last. So the cache never holds more than `max` pictures nor one of a closed window.
+function seenOrderAfter(order, key, live, max) {
+  var kept = order.filter(function (a) { return a !== key && live[a] === true })
+  return kept.slice(Math.max(0, kept.length - (max - 1))).concat([key])
+}
+
 // The caption of a tab card or row: its site, and a note when it is the tab its window shows.
 function tabCaption(entry, activeNote) {
   var host = String(entry && entry.host || "")
