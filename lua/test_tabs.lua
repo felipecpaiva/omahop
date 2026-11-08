@@ -246,4 +246,22 @@ do -- the shown tab is the window: no copy of it in a result
   local out = T.without_copies(list)
   assert(#out == 3 and out[1].address == "0x1" and not out[1].tab and out[2].tab.id == 2 and out[3].tab.id == 3, "the active tab row goes only when its window row is there")
 end
+do -- draw_requests: which tabs to ask the extension to draw
+  local function ent(hostpid, id, extra) local t = { hostpid = hostpid, id = id, active = false }; for k, v in pairs(extra or {}) do t[k] = v end return { tab = t } end
+  local req = {}
+  local out = T.draw_requests({ { }, ent(5, 1), ent(5, 2, { active = true }), ent(5, 3, { picture = "x" }), ent(6, 1), ent(5, 4) }, req, 6, 63)
+  assert(#out == 2 and out[1].hostpid == 5 and table.concat(out[1].ids, ",") == "1,4" and out[2].hostpid == 6 and out[2].ids[1] == 1, "windows, shown and pictured tabs are skipped; one request per host")
+  assert(req["5:1"] and req["5:4"] and req["6:1"] and not req["5:2"] and not req["5:3"], "requested ids are remembered, others not")
+  assert(#T.draw_requests({ ent(5, 1), ent(5, 4) }, req, 6, 63) == 0, "asked for once per session")
+  local many = {}
+  for id = 1, 9 do many[id] = ent(7, id) end
+  out = T.draw_requests(many, {}, 6, 63)
+  assert(#out == 1 and #out[1].ids == 6 and out[1].ids[6] == 6, "capped at 6 ids")
+  local long = {}
+  for id = 1, 6 do long[id] = ent(7, 1234567890 + id) end
+  out = T.draw_requests(long, {}, 6, 63)
+  assert(#out == 1 and #("draw " .. table.concat(out[1].ids, " ")) <= 63 and #out[1].ids == 5, "the line stays under 64 bytes")
+  assert(#T.draw_requests({ ent("1", 2), ent(1, "2"), ent(1.5, 2) }, {}, 6, 63) == 0, "ids that are not integers are never asked for")
+end
+
 print("tabs ok")

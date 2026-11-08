@@ -337,6 +337,28 @@ function T.interleave(entries, rows)
   return out
 end
 
+-- Which tabs to ask the extension to draw (setting browser_tab_previews_draw): the entries a search shows, in order. A tab qualifies when it is
+-- not the one its window shows (that one is photographed, never drawn), has no picture yet and was not asked for in this session (`requested`,
+-- keys "<hostpid>:<id>", filled in here). At most max_ids per host and a request line (`draw` and the ids) under max_line bytes.
+-- -> ordered list of { hostpid, ids }.
+function T.draw_requests(entries, requested, max_ids, max_line)
+  local by_host, out = {}, {}
+  for _, e in ipairs(entries) do
+    local t = e.tab
+    if t and not t.active and not t.picture and math.type(t.hostpid) == "integer" and math.type(t.id) == "integer" then
+      local key = t.hostpid .. ":" .. t.id
+      local r = by_host[t.hostpid]
+      if not requested[key] and (not r or (#r.ids < max_ids and r.len + 1 + #tostring(t.id) < max_line)) then
+        if not r then r = { hostpid = t.hostpid, ids = {}, len = 4 }; by_host[t.hostpid] = r; out[#out + 1] = r end
+        r.ids[#r.ids + 1] = t.id; r.len = r.len + 1 + #tostring(t.id)
+        requested[key] = true
+      end
+    end
+  end
+  for _, r in ipairs(out) do r.len = nil end
+  return out
+end
+
 -- After a search: the tab a browser window is showing is the window itself (the window row carries that tab's title), so its tab row would be a copy.
 -- Drop an active tab row when its window row is in the result too; keep it when only the tab matched (for example by its site) and the window row did not.
 function T.without_copies(entries)

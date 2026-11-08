@@ -30,6 +30,7 @@ M.state_path = state_dir .. "/state"
 local config_home = os.getenv("XDG_CONFIG_HOME") or ((os.getenv("HOME") or "") .. "/.config")
 M.config_path = config_home .. "/omahop/config.toml"
 M.tabs_activate_cmd = here .. "/../tools/omahop-tabs-activate" -- detached helpers for browser tabs (setting browser_tabs)
+M.tabs_request_cmd = here .. "/../tools/omahop-tabs-request" -- asks the extension for pictures (docs/file-contract.md)
 M.tabs_files_cmd = here .. "/../tools/omahop-tabs-files"
 M.tabs_flag = state_dir .. "/tabs.enabled"
 M.tabs_draw_flag = state_dir .. "/tabs.draw" -- setting browser_tab_previews_draw: the extension may draw pictures of tabs never shown
@@ -39,6 +40,7 @@ local layouts_dir = (os.getenv("XDG_STATE_HOME") or ((os.getenv("HOME") or "") .
 M.order = {}
 M.entries = {}      -- what the session shows (filtered by the search query)
 M.all_entries = {}  -- every window of this session, before the query
+M.pic_requested = {} -- tabs already asked for a drawing in this session ("<hostpid>:<id>")
 M.query = ""
 M.bound = {}        -- chords bound for the running session, unbound exactly at its end
 M.gen = 0
@@ -271,28 +273,100 @@ local function read_tab_file(name)
   return text
 end
 
--- Tab rows for this session: fresh, well-formed files only, matched against every Hyprland window, ignored sites left out.
-function M.load_tab_rows()
-  if not M.cfg.browser_tabs then return {} end
-  local parents, snaps = {}, {}
+-- The fresh tab files (host process alive, written recently) and the parent pids found on the way. Reads no file.
+local function fresh_tab_files(quiet)
+  local parents, files = {}, {}
   local function alive(pid) parents[pid] = parents[pid] or M.parent_pid(pid); return parents[pid] ~= nil end
   for _, file in ipairs(Tabs.listing(M.list_tab_files())) do
     local fresh, why = Tabs.fresh(file, os.time(), alive)
-    local snap
-    if fresh then snap, why = Tabs.parse(read_tab_file(file.name)) end
+    if fresh then files[#files + 1] = file elseif not quiet then log("tabs: skipped " .. file.name .. ": " .. tostring(why)) end
+  end
+  return files, parents
+end
+
+-- Fresh, well-formed tab files, parsed. The skip reason never holds a title or an address (lua/tabs.lua).
+local function tab_snapshots(quiet)
+  local files, parents = fresh_tab_files(quiet)
+  local snaps = {}
+  for _, file in ipairs(files) do
+    local snap, why = Tabs.parse(read_tab_file(file.name))
     if snap then
       snap.hostpid, snap.pids = file.pid, { [snap.pid] = true, [parents[file.pid]] = true }
       snaps[#snaps + 1] = snap
-    else
-      log("tabs: skipped " .. file.name .. ": " .. tostring(why)) -- the reason never holds a title or an address (lua/tabs.lua)
+    elseif not quiet then
+      log("tabs: skipped " .. file.name .. ": " .. tostring(why))
     end
   end
+  return snaps
+end
+
+-- Tab rows for this session: fresh, well-formed files only, matched against every Hyprland window, ignored sites left out.
+function M.load_tab_rows()
+  if not M.cfg.browser_tabs then return {} end
+  local snaps = tab_snapshots()
   if #snaps == 0 then return {} end
   local hwins = {}
   for _, w in ipairs(hl.get_windows()) do
     hwins[#hwins + 1] = { address = w.address, class = w.class or "", title = w.title or "", pid = math.tointeger(w.pid), focus_history = w.focus_history_id or 1e9 }
   end
   return Tabs.rows(snaps, hwins, (Tabs.ignore_list(M.cfg.browser_tabs_ignore)))
+end
+
+-- ---- page pictures on request (docs/file-contract.md, decision D26) ----
+-- Detached again, never a FIFO opened here. `shown` (once per session, to every live host) asks the extension to photograph the tab each of its
+-- windows shows; `draw` (at search time, only with browser_tab_previews_draw) asks it to draw tabs that have no picture. While a request
+-- is recent the tab files are re-read about every 400 ms (files only, no hyprctl) so a picture shows as soon as it exists.
+M.pic_window_ms, M.pic_poll_ms, M.draw_max_ids, M.draw_max_line = 6000, 400, 6, 63
+
+local function pictures_on() return M.cfg.browser_tabs and M.cfg.browser_tab_previews == true end
+local function draw_on() return pictures_on() and M.cfg.browser_tab_previews_draw == true end
+
+local function send_request(hostpid, what)
+  local pid = math.tointeger(hostpid)
+  if not (pid and pid > 0) then return end
+  hl.exec_cmd(("%s %s %d %s"):format(sq(M.tabs_request_cmd), sq(state_dir), pid, what))
+  M.pic_until, M.pic_next = M.now() + M.pic_window_ms, nil
+end
+
+-- Session start: ask every live host for a fresh picture of its shown tabs.
+function M.request_shown()
+  if not pictures_on() then return end
+  for _, file in ipairs((fresh_tab_files(true))) do send_request(file.pid, "shown") end
+end
+
+-- After a search: ask for drawings of the visible tabs that have none.
+function M.request_draws()
+  if not (M.tabs_loaded and draw_on()) then return end
+  for _, r in ipairs(Tabs.draw_requests(M.entries, M.pic_requested, M.draw_max_ids, M.draw_max_line)) do
+    local ids = {}
+    for i, id in ipairs(r.ids) do ids[i] = ("%d"):format(id) end
+    send_request(r.hostpid, "draw " .. table.concat(ids, " "))
+  end
+end
+
+-- While a request is recent: pull new picture names from the tab files into the entries and rewrite the state only when one changed.
+function M.poll_pictures(now)
+  if not M.pic_until then return end
+  if now >= M.pic_until then M.pic_until = nil; return end
+  if not M.tabs_loaded or (M.pic_next and now < M.pic_next) then return end
+  M.pic_next = now + M.pic_poll_ms
+  local ok, err = pcall(function()
+    local pics = {}
+    for _, snap in ipairs(tab_snapshots(true)) do -- quiet: the same skip would be logged every 400 ms
+      for _, w in ipairs(snap.windows) do
+        for _, t in ipairs(w.tabs) do pics[snap.hostpid .. ":" .. t.id] = t.picture or false end
+      end
+    end
+    local changed = false
+    for _, list in ipairs({ M.all_entries, M.entries }) do
+      for _, e in ipairs(list) do
+        local p = e.tab and pics[e.tab.hostpid .. ":" .. e.tab.id]
+        if p ~= nil and (p or nil) ~= e.tab.picture then e.tab.picture = p or nil; changed = true end
+      end
+    end
+    if changed then M.write_state() end
+  end)
+  if not ok then log("tabs: picture poll failed: " .. tostring(err)) end
 end
 
 -- The chords in use, from a snapshot of `hyprctl binds` that a detached command wrote to a file (hyprctl must never be called from here directly:
@@ -344,6 +418,7 @@ function M.refilter()
   M.session:resize(#M.entries, #M.entries > 0 and 1 or 0)
   M.session:mark_query(M.query ~= "")
   M.write_state()
+  M.request_draws()
 end
 
 function M.type_key(ch)
@@ -503,7 +578,7 @@ function M.apply(actions)
   end
   if not closed then M.write_state(); return end
   local grabbed = M.grabbed
-  bind_session_keys(false); M.gen = M.gen + 1; M.query = ""; M.grabbed = false
+  bind_session_keys(false); M.gen = M.gen + 1; M.query = ""; M.grabbed = false; M.pic_until = nil
   M.write_state() -- open=0 first: the overlay lets go of the keyboard
   if not target then return end
   if grabbed then hl.timer(function() M.activate(target) end, { type = "oneshot", timeout = M.release_ms }) else M.activate(target) end
@@ -516,6 +591,7 @@ local function tick(gen)
     local now = M.now()
     if M.swipe and M.swipe:expired(now) then M.swipe:stop(); M.apply(M.session:key(now, "cancel")); return end -- no finish event came: close, never pick
     M.apply(M.session:tick(now, keys_down()))
+    if M.pic_until then M.poll_pictures(now) end
   end)
   if not ok then
     log("tick error: " .. tostring(err))
@@ -660,6 +736,9 @@ function M.open_session(now, delta, list)
   if #M.entries < 2 then M.entries = {}; return false end -- nothing to switch to
   M.gen = M.gen + 1
   bind_session_keys(true)
+  M.pic_requested, M.pic_until, M.pic_next = {}, nil, nil
+  local asked, why = pcall(M.request_shown) -- pictures must never stop the switcher opening
+  if not asked then log("tabs: cannot ask for pictures: " .. tostring(why)) end
   M.apply(M.session:open(now, #M.entries, first))
   hl.timer(function() tick(M.gen) end, { type = "oneshot", timeout = M.tick_ms })
   return true

@@ -757,6 +757,77 @@ do
   assert(count_cmd(" pictures-off") == 1, "previews off while the flag exists: the helper removes pictures")
   M.session:key(clock, "cancel"); M.apply({})
   os.execute(("rm -f '%s/tabs.pictures'"):format(run))
+  -- picture requests (browser_tab_previews, browser_tab_previews_draw): `shown` once per session to every live host, `draw` for visible tabs
+  -- with no picture (never the shown tab, at most 6 ids a line, none twice in a session), and a bounded re-read of the tab files while a request is recent
+  os.execute(("rm -f '%s'/tabs.*"):format(run))
+  local PIC = "0123456789abcdef/fedcba9876543210-"
+  local function pagefile(pics) -- tab 10 is the shown one; 11 to 19 are background tabs "Page N"
+    local tabs = { '{"id": 10, "active": true, "title": "Alpha page", "url": "https://alpha.example.com/"}' }
+    for id = 11, 19 do
+      local pic = pics[id] and (', "picture": "' .. PIC .. pics[id] .. '"') or ""
+      tabs[#tabs + 1] = ('{"id": %d, "active": false, "title": "Page %d", "url": "https://site%d.example.com/"%s}'):format(id, id, id, pic)
+    end
+    return ('{"schema": 1, "browser": "chromium", "pid": %d, "caller": "chrome-extension://abc/", "profile": "Default", "windows": [{"id": 1, "focused": true, "type": "normal", "tabs": [%s]}]}'):format(browser_pid, table.concat(tabs, ","))
+  end
+  local function reqs() return ran_all("omahop-tabs-request") end
+  local function req_line(cmd) return cmd:match(" (%d+) (.*)$") end
+  local function tab_reads() local n = 0 for _, p in ipairs(opened) do if p:find("/tabs%.%d+%.json$") then n = n + 1 end end return n end
+  local prefix = ("exec '%s' '%s' %d "):format(M.tabs_request_cmd, run, hostpid)
+  put("tabs." .. hostpid .. ".json", pagefile({ [19] = "4" }))
+  -- the flags off: nothing is requested
+  setcfg('browser_tabs = true\n[windows]\nworkspaces = "current"\n'); open_session(); type_word("page")
+  assert(#reqs() == 0, "no page pictures: no request")
+  local idle = tab_reads(); advance(16, 100)
+  assert(tab_reads() == idle, "nothing pending: the tab files are not polled")
+  setcfg('browser_tabs = true\nbrowser_tab_previews_draw = true\n[windows]\nworkspaces = "current"\n'); open_session(); type_word("page")
+  assert(#reqs() == 0, "draw without page pictures: no request")
+  -- pictures on, draw off: `shown` only, once, not repeated by typing
+  setcfg('browser_tabs = true\nbrowser_tab_previews = true\n[windows]\nworkspaces = "current"\n'); open_session()
+  assert(#reqs() == 1 and reqs()[1] == prefix .. "shown", "session start: one shown to the live host: " .. table.concat(reqs(), " | "))
+  type_word("page")
+  assert(#reqs() == 1 and #M.entries >= 9, "typing asks for no drawing while draw is off, and shown is not repeated")
+  -- pending: the files are re-read about every 400 ms, and only for 6 seconds
+  local r0 = tab_reads()
+  advance(16, 25)
+  assert(tab_reads() == r0 + 1, "one re-read in the first 400 ms: " .. (tab_reads() - r0))
+  put("tabs." .. hostpid .. ".json", pagefile({ [12] = "5d", [19] = "4" }))
+  advance(16, 30)
+  assert(read_state():find("\nt\t0xb6\tchromium\t0\t0\t\t" .. PIC .. "5d\tsite12.example.com\tPage 12\n", 1, true), "a picture that appears while open reaches the state file")
+  local function tab_lines() local t = {} for l in read_state():gmatch("\nt\t[^\n]*") do t[#t + 1] = l end return table.concat(t) end
+  local before_lines = tab_lines()
+  advance(16, 100)
+  assert(tab_lines() == before_lines, "nothing changed: the tab lines stay")
+  advance(16, 400)
+  local r1 = tab_reads()
+  advance(16, 150)
+  assert(tab_reads() == r1, "no re-read after the 6 s window: " .. (tab_reads() - r1))
+  assert(r1 - r0 <= 18, "bounded polling: about one read per 400 ms for 6 s, got " .. (r1 - r0))
+  -- draw on: shown at start, then draws for the visible background tabs without a picture, 6 ids at most a line, none twice
+  setcfg('browser_tabs = true\nbrowser_tab_previews = true\nbrowser_tab_previews_draw = true\n[windows]\nworkspaces = "current"\n')
+  put("tabs." .. hostpid .. ".json", pagefile({ [19] = "4" }))
+  open_session()
+  assert(#reqs() == 1, "start: only shown so far")
+  type_word("page")
+  local lines, seen = {}, {}
+  for i = 2, #reqs() do
+    local pid, rest2 = req_line(reqs()[i]); lines[#lines + 1] = rest2
+    assert(math.tointeger(pid) == hostpid and rest2:find("^draw [%d ]+$"), "a draw line is `draw` and digits: " .. reqs()[i])
+    local n = 0
+    for id in rest2:gmatch("%d+") do assert(not seen[id], "an id is asked for once per session: " .. id); seen[id] = true; n = n + 1 end
+    assert(n <= 6, "at most 6 ids a line")
+  end
+  assert(seen["10"] == nil and seen["19"] == nil, "the shown tab and a tab with a picture are not drawn")
+  local count = 0 for _ in pairs(seen) do count = count + 1 end
+  assert(count == 8 and #lines == 2 and lines[1] == "draw 11 12 13 14 15 16" and lines[2] == "draw 17 18", "8 tabs, the first line capped at 6: " .. table.concat(lines, " / "))
+  M.query = "page"; M.refilter()
+  assert(#reqs() == 3, "the same entries again: no new request")
+  -- a new session asks again
+  open_session(); type_word("page")
+  assert(#reqs() == 3 and reqs()[1] == prefix .. "shown", "new session: shown and the two draws again: " .. #reqs())
+  -- the closed session stops polling
+  M.session:key(clock, "cancel"); M.apply({})
+  local r2 = tab_reads(); advance(16, 60)
+  assert(tab_reads() == r2, "a closed session reads nothing")
   io.open, hl.exec_cmd, hl.dispatch = real_open, real_exec, real_dispatch
   os.execute(("rm -f '%s'/tabs.*"):format(run))
   setcfg('[windows]\nworkspaces = "all"\n')
