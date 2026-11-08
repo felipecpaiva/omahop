@@ -1,0 +1,5 @@
+<!doctype html><title>video</title><body style="margin:0;background:#fff"><video id=v width=400 height=200 muted autoplay></video>
+<canvas id=c width=400 height=200 style="display:none"></canvas>
+<script>const c=document.getElementById('c'),x=c.getContext('2d');const P=['#ff0000','#00ff00','#0000ff','#ffff00'];let i=0;
+setInterval(()=>{x.fillStyle=P[(i++>>2)%4];x.fillRect(0,0,400,200)},100);
+const v=document.getElementById('v');v.srcObject=c.captureStream(10);v.play();</script>

@@ -1,0 +1,9 @@
+spawned
+mode headless win 2099202494 B 2099202496
+state [{"id":2099202493,"win":2099202492,"active":true,"discarded":false,"frozen":false,"url":"about:blank","st":"Error: Cannot access contents of url \"about:blank\". Extension manifest must requ"},{"id":2099202495,"win":2099202494,"active":true,"discarded":false,"frozen":false,"url":"http://127.0.0.1:8801/plain.html","st":{"st":null,"vis":"visible"}},{"id":2099202496,"win":2099202494,"active":false,"discarded":false,"frozen":false,"url":"http://127.0.0.1:8801/color.html","st":{"st":{"idx":1,"raf":1,"t":1794127487373,"tick":1,"vis":"hidden"},"vis":"hidden"}}]
+{"name":"iso-csp-dbg","ms":59,"img":{"w":900,"h":513,"top":["0,0,255 x107088","255,255,255 x6394","128,128,128 x1218"],"corner":"255,0,0","left":"0,0,255","right":"0,0,255","nonwhitePct":95}}
+{"name":"iso-xorigin-dbg","error":"Error: timeout 10000ms in captureScreenshot\n    at chrome-extension://lapbjcmcmlacgliicmilocegkkbmknph/sw.js:17:64\n    at async chrome-extension://lapbjcmcmlacgliicmilocegkkbmknph/sw.js:19:14"}
+{"name":"iso-csp-dbg","ms":438,"img":{"w":900,"h":457,"top":["0,0,255 x95031","255,255,255 x6484","128,128,128 x960"],"corner":"0,0,255","left":"0,0,255","right":"0,0,255","nonwhitePct":94}}
+{"name":"iso-canvas-dbg","error":"Error: timeout 10000ms in captureScreenshot\n    at chrome-extension://lapbjcmcmlacgliicmilocegkkbmknph/sw.js:17:64\n    at async chrome-extension://lapbjcmcmlacgliicmilocegkkbmknph/sw.js:19:14"}
+{"name":"iso-color-dbg","ms":542,"img":{"w":900,"h":457,"top":["0,0,255 x91928","0,0,0 x9749","0,0,192 x483"],"corner":"0,0,255","left":"0,0,191","right":"0,0,255","nonwhitePct":100}}
+{"name":"iso-csp-VISIBLE-dbg","ms":30,"img":{"w":900,"h":457,"top":["0,0,255 x95031","255,255,255 x6484","128,128,128 x960"],"corner":"0,0,255","left":"0,0,255","right":"0,0,255","nonwhitePct":94}}

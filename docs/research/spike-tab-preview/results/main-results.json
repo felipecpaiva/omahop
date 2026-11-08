@@ -1,0 +1,422 @@
+{
+ "t0-cvt": {
+  "name": "t0-cvt",
+  "ms": 16,
+  "img": {
+   "w": 900,
+   "h": 513,
+   "top": [
+    "128,128,128 x106755",
+    "0,0,0 x8445",
+    "64,64,64 x225"
+   ],
+   "corner": "136,136,136",
+   "left": "136,136,136",
+   "right": "136,136,136",
+   "nonwhitePct": 100
+  },
+  "expectBefore": "0,255,0",
+  "expectAfter": "0,255,0",
+  "vis": "hidden",
+  "match": "STALE_OR_OTHER"
+ },
+ "t0-dbg": {
+  "name": "t0-dbg",
+  "ms": 59,
+  "img": {
+   "w": 900,
+   "h": 513,
+   "top": [
+    "0,255,0 x104637",
+    "0,0,0 x9734",
+    "0,192,0 x441"
+   ],
+   "corner": "0,255,0",
+   "left": "0,0,0",
+   "right": "0,255,0",
+   "nonwhitePct": 100
+  },
+  "expectBefore": "0,255,0",
+  "expectAfter": "0,255,0",
+  "vis": "hidden",
+  "match": "current(before)"
+ },
+ "t0-h2c": {
+  "name": "t0-h2c",
+  "ms": 824,
+  "img": {
+   "w": 900,
+   "h": 513,
+   "top": [
+    "0,255,0 x104637",
+    "0,0,0 x9734",
+    "0,192,0 x441"
+   ],
+   "corner": "0,255,0",
+   "left": "0,0,0",
+   "right": "0,255,0",
+   "nonwhitePct": 100
+  },
+  "expectBefore": "0,255,0",
+  "expectAfter": "0,0,255",
+  "vis": "hidden",
+  "match": "current(before)"
+ },
+ "t0-h2i": {
+  "name": "t0-h2i",
+  "error": "Error: timeout 12000ms in rasterizer\n    at chrome-extension://lapbjcmcmlacgliicmilocegkkbmknph/sw.js:17:64\n    at async chrome-extension://lapbjcmcmlacgliicmilocegkkbmknph/sw.js:22:10",
+  "expectBefore": "0,0,255",
+  "expectAfter": "0,0,255",
+  "vis": "hidden",
+  "match": "STALE_OR_OTHER"
+ },
+ "t0-mhtml": {
+  "name": "t0-mhtml",
+  "error": "NotFoundError: A requested file or directory could not be found at the time an operation was processed.",
+  "expectBefore": "0,0,255",
+  "expectAfter": "0,0,255",
+  "vis": "hidden",
+  "match": "STALE_OR_OTHER"
+ },
+ "t0-tabcap": {
+  "name": "t0-tabcap",
+  "error": "Error: Extension has not been invoked for the current page (see activeTab permission). Chrome pages cannot be captured.",
+  "expectBefore": "0,0,255",
+  "expectAfter": "0,0,255",
+  "vis": "hidden",
+  "match": "STALE_OR_OTHER"
+ },
+ "ctrl-visible-h2c": {
+  "name": "ctrl-visible-h2c",
+  "ms": 117,
+  "img": {
+   "w": 900,
+   "h": 513,
+   "top": [
+    "128,128,128 x106755",
+    "0,0,0 x8445",
+    "64,64,64 x225"
+   ],
+   "corner": "136,136,136",
+   "left": "136,136,136",
+   "right": "136,136,136",
+   "nonwhitePct": 100
+  }
+ },
+ "ctrl-visible-h2i": {
+  "name": "ctrl-visible-h2i",
+  "ms": 36,
+  "img": {
+   "w": 900,
+   "h": 513,
+   "top": [
+    "0,0,0 x72119",
+    "128,128,128 x43089",
+    "64,64,64 x217"
+   ],
+   "corner": "0,0,0",
+   "left": "0,0,0",
+   "right": "0,0,0",
+   "nonwhitePct": 100
+  }
+ },
+ "ctrl-visible-dbg": {
+  "name": "ctrl-visible-dbg",
+  "ms": 44,
+  "img": {
+   "w": 900,
+   "h": 513,
+   "top": [
+    "128,128,128 x106755",
+    "0,0,0 x8445",
+    "64,64,64 x225"
+   ],
+   "corner": "136,136,136",
+   "left": "136,136,136",
+   "right": "136,136,136",
+   "nonwhitePct": 100
+  }
+ },
+ "fid-canvas-dbg": {
+  "name": "fid-canvas-dbg",
+  "ms": 2192,
+  "img": {
+   "w": 900,
+   "h": 513,
+   "top": [
+    "255,255,255 x95425",
+    "255,0,255 x10000",
+    "0,255,255 x10000"
+   ],
+   "corner": "255,255,255",
+   "left": "255,0,255",
+   "right": "255,255,255",
+   "nonwhitePct": 17
+  }
+ },
+ "fid-canvas-h2c": {
+  "name": "fid-canvas-h2c",
+  "ms": 801,
+  "img": {
+   "w": 900,
+   "h": 513,
+   "top": [
+    "255,255,255 x95425",
+    "255,0,255 x10000",
+    "0,255,255 x10000"
+   ],
+   "corner": "255,255,255",
+   "left": "255,0,255",
+   "right": "255,255,255",
+   "nonwhitePct": 17
+  }
+ },
+ "fid-canvas-h2i": {
+  "name": "fid-canvas-h2i",
+  "error": "Error: timeout 12000ms in rasterizer\n    at chrome-extension://lapbjcmcmlacgliicmilocegkkbmknph/sw.js:17:64\n    at async chrome-extension://lapbjcmcmlacgliicmilocegkkbmknph/sw.js:22:10"
+ },
+ "fid-video-dbg": {
+  "name": "fid-video-dbg",
+  "ms": 71,
+  "img": {
+   "w": 900,
+   "h": 513,
+   "top": [
+    "255,255,255 x95425",
+    "255,0,0 x20000"
+   ],
+   "corner": "255,255,255",
+   "left": "255,0,0",
+   "right": "255,255,255",
+   "nonwhitePct": 17
+  }
+ },
+ "fid-video-h2c": {
+  "name": "fid-video-h2c",
+  "ms": 309,
+  "img": {
+   "w": 900,
+   "h": 513,
+   "top": [
+    "255,255,255 x95425",
+    "255,0,0 x20000"
+   ],
+   "corner": "255,255,255",
+   "left": "255,0,0",
+   "right": "255,255,255",
+   "nonwhitePct": 17
+  }
+ },
+ "fid-video-h2i": {
+  "name": "fid-video-h2i",
+  "error": "[object Event]"
+ },
+ "fid-xorigin-dbg": {
+  "name": "fid-xorigin-dbg",
+  "error": "Error: timeout 10000ms in captureScreenshot\n    at chrome-extension://lapbjcmcmlacgliicmilocegkkbmknph/sw.js:17:64\n    at async chrome-extension://lapbjcmcmlacgliicmilocegkkbmknph/sw.js:19:14"
+ },
+ "fid-xorigin-h2c": {
+  "name": "fid-xorigin-h2c",
+  "ms": 130,
+  "img": {
+   "w": 900,
+   "h": 457,
+   "top": [
+    "255,255,255 x102825"
+   ],
+   "corner": "255,255,255",
+   "left": "255,255,255",
+   "right": "255,255,255",
+   "nonwhitePct": 0
+  }
+ },
+ "fid-xorigin-h2i": {
+  "name": "fid-xorigin-h2i",
+  "error": "[object Event]"
+ },
+ "fid-csp-dbg": {
+  "name": "fid-csp-dbg",
+  "error": "Error: timeout 10000ms in captureScreenshot\n    at chrome-extension://lapbjcmcmlacgliicmilocegkkbmknph/sw.js:17:64\n    at async chrome-extension://lapbjcmcmlacgliicmilocegkkbmknph/sw.js:19:14"
+ },
+ "fid-csp-h2c": {
+  "name": "fid-csp-h2c",
+  "ms": 130,
+  "img": {
+   "w": 900,
+   "h": 457,
+   "top": [
+    "0,0,255 x96402",
+    "255,255,255 x6079",
+    "128,128,255 x125"
+   ],
+   "corner": "0,0,255",
+   "left": "0,0,255",
+   "right": "0,0,255",
+   "nonwhitePct": 94
+  }
+ },
+ "fid-csp-h2i": {
+  "name": "fid-csp-h2i",
+  "error": "Error: timeout 12000ms in rasterizer\n    at chrome-extension://lapbjcmcmlacgliicmilocegkkbmknph/sw.js:17:64\n    at async chrome-extension://lapbjcmcmlacgliicmilocegkkbmknph/sw.js:22:10"
+ },
+ "t60-cvt": {
+  "name": "t60-cvt",
+  "ms": 15,
+  "img": {
+   "w": 900,
+   "h": 513,
+   "top": [
+    "128,128,128 x106755",
+    "0,0,0 x8445",
+    "64,64,64 x225"
+   ],
+   "corner": "136,136,136",
+   "left": "136,136,136",
+   "right": "136,136,136",
+   "nonwhitePct": 100
+  },
+  "expectBefore": "0,0,255",
+  "expectAfter": "0,0,255",
+  "vis": "hidden",
+  "match": "STALE_OR_OTHER"
+ },
+ "t60-dbg": {
+  "name": "t60-dbg",
+  "ms": 44,
+  "img": {
+   "w": 900,
+   "h": 513,
+   "top": [
+    "255,255,0 x104465",
+    "0,0,0 x9810",
+    "192,192,0 x481"
+   ],
+   "corner": "255,255,0",
+   "left": "0,0,0",
+   "right": "255,255,0",
+   "nonwhitePct": 100
+  },
+  "expectBefore": "0,0,255",
+  "expectAfter": "255,255,0",
+  "vis": "hidden",
+  "match": "current(after)"
+ },
+ "t60-h2c": {
+  "name": "t60-h2c",
+  "ms": 142,
+  "img": {
+   "w": 900,
+   "h": 513,
+   "top": [
+    "255,255,0 x104465",
+    "0,0,0 x9810",
+    "192,192,0 x481"
+   ],
+   "corner": "255,255,0",
+   "left": "0,0,0",
+   "right": "255,255,0",
+   "nonwhitePct": 100
+  },
+  "expectBefore": "255,255,0",
+  "expectAfter": "255,255,0",
+  "vis": "hidden",
+  "match": "current(before)"
+ },
+ "t60-mhtml": {
+  "name": "t60-mhtml",
+  "raw": {
+   "bytes": 1010,
+   "ms": 3,
+   "bg": "rgb(255, 255, 0)",
+   "txt": "idx 3 tick 135 raf 5 hidden"
+  },
+  "expectBefore": "255,255,0",
+  "expectAfter": "255,255,0",
+  "vis": "hidden",
+  "match": "STALE_OR_OTHER"
+ },
+ "t330-cvt": {
+  "name": "t330-cvt",
+  "ms": 16,
+  "img": {
+   "w": 900,
+   "h": 513,
+   "top": [
+    "128,128,128 x106755",
+    "0,0,0 x8445",
+    "64,64,64 x225"
+   ],
+   "corner": "136,136,136",
+   "left": "136,136,136",
+   "right": "136,136,136",
+   "nonwhitePct": 100
+  },
+  "expectBefore": "0,0,255",
+  "expectAfter": "0,0,255",
+  "vis": "hidden",
+  "match": "STALE_OR_OTHER"
+ },
+ "t330-dbg": {
+  "name": "t330-dbg",
+  "ms": 56,
+  "img": {
+   "w": 900,
+   "h": 513,
+   "top": [
+    "255,255,0 x104463",
+    "0,0,0 x9808",
+    "192,192,0 x474"
+   ],
+   "corner": "255,255,0",
+   "left": "0,0,0",
+   "right": "255,255,0",
+   "nonwhitePct": 100
+  },
+  "expectBefore": "0,0,255",
+  "expectAfter": "255,255,0",
+  "vis": "hidden",
+  "match": "current(after)"
+ },
+ "t330-h2c": {
+  "name": "t330-h2c",
+  "ms": 128,
+  "img": {
+   "w": 900,
+   "h": 513,
+   "top": [
+    "255,255,0 x104463",
+    "0,0,0 x9808",
+    "192,192,0 x474"
+   ],
+   "corner": "255,255,0",
+   "left": "0,0,0",
+   "right": "255,255,0",
+   "nonwhitePct": 100
+  },
+  "expectBefore": "255,255,0",
+  "expectAfter": "255,255,0",
+  "vis": "hidden",
+  "match": "current(before)"
+ },
+ "t330-mhtml": {
+  "name": "t330-mhtml",
+  "raw": {
+   "bytes": 1010,
+   "ms": 3,
+   "bg": "rgb(255, 255, 0)",
+   "txt": "idx 3 tick 405 raf 9 hidden"
+  },
+  "expectBefore": "255,255,0",
+  "expectAfter": "255,255,0",
+  "vis": "hidden",
+  "match": "STALE_OR_OTHER"
+ },
+ "discarded-mhtml": {
+  "name": "discarded-mhtml",
+  "error": "Error: Don't have permissions required to capture this page.\n    at extensions::pageCapture:23:7"
+ },
+ "discarded-dbg": {
+  "name": "discarded-dbg",
+  "error": "Error: {\"code\":-32603,\"message\":\"Internal error\"}"
+ }
+}

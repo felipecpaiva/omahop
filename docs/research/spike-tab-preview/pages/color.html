@@ -1,0 +1,9 @@
+<!doctype html><title>B color</title><body style="margin:0"><h1 id=t style="font:900 200px sans-serif;margin:0">TAB-B</h1><div id=s style="font:40px monospace"></div>
+<script>
+const P=['#ff0000','#00ff00','#0000ff','#ffff00','#ff00ff','#00ffff'];
+let idx=0,raf=0,tick=0;window.__st={};
+function ap(){document.body.style.background=P[idx%6];window.__st={idx:idx%6,tick,raf,vis:document.visibilityState,t:Date.now()};
+ document.getElementById('s').textContent='idx '+idx%6+' tick '+tick+' raf '+raf+' '+document.visibilityState;}
+setInterval(()=>{idx++;tick++;ap()},1000);
+(function r(){raf++;requestAnimationFrame(r)})();ap();
+</script>
