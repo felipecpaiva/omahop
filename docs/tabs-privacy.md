@@ -19,7 +19,7 @@ browser over native messaging (standard input and output, no network). The brows
 only this extension may start the helper, and the helper itself refuses any other caller.
 
 The helper writes one file per browser profile to `$XDG_RUNTIME_DIR/omahop/` (a folder only you
-can open, mode 700; files mode 600). That folder is in memory and is gone at logout.
+can open, mode 700; files mode 600). That folder is in memory, not on disk.
 
 ## What never happens
 
@@ -27,7 +27,7 @@ can open, mode 700; files mode 600). That folder is in memory and is gone at log
   the extension has no required host permissions and no content scripts (the optional all-websites permission for page pictures is described below).
 - Titles and addresses are never logged, not even in error messages (tests check this).
 - Site icons are written, like the tab file, only in the same private in-memory folder (`tabicons/`), only while the setting is on, never for hidden sites, and deleted when the setting goes off or the browser closes.
-- Page pictures (optional) follow the same rules in the folder `tabpics/`: only while both settings are on, never for hidden sites, deleted when the setting goes off or the browser closes.
+- Page pictures (optional) live in the folder `tabpics/` of the same private in-memory folder: only while both settings are on, never for hidden sites. They are kept while your browser stays open and deleted when you close it, turn the setting off, or the site is ignored.
 - Nothing is written anywhere else, and nothing is kept on disk.
 
 ## Page pictures (optional, off by default)
@@ -42,8 +42,11 @@ a picture of the tab you see, so a picture can be a little old), shrinks it, and
 local helper. The helper keeps it in memory and in the same private in-memory folder as the tab
 file, and omahop reads it from there. Pictures are never sent over the network, never logged,
 never taken in incognito windows, and never kept for sites on your ignore list (the helper
-drops them at once). They are deleted when you turn the setting off, remove the permission,
-close the tab or close the browser. The permission is used for nothing else.
+drops them at once). They are kept in memory while your browser stays open, so a page you
+visited earlier still shows its picture after you reload the extension or close the tab. They are
+deleted when you close the browser, turn the setting off, or the site is ignored. Files are named
+by hashes only (of the site and of the page address), never by a title or an address. The
+permission is used for nothing else.
 
 ## Off by default
 
@@ -54,7 +57,7 @@ within a second. You can keep the extension installed with the setting off and n
 ## Hiding sites
 
 The ignore list in omahop's settings (written to `tabs.ignore`) hides sites by host name. The
-helper drops those tabs before writing, so they never reach any file.
+helper drops those tabs before writing, so they never reach any file. See `file-contract.md`.
 
 ## Permissions the browser shows
 
