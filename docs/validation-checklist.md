@@ -193,3 +193,8 @@ No live test drives the touchpad (no fake pointer or touch input is injected), s
 - [ ] Alt+Tab, then hold Alt and swipe with 4 fingers: the swipe changes nothing, releasing Alt picks as usual.
 - [ ] Turn the setting off in the settings window (no reload): a 4-finger swipe does nothing at once.
 - [ ] Touchscreen: a 4-finger swipe on the screen does nothing (expected: Hyprland does not pass touchscreen swipes to plugins).
+
+
+## Open, 2026-11-08: install the browser tab search (hand check)
+
+Felipe found that searching for a page in a background browser tab finds nothing. That is expected until `browser_tabs` is on and the `omahop-tabs` extension and helper are installed (neither is yet). Steps: Chrome `chrome://extensions`, Developer mode, Load unpacked `omahop-tabs/extension`, run the installer from the `omahop-tabs` repo (see its README for the exact name), turn on Search browser tabs in the settings window, then search for a title of a tab that is not showing. Also the first real test of the extension in a visible Chrome (window match by pid, focus).
