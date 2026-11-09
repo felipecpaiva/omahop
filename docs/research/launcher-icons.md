@@ -134,6 +134,27 @@ Restore proof: deleted the test folder (`rm -r ~/.local/share/icons/omahop-test`
 `ls ~/.local/share/icons` then answers "No such file or directory", exactly as before. Reopened the grid: btop and Chromium show their normal
 icons again. `git status` of the repo shows only the new screenshot folder. Nothing else was backed up because nothing else was touched.
 
+## 5c. Second live test: the small vertical menu (Super + Space itself)
+
+Open without keys: `omarchy-menu summon root` (wrapper of `omarchy-shell shell summon omarchy.menu '{"menu":"root"}'`), close with `omarchy-menu close`.
+Same reversible test: `omahop-test/apps/` with `aether.svg`, `btop.svg`, `chatgpt.svg` (magenta, green, orange T), deleted afterwards
+(`ls ~/.local/share/icons` answers "No such file or directory", as before the test).
+
+- **The root menu rows have no app icons at all.** They are glyph icons from the font (Apps, Learn, Appearance, Trigger, Setup, Install,
+  Remove, Update, About, System), set in `/usr/share/omarchy/default/omarchy/omarchy-menu.jsonc` (`"icon":"..."`) and drawn as text
+  (`Menu.qml` around line 1516, `iconText`, `visible: row.hasIcon && !row.isApp`). Nothing there reads an icon file, so nothing to change.
+  Screenshot: `img/menu-root-test.png`.
+- **The root "Apps" row opens the grid.** Its action is `omarchy-shell omarchy.dock apps` (jsonc line 24), so `omarchy-menu summon apps` and
+  Enter on that row both open the same app grid as Super + Alt + Space, and the grid showed the test icons (Aether magenta, btop green,
+  ChatGPT orange): `img/menu-apps-test.png`.
+- **The vertical list with app icons exists only as the menu's app rows** (`Menu.qml` `mergeAppRows`, rows with `parent: "apps"`, `appIcon`).
+  They are drawn at `Menu.qml:1532 to 1541` with `source: ... root.appLibrary.iconSource(row.appIcon)`, the same function the grid and bar use, so the
+  overlay applies to them by the same rule (source proof, not seen on screen). It was not possible to bring that list on screen without
+  keyboard input here: route `apps` runs the grid action instead, and the rows would most likely only show when text is typed at the root.
+  Not verified: when exactly those rows are visible.
+- Bar: yes, changed. The workspace item for the kitty window drew the test icon in the first test (section 5b) and again here (still showing a
+  `T` tile during the aether/btop/chatgpt test, because it had not been rescanned); it returned to normal after a grid reopen.
+
 ## 6. Not verified
 
 - Symlinks in the real shell: the real test (5b) used plain files, the scratch test (How verified) showed `find` lists symlinks; a link served by
