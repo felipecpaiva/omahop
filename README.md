@@ -174,7 +174,7 @@ A profile replaces only the keys it names; everything else keeps your base value
 
 `modifier = "alt"` (the default) replaces Omarchy's own Alt+Tab, and on workspaces where omahop is not active it runs Omarchy's Alt+Tab itself, as before.
 
-- Super is not offered: Omarchy owns Super+Tab (next workspace) and most other Super chords, so omahop never touches them. Ctrl+Alt is not an option either: Omarchy binds Ctrl+Alt+Tab (focus next monitor).
+- Super is not offered: Omarchy owns Super+Tab (next workspace) and most other Super chords, so omahop never touches them. A user chosen trigger key (you press your own chord, checked against chords already in use) is planned, not shipped; see `docs/ROADMAP.md`. Ctrl+Alt is not an option either: Omarchy binds Ctrl+Alt+Tab (focus next monitor).
 - `"ctrl"`: Ctrl+Tab is free in Hyprland, so omahop takes it, but apps use it (tab switching in browsers and editors): where omahop is active, Ctrl+Tab opens omahop instead. Where it is not active, the key is handed back to the app.
 - The same-app shortcut must start with the same key (`same_app_key = "CTRL + GRAVE"` with Ctrl); the default `ALT + GRAVE` is skipped otherwise, with a note in the log.
 - Shift is not offered: it already means "go back" (Shift+Tab) and types capitals.

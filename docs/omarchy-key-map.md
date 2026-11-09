@@ -36,6 +36,6 @@ Free keys (neither the plain chord nor its Shift variant is bound):
 
 ## What we can build on this
 
-The blocker is the pair (held key, trigger key), not the held key alone. Today the trigger key is always Tab (`M.trigger_key` in `lua/omahop.lua`). A setting `trigger_key` would let the pair be any free chord on the list above, for example Super + a free letter or digit, or Ctrl + Alt + Grave. omahop can check the pair against the live binds and log why it did not bind. Typing keys that Omarchy owns would simply not type (the same rule as today), and the list could say which ones in the settings window. This is not built yet; it is on the roadmap as an idea.
+The blocker is the pair (held key, trigger key), not the held key alone. Today the trigger key is always Tab (`M.trigger_key` in `lua/omahop.lua`). A setting `trigger_key` (decision D31: the user presses their own chord in a key capture field, checked against the live binds, never taking an existing bind, no Super default) would let the pair be any free chord on the list above, for example Super + a free letter or digit, or Ctrl + Alt + Grave. omahop can check the pair against the live binds and log why it did not bind. Typing keys that Omarchy owns would simply not type (the same rule as today), and the list could say which ones in the settings window. This is not built yet; it is planned on the roadmap (D31).
 
 If your bindings change (Omarchy updates, your own `bindings.lua`), run the tool again: it is the source of truth, this page is a snapshot.
