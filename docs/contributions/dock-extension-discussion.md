@@ -1,6 +1,6 @@
-# Draft: Discussion for omacom/omarchy (NOT POSTED)
+# Discussion for omacom/omarchy (POSTED 2026-11-09 as #18249)
 
-Status 2026-11-09: draft for Felipe to approve. Nothing has been posted. Facts behind it: `docs/research/dock-spike.md`.
+Status 2026-11-09: posted as discussion #18249, with two reference comments on #16609 and #15523. Facts behind it: `docs/research/dock-spike.md`.
 
 Category: **Suggestions** ("Feature requests, changes, or other ideas", and where the Omarchy skill sends feature ideas). Our earlier discussion #17754 used Ideas and #17222 used Suggestions, so either is fine; Suggestions is the safer match. Checked 2026-11-09, categories are general, ideas, manual, polls, q-a, show-and-tell, suggestions, support.
 

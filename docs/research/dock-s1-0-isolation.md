@@ -61,3 +61,7 @@ Also noted: the dock hide timer is `DockWindow.qml:221-228` (150 ms) and checks 
 - Whether the headless isolated run in the command above is acceptable at all (it was never executed). If not, S1 runs on a throwaway user or VM.
 - Whether the marketplace or `omarchy-plugin` install accepts a symlinked or second-repo dock plugin (decides the answer to (a)).
 - Anything needing real pointer hover: S1 facts (a) to (e) in the plan.
+
+## Decision 2026-11-09
+
+Decision B: wait for a maintainer reply in discussion #18249 before any more dock work. No symlink experiment and no isolated run now. Verified from the code read above: plugins are discovered only at `plugins/*/manifest.json`, so a `dock/` subfolder inside the omahop plugin is refuted and a dock plugin needs its own top-level folder. Watch #18249, #16609, #16219 and #16479 every 3 days with the workspace `scripts/check-contributions.sh`.

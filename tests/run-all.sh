@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# All omahop checks. The pure ones run anywhere with Lua 5.5; the live one needs Hyprland, kitty, grim and write access to /dev/uinput
-# and uses the real keyboard (keep your hands off it for about a minute). Usage: bash tests/run-all.sh [--no-live]
+# All omahop checks. The pure ones run anywhere with Lua 5.5 and send no input. The live ones need Hyprland, kitty, grim and write access
+# to /dev/uinput and use the real keyboard (keep your hands off it for about a minute); they are OFF by default (a default run once closed
+# the terminal twice). Usage: bash tests/run-all.sh [--live | --no-live]   (OMAHOP_LIVE=1 is the same as --live; --no-live always wins)
 set -e
 cd "$(dirname "$0")/.."
 # Hyprland embeds Lua 5.5; 5.4 accepts code that 5.5 rejects, so a pass on 5.4 proves little.
@@ -39,7 +40,10 @@ done
 if command -v luacheck >/dev/null; then luacheck lua --no-color -q --globals hl o omahop_takeover || true; fi
 # qmllint cannot resolve the shell's qs.* imports (they only exist inside the running shell), so it can only check syntax: a syntax error fails the run, import warnings are hidden.
 if [ -x /usr/lib/qt6/bin/qmllint ]; then /usr/lib/qt6/bin/qmllint --unqualified disable --unresolved-type disable --import disable ./*.qml 2>&1 | grep -E "^(Error|Syntax)" && exit 1 || echo "qml syntax ok"; else echo "SKIP qmllint not installed"; fi
-[ "${1:-}" = "--no-live" ] && exit 0
+if [ "${1:-}" = "--no-live" ] || { [ "${1:-}" != "--live" ] && [ "${OMAHOP_LIVE:-}" != "1" ]; }; then
+  echo "live tests skipped (no input sent); run with --live or OMAHOP_LIVE=1 to include them"
+  exit 0
+fi
 echo "Live test next: it uses your real keyboard. Keep your hands off it."
 python3 tests/live.py
 python3 tests/live_panel.py

@@ -1,6 +1,6 @@
 # Hand checks Felipe owes
 
-Automated checks (`tests/run-all.sh`) cover logic and the keyboard path with a virtual keyboard. These need a real keyboard and your eyes.
+Automated checks (`tests/run-all.sh`) cover logic with no input sent. The live tests (virtual keyboard, `tests/live*.py`) run only with `--live` or `OMAHOP_LIVE=1` (a default run once closed the terminal twice), and `live_panel.py` pixel clicks also need `OMAHOP_LIVE_CLICKS=1`; a no-input scope check lives in `tests/config_io.test.mjs`. These need a real keyboard and your eyes.
 
 ## v0.1
 
