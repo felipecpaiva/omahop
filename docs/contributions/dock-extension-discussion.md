@@ -61,4 +61,4 @@ I am happy to send the PR, with before and after captures and the dock test, onc
 Notes for Felipe before posting:
 - No private data and no screenshots in the body. Say the plugin name (omahop, public) only if you want to; the draft does not name it.
 - No dashes used as punctuation. Re-read once for tone.
-- Tracker entry: `/home/felipe/Work/docs/contributions.md`, status "draft, not posted". After posting, replace with the discussion URL and run `bash scripts/check-contributions.sh`.
+- Tracker entry: the workspace tracker `docs/contributions.md`, status "draft, not posted". After posting, replace with the discussion URL and run `bash scripts/check-contributions.sh`.
