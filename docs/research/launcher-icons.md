@@ -113,10 +113,31 @@ present (crash, manual edit) gets removed.
 Effort: small to medium (one script plus tests with fake desktop entries and a temp `HOME`, one bool row, docs). Risk: low for files (one
 owned folder), medium for behaviour (PNG versus SVG ordering, the Qt image cache after a change, a future Omarchy changing the index scan).
 
+## 5b. Real test on this machine (2026-11-09, Felipe approved)
+
+Result: **works.** Steps: made `~/.local/share/icons/omahop-test/apps/` with three plain SVG files named `kitty.svg`, `btop.svg`, `chromium.svg`
+(solid magenta, green, orange squares with a T). `~/.local/share/icons` did not exist before. No setting, no env, no gsettings, no file under
+`/usr` or `~/.config` was changed. Opened the app grid with `omarchy-shell omarchy.dock apps` (the same menu code as the Apps list behind
+Super + Space; no keyboard input to any window), waited 2.5 s, took `grim`. In the grid **btop shows the green T and Chromium the orange T**
+instead of their normal icons, live, with no shell restart: the grid's own icon rescan on open found the folder.
+Screenshot (cropped to the grid, nothing else on screen): `img/launcher-icons-test.png`.
+
+Findings from the test:
+- The kitty entry is not on the first page of the grid (alphabetical, the screenshot ends at "Image Viewer"), so the kitty test icon was not seen
+  in the grid. It did show on the **top bar**: the workspace item for the kitty window showed the magenta test icon too. So the overlay also
+  changes the bar's app icons (anything using `appLibrary.iconSource`), not only the two launcher views. Say so in the setting's help.
+- A surface that already drew its icon keeps the old picture until the next rescan, and the bar kept the test icon for a moment after the folder
+  was deleted, until the grid was opened again (which rescans). This matches the stale image note above.
+- Opening the grid a second time with the same command closes it (it toggles), which is how the test grid was closed without a key.
+
+Restore proof: deleted the test folder (`rm -r ~/.local/share/icons/omahop-test`, then `rmdir ~/.local/share/icons`, which this test had created);
+`ls ~/.local/share/icons` then answers "No such file or directory", exactly as before. Reopened the grid: btop and Chromium show their normal
+icons again. `git status` of the repo shows only the new screenshot folder. Nothing else was backed up because nothing else was touched.
+
 ## 6. Not verified
 
-- That the running shell really shows the overlay icon: the scratch test used the stock scan command only; no change was made to the real icon
-  folders and nothing was sent to a window. A real check is a hand step in `validation-checklist.md` once built.
+- Symlinks in the real shell: the real test (5b) used plain files, the scratch test (How verified) showed `find` lists symlinks; a link served by
+  the running shell is the first hand check once built (`validation-checklist.md`). The kitty icon in the grid (it was off the first page).
 - The PNG in SVG wrapper idea; the effect of a missing `index.theme` on Qt; the root menu typed search.
 - Other machines: Omarchy older than the version with `AppLibrary` (the 4.0.6 Z13 note) may use a different launcher; the feature must detect
   `AppLibrary` before offering the setting, or say it is for Omarchy 4.5 and later.
@@ -132,6 +153,7 @@ the builder from theme icons is mostly SVG anyway.
 - `grep` of `~/.config/hypr`, `/usr/share/omarchy/default/hypr/bindings/*.lua`; `which walker` (absent).
 - Read `shell/services/AppLibrary.qml`, `PluginAppLibraryApi.qml`, `plugins/menu/Menu.qml`, `plugins/menu/manifest.json`, `plugins/dock/AppGrid.qml`, `Dock.qml`.
 - `env`, `gsettings get org.gnome.desktop.interface icon-theme`, absence of qt6ct and gtk settings files, `~/.config/omarchy/shell.json`.
+- Real test: section 5b.
 - Scratch test in the session scratchpad (a fake `HOME`, never the real one): the stock scan command was run with
   `~/.local/share/icons/omahop-launcher/apps/` holding a symlink `firefox.svg` and a symlink `kitty.png`. Result: the symlinked SVG was listed
   and won for its name; the symlinked `kitty.png` lost to the system `hicolor/scalable/apps/kitty.svg`. This confirmed the layout is scanned
