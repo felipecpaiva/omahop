@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Prints one icon file path per icon name, best first: app icons (scalable, then the biggest PNG), then pixmaps,
 # then every other icon kind (devices, categories, places, actions, status, mimetypes). Used by Service.qml.
+# Files of omahop's own launcher overlay (tools/icon-overlay.sh) are never listed, so the overlay cannot feed back into the choice it was built from.
 # Optional first argument: an icon theme name (the icon_theme setting). That theme and the themes it inherits are listed first,
 # then everything else, so an app the theme lacks still gets an icon. The name comes from a config file: letters, digits, . - _ only.
 set -euo pipefail
@@ -70,4 +71,4 @@ emit_all() {
     [[ ${#roots[@]} -gt 0 ]] && emit_themed "${roots[@]}"
   fi
   emit_all
-} | awk '{ f = $0; sub(/^.*\//, "", f); sub(/\.[^.]*$/, "", f); if (!(f in seen)) { seen[f] = 1; print } }'
+} | awk '/\/icons\/omahop-launcher\// { next } { f = $0; sub(/^.*\//, "", f); sub(/\.[^.]*$/, "", f); if (!(f in seen)) { seen[f] = 1; print } }'

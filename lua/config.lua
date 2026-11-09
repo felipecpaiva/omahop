@@ -75,6 +75,8 @@ C.spec = {
       help = "Type the folder name of an installed icon theme, such as Papirus, to prefer its icons. Empty uses whichever installed theme the scan finds first. An app the theme has no icon for still gets one from the others. " },
     icon_pack = { default = "", group = "look", subgroup = "Icons", advanced = true, label = "Icon pack",
       help = "Type the folder name of an icon pack in ~/.config/omahop/packs, such as omahop-sample. Its icons come first; an app the pack has no icon for keeps its usual one. Empty uses no pack. A pack you made yourself or copied from someone: see docs/icon-packs.md for the format. Applies at once. To share a pack as one zip or install one, run tools/pack-export.sh <name> or tools/pack-import.sh <file.zip> from the plugin folder (~/.config/omarchy/plugins/io.github.felipecpaiva.omahop)." },
+    icons_in_launcher = { default = false, group = "look", subgroup = "Icons", advanced = true, base_only = true, label = "Use these icons in the Omarchy app grid, bar and menu",
+      help = "Off by default, and it needs an icon theme or an icon pack above (without one it does nothing). When on, the app grid (Super + Alt + Space), the app icons on the bar and the app rows of the Omarchy menu show the same icons as the switcher. The menu's own round glyph icons do not change. omahop writes links in ~/.local/share/icons/omahop-launcher (the folder holds a marker file, .omahop); other programs that read that folder may notice. Turning this off, or clearing both the theme and the pack, deletes that folder. SVG icons only: a PNG from a pack or theme loses to a system SVG of the same name. A picture already on screen may keep its old icon until the grid is opened again or the shell restarts." },
     swipe_trigger = { default = false, group = "swipe", subgroup = "Swipe", reload = true, label = "Swipe on the touchpad to switch",
       help = "Off by default. When on, a swipe left or right with several fingers on the touchpad opens the list and moves the selection one row per stretch of travel; lifting the fingers picks. Swipe back to the window you started on and lift to close without switching. Touchpads only: a touchscreen swipe cannot reach omahop. Works where omahop takes over Alt+Tab. Applies after a Hyprland reload." },
     swipe_fingers = { default = 4, min = 3, max = 4, group = "swipe", subgroup = "Swipe", depends = "top.swipe_trigger", reload = true, label = "Fingers",
@@ -120,7 +122,7 @@ C.groups = {
   { id = "swipe", title = "Touchpad swipe" },
 }
 C.order = { "top.profile", "top.takeover", "top.modifier", "top.scope", "top.search", "top.search_fuzzy", "top.search_linger_seconds", "windows.workspaces", "windows.monitors", "windows.minimized", "windows.specials", "windows.ignore",
-  "top.style", "top.thumbnails", "top.thumbnail_exclude", "top.reveal_delay_ms", "top.border", "top.icon_theme", "top.icon_pack", "top.audio_marker", "top.actions", "top.peek", "top.peek_position",
+  "top.style", "top.thumbnails", "top.thumbnail_exclude", "top.reveal_delay_ms", "top.border", "top.icon_theme", "top.icon_pack", "top.icons_in_launcher", "top.audio_marker", "top.actions", "top.peek", "top.peek_position",
   "windows.ignore_titles", "windows.first", "top.passthrough_fullscreen", "top.passthrough", "top.same_app_key", "top.hints", "top.hint_keys", "top.action_keys", "keys.repeat_delay_ms", "keys.repeat_ms",
   "top.browser_tabs", "top.browser_tabs_ignore", "top.browser_tab_previews", "top.browser_tab_previews_draw", "top.swipe_trigger", "top.swipe_fingers", "top.swipe_distance" }
 
