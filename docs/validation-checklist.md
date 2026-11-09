@@ -241,3 +241,28 @@ Needs omahop-tabs extension 0.6.1 or later in a real Chrome, `browser_tabs`, `br
 - [ ] Shell restarted. With thumbnails = snapshot, open the switcher with a window on a workspace that is not shown: a picture, or the icon marked "no picture", never a bare icon.
 - [ ] Open the switcher while a window is on the shown workspace, close it, move that window to another workspace, open again: if the live picture is missing the card shows the old picture marked "last seen".
 - [ ] Close a window: its card is gone and it never comes back with an old picture. Memory of the shell does not grow over many openings (30 pictures at most).
+
+## v1.6 (settings categories, icon picker, icon builder, launcher icons, theme following) (hand check)
+
+Nothing here was run by hand before the release: it was built and checked by tests and by screenshots taken with the dev open-page file (`docs/settings.md`). Run it on a desktop session with the plugin installed; keep a copy of `~/.config/omahop` first.
+
+Settings categories (D24):
+- [ ] Open the settings window: a side list shows General, Windows, Look, Keys, Peek strip, Browser tabs, Touchpad swipe. Click each: one category shows at a time, sub headings are visible, and the scroll is short.
+- [ ] A switch with dependents (Search browser tabs): turn it off, the dependents disappear; on, they nest under it. "Show advanced settings (n)" opens and folds the advanced ones, per category.
+- [ ] A setting changed in one category is still changed after clicking away and back, and after Close and reopen.
+
+Icon picker (D28):
+- [ ] Look, Icons: **Choose a theme** opens the picker on the Theme tab, **Choose a pack** (or the second row) on the Pack tab. Each choice is a card with the same sample apps.
+- [ ] Up and Down move and preview, Enter writes the setting and returns, Esc returns and writes nothing, the filter box narrows by name, and the chosen card carries the check mark.
+- [ ] With `packs/omahop-reference` linked into `~/.config/omahop/packs`: its card shows tiles in the Omarchy theme colours; `omarchy theme set` another theme and the tiles change colour without a restart (follows_theme).
+- [ ] In Alt+Tab, the omahop entry and the omagnet entry show their real logos (dark tile, cream and amber squares), not the settings gear.
+
+Icon builder (D29):
+- [ ] **Customize icons** opens the builder. Filter apps, pick a theme icon, a file icon (a PNG or SVG), see it in the preview row and card; Ctrl+Z undoes, Ctrl+R resets the app, Esc goes back.
+- [ ] **Save as pack**: name, author, licence, Save. The pack appears under `~/.config/omahop/packs/<name>`; saving the same name asks Replace or Cancel. **Use it now** sets Icon pack.
+- [ ] **Open a pack** copies a pack into the draft; with unsaved changes it asks first. **Discard draft** empties it.
+- [ ] **Export**: the zip lands at the path shown (or the folder you chose with Choose folder); an existing file asks Replace or Cancel; a pack whose text names your home folder or computer is refused.
+- [ ] **Import**: Check shows name, author, licence, icons and folder; Install, or Replace (asks), or **Edit as draft** (installs nothing). A zip with a bad icon is refused whole with the reasons.
+
+Launcher icons (D30):
+- [ ] With an Icon pack or theme set, turn on "Use these icons in the Omarchy app grid, bar and menu": `ls ~/.local/share/icons/omahop-launcher/apps` has links, and the app grid (Super + Alt + Space) and bar show your icons. Turn it off: the folder is gone. A PNG icon that loses to a system SVG is left out (SVG only).

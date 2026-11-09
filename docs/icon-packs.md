@@ -112,9 +112,9 @@ then set Icon pack to `omahop-sample`.
 
 ## Reference pack (test fixture)
 
-`packs/omahop-reference/` is a complete pack made by `tools/refpack/gen.sh`: 132 plain SVG icons (about 0.5 KB each, CC0) for the apps of one
+`packs/omahop-reference/` is a complete pack made by `tools/refpack/gen.sh`: 132 plain SVG icons (about 0.5 KB each, CC0; the omahop and omagnet icons are the projects' real logos, MIT, see below) for the apps of one
 Omarchy machine plus the usual Linux desktop apps (browsers, terminals, editors, file managers, media, chat, office, games, system tools).
-It is the shared fixture for testing the icon picker and the coming builder with a pack that has many icons. Preview: `docs/research/img/refpack-sheet.png`.
+It is the shared fixture for testing the icon picker and the icon builder with a pack that has many icons. Preview: `docs/research/img/refpack-sheet.png`.
 
 Install (copy, or link so a regenerate shows at once), then pick it in the picker. Nothing enables it for you:
 
@@ -126,6 +126,7 @@ ln -s "$PWD/packs/omahop-reference" ~/.config/omahop/packs/omahop-reference
   window class in lower case (or the desktop entry icon name for web apps). Adding an app is one line, then `bash tools/refpack/gen.sh`.
 - **Glyph**: `@name` is a hand drawn glyph (23 of them: terminal, browser, files, code, music, video, chat, mail, settings, calculator, camera,
   monitor, doc, sheet, slides, gamepad, calendar, image, download, notes, disk, mic, record), anything else is a one to three letter monogram.
+- **Real logos**: a glyph written `=name` copies `tools/refpack/brand/name.svg` instead of drawing a tile: today `omahop` (from `branding/logo/icon.svg`) and `omagnet` (from the omagnet repo's `branding/logo/icon.svg`), both ours and MIT licensed (the pack's `LICENSE` says so, everything else is CC0). The file is checked like any pack icon (one plain `<svg>`, nothing that loads or runs, under 16 KB) and kept as it is: a logo is a multi coloured mark, so it keeps its own colours and does not follow the theme, even in a `follows_theme` pack. Fixed in v1.6.0: both entries used to show the generic settings gear. The omahop launcher entry (`omahop.desktop`) now also points `Icon=` at the real logo (`branding/logo/icon.svg` of the installed plugin) instead of `preferences-desktop`.
   Hand drawn glyphs are simple strokes in `GLYPHS` in `gen.py`; 105 of the 132 icons use one, the other 27 are monograms.
 - **Look**: 128x128 viewBox, rounded square tile (radius 28 of 112), one stroked glyph or a bold monogram, no gradients, no shadows, no external
   references. Tile colour is one palette key per category (browser blue, terminal green, dev magenta, files yellow, media red, chat cyan,
