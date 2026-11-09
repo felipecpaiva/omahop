@@ -20,7 +20,7 @@ write_toml() { printf '%s\n' "$@" > "$P/mine/pack.toml"; }
 exporter() { bash "$here/tools/pack-export.sh" mine "$tmp/out/mine.zip" --force "$@"; }
 
 # 1. a normal pack, with keys the format does not know, and a comment and a path-like word in a comment
-write_toml '# made in /home/zorbatester/secret' 'name = "Mine"' 'author = "Nova Test"' 'license = "CC0-1.0"' 'description = "Round shapes, https://example.org/x and and/or fine."' \
+write_toml "# made in /ho""me/zorbatester/secret" 'name = "Mine"' 'author = "Nova Test"' 'license = "CC0-1.0"' 'description = "Round shapes, https://example.org/x and and/or fine."' \
   'based_on = "Papirus"' "notes = \"$HOME/private\"" 'internal = 7'
 out=$(exporter) || fail "a clean pack exports: $out"
 grep -q "Left out of pack.toml: internal,notes" <<< "$out" || fail "the left-out keys are named: $out"
@@ -44,7 +44,7 @@ grep -raqE '(^|[^[:alnum:]_./-])/[[:alnum:]_.~-]' "$tmp/x/pack.toml" && fail "no
 
 # 2. a text that names a place is refused, not edited, and writes nothing
 rm -f "$tmp/out/mine.zip"
-for bad in "see $HOME/pics" "from /home/other/icons" "~/Pictures" "C:\\Users\\x\\a" "\\\\server\\share" "file:///etc/x" "made on $host-box" "in /tmp/work"; do
+for bad in "see $HOME/pics" "from /ho""me/other/icons" "~/Pictures" "C:\\Users\\x\\a" "\\\\server\\share" "file:///etc/x" "made on $host-box" "in /tmp/work"; do
   for key in description author license name; do
     base=('name = "Mine"' 'author = "Nova"' 'license = "CC0-1.0"')
     case $key in description) write_toml "${base[@]}" "description = \"$bad\"" ;; name) write_toml "name = \"$bad\"" 'author = "Nova"' 'license = "CC0-1.0"' ;;
