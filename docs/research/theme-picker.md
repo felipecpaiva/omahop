@@ -44,3 +44,31 @@ A separate page of the one settings window with a card list (one card per choice
 ## Could not verify
 
 Current GNOME Settings icon picker, KDE's exact layout, Papirus tools, wofi pickers, Firefox hover preview, VS Code Escape revert for icon themes. None changes the recommendation.
+
+## Proposed design (D28)
+
+```
++--------------------------------------------------------------+
+| < Back to settings        Icons:  [ Theme ] [ Pack ]         |
+| Filter: [ papi_________ ]                                    |
++--------------------------------------------------------------+
+|  Preview of the highlighted choice (larger icons)            |
+|   [fx] [term] [files] [code] [music] [chat] [mail] [calc]    |
++--------------------------------------------------------------+
+|  (o) Automatic (today's behaviour)                           |
+|  ( ) Adwaita      [fx][term][files][code][music][chat]       |
+| >( ) Papirus      [fx][term][files][code][music][chat]  <--  |
+|  ( ) Yaru-blue    [fx][term][files][code][music][chat]       |
+|  Pack tab: also "No pack", then each pack folder,            |
+|  and a button "Make or edit icon packs" (existing editor)    |
++--------------------------------------------------------------+
+| Up/Down move, preview live | Enter choose | Esc back (no change)|
++--------------------------------------------------------------+
+```
+
+- Opens from a button on the Icon theme and Icon pack rows (spec field `editor = "icons"`); the rows show the current value as text. Back returns to the settings list at the same category.
+- Mouse: click a card to preview, double click or the Choose button to commit, wheel scrolls. Keyboard: Up, Down, Home, End, Enter, Escape, typing goes to the filter.
+- Data, not code: themes from a scan script (folder name, `Name=` from `index.theme`, drop folders with no app icons); packs from the packs folder (name and author from `pack.toml`); sample app ids from one list in `lua/config.lua`, passed through spec.json. Adding a theme or pack, or changing the sample apps, needs no QML edit.
+- Cost: icon lookups run per visible card only (`tools/icon-preview.sh <theme> <id>...`), results cached by theme and id, in the spirit of Omarchy's `PreviewHold`.
+- Nothing new in the shell: the page lives inside the settings window, like the pack editor. Typed names stay as the fallback in the advanced text row.
+- Files: `lua/config.lua`, `tools/gen-spec.lua`, spec.json, `tools/icon-themes.sh`, `tools/icon-preview.sh` (plus shell tests), `IconPickerPage.qml`, `IconChoiceCard.qml`, `SettingsPanel.qml`, `SettingRow.qml`, `docs/settings.md`, `docs/icon-packs.md`. Effort: medium.
