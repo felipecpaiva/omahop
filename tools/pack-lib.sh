@@ -43,6 +43,15 @@ pack_folder_name() {
   printf '%s\n' "$folder"
 }
 
+# meta_ok <key> <value> <required>: a value pack.toml can hold (calls the caller's die with the reason; pack-edit.sh and draft-edit.sh).
+meta_ok() {
+  local key=$1 value=$2 required=$3
+  [[ $required == 0 || -n $value ]] || die "$key must not be empty"
+  [[ $value != *\"* ]] || die "$key cannot hold a double quote"
+  [[ $value != *[[:cntrl:]]* ]] || die "$key cannot hold a line break or a control character"
+  (( ${#value} <= PACK_MAX_TEXT )) || die "$key is longer than $PACK_MAX_TEXT characters"
+}
+
 # icon_stem <app id>: lower case, runs of whitespace as one dash (a form IconResolve.candidates tries), and it must make a valid icon name.
 icon_stem() {
   local stem=${1,,}

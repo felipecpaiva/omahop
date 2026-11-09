@@ -7,6 +7,10 @@
 #   draft-edit.sh reset-app <app id>           deletes the icon of that app (back to the theme's own)
 #   draft-edit.sh undo                         reverses the last add, remove or reset-app (the last HIST_MAX steps are kept); prints the stem
 #   draft-edit.sh discard                      deletes the whole draft
+#   draft-edit.sh save [--replace] [--based-on <theme>] <name> <author> <licence> [description]
+#                                              turns the draft into the installed pack of that name (icons/ only, strict check) and then discards the draft;
+#                                              refuses an existing pack unless --replace; on any failure the draft is untouched; prints the pack folder name
+#   draft-edit.sh open-pack [--force] <name>   loads an installed pack into the draft as a copy; refuses over a draft with changes unless --force
 # Positional arguments only. Every image rule is pack-lib.sh's, the one export and import use, so a draft file always passes what export accepts.
 # Writes stay under $XDG_CACHE_HOME/omahop/draft/, through a hidden staging folder and one rename. A refusal exits 1 with the reason.
 set -euo pipefail
@@ -18,7 +22,7 @@ readonly HIST_MAX=30
 HIST_LINE='^[0-9]+'$'\t''[a-z0-9][a-z0-9._+-]{0,199}'$'\t''(png|svg|-)$'
 
 die() { printf 'omahop draft edit: %s\n' "$1" >&2; exit 1; }
-usage() { die "usage: draft-edit.sh list | add <app id> <image> | remove <icon file> | reset-app <app id> | undo | discard"; }
+usage() { die "usage: draft-edit.sh list | add <app id> <image> | remove <icon file> | reset-app <app id> | undo | discard | save [--replace] [--based-on <theme>] <name> <author> <licence> [description] | open-pack [--force] <name>"; }
 
 DRAFT=${XDG_CACHE_HOME:-$HOME/.cache}/omahop/draft
 STAGES=()
@@ -143,6 +147,82 @@ cmd_discard() {
   printf 'Discarded the draft\n'
 }
 
+# stage_dir <parent> <prefix>: makes a hidden staging folder in <parent>, sets STAGE to it, removes it at exit (not in a subshell, so the trap sees it).
+STAGE=""
+stage_dir() { STAGE=$(mktemp -d -- "$1/$2.XXXXXX"); STAGES+=("$STAGE"); }
+
+cmd_save() {
+  local replace=0 based="" folder dir packs stage old key text="" path
+  while (( $# > 0 )); do
+    case $1 in
+      --replace) replace=1; shift ;;
+      --based-on) (( $# >= 2 )) || usage; based=$2; shift 2 ;;
+      *) break ;;
+    esac
+  done
+  (( $# == 3 || $# == 4 )) || usage
+  local -A META=([name]=$1 [author]=$2 [license]=$3 [description]=${4:-})
+  for key in name author license; do meta_ok "$key" "${META[$key]}" 1; done
+  meta_ok description "${META[description]}" 0
+  meta_ok based_on "$based" 0
+  folder=$(pack_folder_name "${META[name]}") || die "the name needs a letter or digit"
+  open_draft || die "the draft is empty, nothing to save"
+  [[ -n $(find "$PACK_ICONS" -mindepth 1 -maxdepth 1 -type f -print -quit) ]] || die "the draft has no icons, nothing to save"
+  dir=$(pack_dir "$folder")
+  packs=${dir%/*}
+  [[ ! -L $packs && ! -L $dir ]] || die "the packs folder or $folder is a link"
+  [[ $replace == 1 || ! -e $dir ]] || die "a pack named $folder already exists (use Replace)"
+  [[ $replace == 0 || ! -e $dir || -d $dir ]] || die "$folder is not a pack folder"
+  mkdir -p -- "$packs"
+  stage_dir "$packs" .save; stage=$STAGE
+  mkdir -- "$stage/icons"
+  for key in name author license description based_on; do
+    case $key in based_on) [[ -z $based ]] || text+="based_on = \"$based\""$'\n' ;; *) [[ -z ${META[$key]} ]] || text+="$key = \"${META[$key]}\""$'\n' ;; esac
+  done
+  printf '%s' "$text" > "$stage/pack.toml"
+  while IFS= read -r -d '' path; do cp -- "$path" "$stage/icons/${path##*/}"; done < <(find "$PACK_ICONS" -mindepth 1 -maxdepth 1 -type f -print0)
+  chmod -R u=rwX,go=rX -- "$stage"
+  pack_check_strict "$stage" || die "not saved, the draft is untouched:"$'\n'"$PACK_ERR"
+  if [[ -e $dir ]]; then
+    stage_dir "$packs" .old; old=$STAGE
+    mv -T -- "$dir" "$old/pack" || die "cannot replace $folder"
+    mv -T -- "$stage" "$dir" || { mv -T -- "$old/pack" "$dir"; die "cannot move the new pack into place, $folder is unchanged"; }
+  else
+    mv -T -- "$stage" "$dir" || die "cannot move the new pack into place"
+  fi
+  rm -rf -- "$DRAFT" || printf 'omahop draft edit: saved, but the draft could not be removed\n' >&2
+  printf '%s\n' "$folder"
+}
+
+cmd_open_pack() {
+  local force=0 cache src new old n=0 path note
+  if [[ ${1:-} == --force ]]; then force=1; shift; fi
+  (( $# == 1 )) || usage
+  pack_name_ok "$1" || die "a pack name has only letters, digits, dot, dash and underscore"
+  src=$(pack_dir "$1")
+  [[ -d $src ]] || die "no pack folder named $1"
+  pack_check "$src" || die "the pack cannot be opened: $PACK_ERR"
+  [[ $PACK_ROOT == "$(realpath -e -- "${src%/*}")/$1" ]] || die "$1 is not a folder of the packs folder"
+  if [[ $force == 0 && -d $DRAFT && ! -L $DRAFT ]] && { [[ -s $DRAFT/history ]] || [[ -n $(find "$DRAFT/icons" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null) ]]; }; then
+    die "the draft has changes; discard it first or use --force"
+  fi
+  note() { printf 'omahop draft edit: %s\n' "$1" >&2; }
+  pack_icons note
+  (( ${#PACK_GOOD[@]} > 0 )) || die "$1 has no usable icons"
+  cache=${DRAFT%/*}
+  [[ ! -L $cache && ! -L $DRAFT ]] || die "the draft folder is a link"
+  (umask 077; mkdir -p -- "$cache"); chmod 700 -- "$cache"
+  stage_dir "$cache" .draft; new=$STAGE
+  mkdir -- "$new/icons" "$new/undo"
+  for path in "${PACK_GOOD[@]}"; do cp -L -- "$path" "$new/icons/${path##*/}"; n=$((n + 1)); done
+  chmod -R u=rwX,go-rwx -- "$new"
+  printf 'name = "draft"\nauthor = "draft"\nlicense = "draft"\n' > "$new/pack.toml"
+  pack_check_strict "$new" || die "not opened:"$'\n'"$PACK_ERR"
+  if [[ -e $DRAFT ]]; then stage_dir "$cache" .olddraft; old=$STAGE; mv -T -- "$DRAFT" "$old/d"; fi
+  mv -T -- "$new" "$DRAFT" || die "cannot move the draft into place"
+  printf 'Opened %s with %s icons\n' "$1" "$n"
+}
+
 (( $# >= 1 )) || usage
 command=$1
 shift
@@ -153,5 +233,7 @@ case $command in
   reset-app) cmd_reset "$@" ;;
   undo) cmd_undo "$@" ;;
   discard) cmd_discard "$@" ;;
+  save) cmd_save "$@" ;;
+  open-pack) cmd_open_pack "$@" ;;
   *) usage ;;
 esac

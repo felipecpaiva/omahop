@@ -26,15 +26,6 @@ usage() { die "usage: pack-edit.sh list | stem <app id> | init <name> <author> <
 
 packs_dir() { dirname -- "$(pack_dir x)"; }
 
-# meta_ok <key> <value> <required>: a value pack.toml can hold.
-meta_ok() {
-  local key=$1 value=$2 required=$3
-  [[ $required == 0 || -n $value ]] || die "$key must not be empty"
-  [[ $value != *\"* ]] || die "$key cannot hold a double quote"
-  [[ $value != *[[:cntrl:]]* ]] || die "$key cannot hold a line break or a control character"
-  (( ${#value} <= PACK_MAX_TEXT )) || die "$key is longer than $PACK_MAX_TEXT characters"
-}
-
 # meta_args <name> <author> <license> [description]: checks the four values and fills META.
 declare -A META=()
 meta_args() {

@@ -114,6 +114,77 @@ bash "$draft" discard > /dev/null
 [[ ! -e $dir && -z $(bash "$draft" list) ]] || fail "discard removes the draft"
 bash "$draft" discard > /dev/null || fail "discard of nothing is fine"
 
+# ---- save: the draft becomes an installed pack; open-pack loads one back
+packs=$XDG_CONFIG_HOME/omahop/packs
+mkdraft() { bash "$draft" add kitty "$sample/kitty.png" > /dev/null; bash "$draft" add firefox "$sample/firefox.svg" > /dev/null; }
+refused "the draft is empty" save mine Me CC0-1.0
+mkdraft
+bash "$draft" discard > /dev/null
+refused "the draft is empty" save mine Me CC0-1.0
+mkdraft
+refused "usage" save mine Me
+refused "usage" save --based-on
+for name in "..." "///" "---"; do refused "needs a letter or digit" save "$name" Me CC0-1.0; done
+refused "name must not be empty" save "" Me CC0-1.0
+refused "license must not be empty" save mine Me ""
+refused "license cannot hold a double quote" save mine Me 'MIT"'
+refused "author cannot hold a line break" save mine $'Me\nx' MIT
+refused "description is longer than 500" save mine Me MIT "$(printf 'd%.0s' {1..501})"
+refused "based_on cannot hold a double quote" save --based-on 'a"b' mine Me MIT
+[[ ! -e $packs ]] || fail "a refused save makes no packs folder"
+[[ $(bash "$draft" save --based-on Papirus "My Icons!" "Nova" CC-BY-4.0 "Mine, all mine") == my-icons ]] || fail "save prints the folder"
+[[ ! -e $dir ]] || fail "a saved draft is discarded"
+[[ $(ls -A "$packs") == my-icons && $(ls "$packs/my-icons/icons" | tr '\n' ' ') == "firefox.svg kitty.png " ]] || fail "only icons/ and pack.toml: $(ls -A "$packs/my-icons")"
+[[ $(ls -A "$packs/my-icons" | tr '\n' ' ') == "icons pack.toml " ]] || fail "no history or undo in the pack"
+grep -qx 'based_on = "Papirus"' "$packs/my-icons/pack.toml" && grep -qx 'name = "My Icons!"' "$packs/my-icons/pack.toml" || fail "pack.toml: $(cat "$packs/my-icons/pack.toml")"
+bash -c 'source "$1"; pack_check_strict "$2" && [[ ${PACK_META[based_on]} == Papirus && ${PACK_META[license]} == CC-BY-4.0 ]]' _ "$here/tools/pack-lib.sh" "$packs/my-icons" || fail "based_on passes pack_check_strict"
+[[ $(stat -c %a "$packs/my-icons" "$packs/my-icons/pack.toml" "$packs/my-icons/icons/kitty.png") == $'755\n644\n644' ]] || fail "modes of the saved pack"
+! grep -rqF -e "$tmp" -e "$HOME" "$packs" || fail "a home or temp path in the saved pack"
+[[ -z $(find "$packs" -name '.*' -not -path "$packs") ]] || fail "no staging folder left"
+
+# a name clash is refused and leaves the draft and the pack alone; --replace swaps it
+mkdraft
+bash "$draft" add zed "$sample/kitty.png" > /dev/null
+refused "already exists" save my-icons Me CC0-1.0
+refused "already exists" save "My Icons" Me CC0-1.0
+[[ $(bash "$draft" save --replace my-icons Me2 MIT) == my-icons ]] || fail "replace"
+grep -qx 'author = "Me2"' "$packs/my-icons/pack.toml" && ! grep -q based_on "$packs/my-icons/pack.toml" || fail "replaced pack.toml"
+[[ $(ls "$packs/my-icons/icons" | tr '\n' ' ') == "firefox.svg kitty.png zed.png " && -z $(ls -A "$packs" | grep '^\.') ]] || fail "replaced icons: $(ls -A "$packs")"
+
+# atomic: a draft file that fails the strict check (planted by hand) leaves the old pack and the draft untouched
+mkdraft
+printf '<svg xmlns="http://www.w3.org/2000/svg"><script>x</script></svg>' > "$dir/icons/evil.svg"
+refused "not saved, the draft is untouched" save --replace my-icons Me3 MIT
+refused "not saved, the draft is untouched" save fresh Me3 MIT
+[[ ! -e $packs/fresh && -f $dir/icons/evil.svg && -n $(ls -A "$packs/my-icons/icons") ]] || fail "failed save is atomic"
+grep -qx 'author = "Me2"' "$packs/my-icons/pack.toml" || fail "the old pack is unchanged"
+
+# open-pack: a round trip, no history, refuses over changes unless --force
+refused "the draft has changes" open-pack my-icons
+[[ $(bash "$draft" open-pack --force my-icons) == "Opened my-icons with 3 icons" ]] || fail "open-pack --force"
+[[ $(bash "$draft" list | cut -f2 | tr '\n' ' ') == "firefox.svg kitty.png zed.png " && ! -e $dir/history && -z $(ls -A "$dir/undo") ]] || fail "opened draft"
+[[ $(stat -c %a "$dir" "$dir/icons/kitty.png") == $'700\n600' ]] || fail "the draft stays private"
+refused "no pack folder named" open-pack nope
+refused "only letters, digits" open-pack "../x"
+refused "usage" open-pack
+bash "$draft" save --replace round Me MIT > /dev/null
+cmp -s "$packs/round/icons/zed.png" "$sample/kitty.png" && [[ $(ls "$packs/round/icons" | wc -l) == 3 ]] || fail "round trip keeps the icons"
+bash "$draft" open-pack round > /dev/null || fail "an empty draft is replaced without --force"
+bash "$draft" undo 2> /dev/null && fail "an opened draft has no history"
+bash "$draft" discard > /dev/null
+# a themed pack: the committed icons are copied, follows_theme and generator are dropped on save
+mkdir -p "$packs/themed/icons"
+cp "$sample/kitty.png" "$packs/themed/icons/"
+printf 'name = "themed"\nauthor = "a"\nlicense = "MIT"\nfollows_theme = true\ngenerator = "refpack"\n' > "$packs/themed/pack.toml"
+bash "$draft" open-pack themed > /dev/null
+bash "$draft" save themed-copy a MIT > /dev/null
+! grep -q "follows_theme\|generator" "$packs/themed-copy/pack.toml" || fail "follows_theme is dropped"
+# a pack with a bad icon: the good ones load, the reason is printed
+cp "$tmp/src/script.svg" "$packs/themed/icons/evil.svg"
+bash "$draft" open-pack themed 2> "$tmp/src/err" > /dev/null
+grep -q "skipped icons/evil.svg" "$tmp/src/err" && [[ $(bash "$draft" list | wc -l) == 1 ]] || fail "a bad icon is skipped with a note"
+bash "$draft" discard > /dev/null
+
 # ---- mutation: without the strict check, the script SVG would be added
 mutant=$tmp/src/mutant.sh
 cp "$here/tools/pack-lib.sh" "$tmp/src/pack-lib.sh"
@@ -121,4 +192,4 @@ sed 's/  pack_check_strict "\$stage" || die/  true || die/' "$draft" > "$mutant"
 cmp -s "$draft" "$mutant" && fail "mutation did not apply"
 bash "$mutant" add kitty "$tmp/src/script.svg" > /dev/null 2>&1 || fail "mutant still refuses: the strict check is not what stops it"
 
-echo "ok   draft edit: add, remove, reset-app, undo (bounded), list, discard; private; copies not links; hostile input changes nothing; strict check is load-bearing"
+echo "ok   draft edit: add, remove, reset-app, undo (bounded), list, discard, save (atomic, replace, based_on), open-pack; private; copies not links; hostile input changes nothing; strict check is load-bearing"
