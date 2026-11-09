@@ -43,6 +43,14 @@ pack_folder_name() {
   printf '%s\n' "$folder"
 }
 
+# icon_stem <app id>: lower case, runs of whitespace as one dash (a form IconResolve.candidates tries), and it must make a valid icon name.
+icon_stem() {
+  local stem=${1,,}
+  stem=${stem//+([[:space:]])/-}
+  [[ $stem.png =~ ^${PACK_ICON_NAME}$ ]] || return 1
+  printf '%s\n' "$stem"
+}
+
 # pack_dir <name>: where the pack of that folder name lives.
 pack_dir() { printf '%s\n' "${XDG_CONFIG_HOME:-$HOME/.config}/omahop/packs/$1"; }
 

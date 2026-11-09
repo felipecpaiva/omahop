@@ -26,14 +26,6 @@ usage() { die "usage: pack-edit.sh list | stem <app id> | init <name> <author> <
 
 packs_dir() { dirname -- "$(pack_dir x)"; }
 
-# icon_stem <app id>: lower case, runs of whitespace as one dash (a form IconResolve.candidates tries), and it must make a valid icon name.
-icon_stem() {
-  local stem=${1,,}
-  stem=${stem//+([[:space:]])/-}
-  [[ $stem.png =~ ^${PACK_ICON_NAME}$ ]] || return 1
-  printf '%s\n' "$stem"
-}
-
 # meta_ok <key> <value> <required>: a value pack.toml can hold.
 meta_ok() {
   local key=$1 value=$2 required=$3
