@@ -111,6 +111,10 @@ The settings app reads and writes the same file; hand edits apply live.
 - Glue: scope guard calls the stock handler on an out-of-scope desktop.
 - Live (real monitors only): default settings on a tiling desktop equal stock Alt+Tab.
 
+## Settings window layout (D24, v1.6.0)
+
+The window shows a side list of categories and one category at a time. The category is the spec's `group`: General, Windows, Look, Keys, Peek strip, Browser tabs, Touchpad swipe (a category with nothing to show is left out). Inside a category, `subgroup` is a sub heading, `advanced` settings are folded under "Show advanced settings (n)" (the count is per category), and `depends` ("section.key" of a switch or choice) nests a setting under the one it needs and hides it while that one is off or "off" (a chain counts). All three come from `lua/config.lua` through `spec.json`, so adding a setting needs no QML change. No search box (see D24). The first category is shown on every open; the dev hook `category:<id>` (below) opens another.
+
 ## Icon picker (D28, slice 1)
 
 Both icon rows (group Look, sub heading Icons) show a button labelled with the current value ("Choose a theme: Automatic"). It opens a page of the same settings window with a Theme and a Pack tab. Each choice is a card showing the same sample apps (`sample_apps` in `lua/config.lua`, carried to the panel by spec.json), so choices compare side by side; an app a choice has no icon for is an empty outline. Up, Down, PageUp, PageDown, Home and End move and the larger preview row follows at once, but nothing is written until Enter or Choose; Escape (or Back) returns and writes nothing. Typing filters by name. Automatic (theme) or No pack (pack) is the first card and clears the setting. A click selects, a double click chooses. The typed text boxes stay under the buttons as the fallback for a name the scan does not list. Customize icons opens the icon builder (below); the Pack tab links to the pack editor.
@@ -119,7 +123,7 @@ Choices come from `tools/icon-themes.sh` (folder and `Name=` of every installed 
 
 ### Opening a page without clicks (dev and test only)
 
-Write `icon_theme`, `icon_pack` or `builder` (the icon builder) into `$XDG_RUNTIME_DIR/omahop/open-page`, then open the settings window (`omarchy-shell shell toggle io.github.felipecpaiva.omahop`): it lands on that picker page. The file is emptied once read. Used for screenshots, where no keyboard input is allowed.
+Write `icon_theme`, `icon_pack` or `builder` (the icon builder) into `$XDG_RUNTIME_DIR/omahop/open-page`, then open the settings window (`omarchy-shell shell toggle io.github.felipecpaiva.omahop`): it lands on that picker page. `category:<id>` (for example `category:look`, ids as in `spec.json`) opens the settings list on that category of the side list. The file is emptied once read. Used for screenshots, where no keyboard input is allowed.
 
 ## Icon builder (D29, slice 2a)
 
