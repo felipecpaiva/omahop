@@ -32,6 +32,8 @@ M.config_path = config_home .. "/omahop/config.toml"
 M.tabs_activate_cmd = here .. "/../tools/omahop-tabs-activate" -- detached helpers for browser tabs (setting browser_tabs)
 M.tabs_request_cmd = here .. "/../tools/omahop-tabs-request" -- asks the extension for pictures (docs/file-contract.md)
 M.tabs_files_cmd = here .. "/../tools/omahop-tabs-files"
+M.overlay_cmd = here .. "/../tools/icon-overlay.sh" -- setting icons_in_launcher: Service.qml builds the links, this side only removes them
+M.overlay_marker = (os.getenv("XDG_DATA_HOME") or ((os.getenv("HOME") or "") .. "/.local/share")) .. "/icons/omahop-launcher/.omahop"
 M.tabs_flag = state_dir .. "/tabs.enabled"
 M.tabs_draw_flag = state_dir .. "/tabs.draw" -- setting browser_tab_previews_draw: the extension may draw pictures of tabs never shown
 M.tabs_pictures_flag = state_dir .. "/tabs.pictures" -- setting browser_tab_previews: the helper may keep page pictures only while it exists
@@ -245,6 +247,15 @@ function M.sync_tabs_files()
     local f = io.open(M.tabs_flag, "r")
     if f then f:close(); hl.exec_cmd(("%s %s off"):format(sq(M.tabs_files_cmd), sq(state_dir))) end
   end
+end
+
+-- Remove the launcher icon overlay when the setting is off or both icon settings are empty (also after a crash or a manual edit). Nothing runs when
+-- the marker is not there; the script itself deletes only a folder that holds the marker. Turning it on is Service.qml's job (it holds the resolver).
+function M.sync_icon_overlay()
+  local wanted = M.cfg.icons_in_launcher == true and ((M.cfg.icon_theme or "") ~= "" or (M.cfg.icon_pack or "") ~= "")
+  if wanted then return end
+  local f = io.open(M.overlay_marker, "r")
+  if f then f:close(); hl.exec_cmd(("bash %s off"):format(sq(M.overlay_cmd))) end
 end
 
 -- A process's parent pid from /proc, or nil when it is gone.
@@ -731,6 +742,8 @@ function M.reload_config()
   M.cfg = cfg
   local synced, why = pcall(M.sync_tabs_files) -- a tabs problem must never stop the switcher loading
   if not synced then log("tabs: cannot update the flag files: " .. tostring(why)) end
+  local overlaid, why_overlay = pcall(M.sync_icon_overlay) -- an icon overlay problem must never stop the switcher loading
+  if not overlaid then log("icons: cannot update the launcher icon overlay: " .. tostring(why_overlay)) end
   local known = {}
   for name in pairs(M.actions) do known[name] = true end
   local keys, key_problems = ActionKeys.resolve(cfg.action_keys, known, cfg.hints, Hints.parse_keys(cfg.hint_keys))

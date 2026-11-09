@@ -191,6 +191,27 @@ licence that allows sharing. Put the licence in `pack.toml` and a `LICENSE` file
 
 A pack folder can live in its own git repository; others clone it into `~/.config/omahop/packs/`.
 
+## Icons in the Omarchy app grid, bar and menu (optional)
+
+Off by default. The setting **Use these icons in the Omarchy app grid, bar and menu** (`icons_in_launcher`, group Look, Show advanced, needs an
+`icon_theme` or an `icon_pack`, not changed by a profile) extends your icon choice beyond omahop:
+
+- **Changes:** the app grid (Super + Alt + Space), the app icons on the bar, and the app rows of the Omarchy menu.
+- **Does not change:** the menu's own round glyph icons (Apps, Learn, System and so on); they are font glyphs, not files.
+- **How:** omahop owns one folder, `~/.local/share/icons/omahop-launcher/` (`apps/<Icon= name>.svg`, one symlink per desktop entry, pointing at the file
+  omahop picked for it: pack first, then theme, the same rules as the switcher, plus a `.omahop` marker file). Omarchy's icon index reads that
+  folder before the system ones. No Omarchy file, desktop entry or system icon theme is touched. Other programs that read
+  `~/.local/share/icons` may notice the folder (it has no `index.theme`, so it is not offered as a theme).
+- **Off:** turning the setting off, or emptying both the theme and the pack, deletes the folder, but only when the marker file is in it. A folder of
+  that name without the marker is never changed (the script refuses and logs a note).
+- **Limits (version one):** SVG icons only. A PNG from a pack or theme loses to a system SVG of the same name in Omarchy's index, so such an
+  app is left out. A picture already drawn may keep its old icon until the grid is opened again or the shell restarts (Qt keeps images by file).
+  Built for the Omarchy shell that has `AppLibrary` (4.5 and later).
+
+The links are rebuilt (after a short wait) when the setting, the theme, the pack or the installed apps change. `tools/icon-overlay.sh on|refresh|off`
+does the file work and checks every name and file again; `Service.qml` chooses the files; `lua/omahop.lua` only removes a leftover folder at load.
+Test: `tests/icon_overlay.test.sh` (a temporary HOME). Research and live test: `research/launcher-icons.md`, decision D30.
+
 ## How it works
 
 The rules live once, in `tools/pack-lib.sh`, sourced by the indexer, the exporter, the importer and the editor's writer `tools/pack-edit.sh`. `tools/pack-index.sh <name>` lists the pack's good icon files, one path per line; `Service.qml` runs it when `icon_pack` changes (a separate scan

@@ -4,7 +4,7 @@ if not os.getenv("OMAHOP_TEST_DIR") then
   local dir = os.tmpname(); os.remove(dir)
   os.execute(("mkdir -p '%s/run' '%s/state/omarchy/workspace-layouts' '%s/cfg/omahop'"):format(dir, dir, dir))
   local lay = io.open(dir .. "/state/omarchy/workspace-layouts/1.lua", "w"); lay:write('o.workspace_mode({ workspace = "1", mode = "floating" })\n'); lay:close()
-  local cmd = ("OMAHOP_TEST_DIR='%s' XDG_RUNTIME_DIR='%s/run' XDG_STATE_HOME='%s/state' XDG_CONFIG_HOME='%s/cfg' lua '%s'"):format(dir, dir, dir, dir, arg[0])
+  local cmd = ("OMAHOP_TEST_DIR='%s' XDG_RUNTIME_DIR='%s/run' XDG_STATE_HOME='%s/state' XDG_CONFIG_HOME='%s/cfg' XDG_DATA_HOME='%s/data' lua '%s'"):format(dir, dir, dir, dir, dir, arg[0])
   local ok = os.execute(cmd)
   os.execute("rm -rf '" .. dir .. "'")
   os.exit(ok and 0 or 1)
@@ -763,6 +763,21 @@ do
   assert(count_cmd(" pictures-off") == 1, "previews off while the flag exists: the helper removes pictures")
   M.session:key(clock, "cancel"); M.apply({})
   os.execute(("rm -f '%s/tabs.pictures'"):format(run))
+  -- launcher icon overlay (icons_in_launcher): this side only removes it, and only when the marker exists; building it is Service.qml's job
+  M.overlay_marker = TESTDIR .. "/ovl/.omahop"
+  local function overlay_off() return #ran_all("icon-overlay.sh") end
+  setcfg('icons_in_launcher = true\nicon_pack = "p"\n[windows]\nworkspaces = "current"\n'); open_session()
+  assert(overlay_off() == 0, "no marker: no helper run")
+  os.execute(("mkdir -p '%s/ovl' && touch '%s/ovl/.omahop'"):format(TESTDIR, TESTDIR))
+  setcfg('icons_in_launcher = true\nicon_pack = "p"\n[windows]\nworkspaces = "current"\n'); open_session()
+  assert(overlay_off() == 0, "on with a pack: the marker stays, nothing is removed here")
+  setcfg('icons_in_launcher = true\n[windows]\nworkspaces = "current"\n'); open_session()
+  assert(overlay_off() == 1 and ran_all("icon-overlay.sh")[1]:find(" off$"), "on but no theme and no pack: removed")
+  M.session:key(clock, "cancel"); M.apply({})
+  setcfg('icon_theme = "t"\n[windows]\nworkspaces = "current"\n'); open_session()
+  assert(overlay_off() == 1, "setting off with a marker: removed")
+  os.execute(("rm -rf '%s/ovl'"):format(TESTDIR))
+  M.session:key(clock, "cancel"); M.apply({})
   -- picture requests (browser_tab_previews, browser_tab_previews_draw): `shown` once per session to every live host, `draw` for visible tabs
   -- with no picture (never the shown tab, at most 6 ids a line, none twice in a session), and a bounded re-read of the tab files while a request is recent
   os.execute(("rm -f '%s'/tabs.*"):format(run))

@@ -412,6 +412,20 @@
       "subgroup": "Icons",
       "type": "text"
     }, {
+      "advanced": true,
+      "default": false,
+      "depth": 0,
+      "help": "Off by default, and it needs an icon theme or an icon pack above (without one it does nothing). When on, the app grid (Super + Alt + Space), the app icons on the bar and the app rows of the Omarchy menu show the same icons as the switcher. The menu's own round glyph icons do not change. omahop writes links in ~/.local/share/icons/omahop-launcher (the folder holds a marker file, .omahop); other programs that read that folder may notice. Turning this off, or clearing both the theme and the pack, deletes that folder. SVG icons only: a PNG from a pack or theme loses to a system SVG of the same name. A picture already on screen may keep its old icon until the grid is opened again or the shell restarts.",
+      "hidden": false,
+      "id": "top.icons_in_launcher",
+      "key": "icons_in_launcher",
+      "label": "Use these icons in the Omarchy app grid, bar and menu",
+      "overridable": false,
+      "reload": false,
+      "section": "top",
+      "subgroup": "Icons",
+      "type": "bool"
+    }, {
       "advanced": false,
       "default": false,
       "depth": 0,

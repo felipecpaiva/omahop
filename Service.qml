@@ -184,6 +184,41 @@ Item {
     onFileChanged: root.scanPack()
   }
 
+  // ---- icons in the Omarchy app grid, bar and menu (setting icons_in_launcher, off by default, D30): the same file this resolver picks for each desktop
+  // entry (pack first, then theme) is linked under the entry's Icon= name in ~/.local/share/icons/omahop-launcher by tools/icon-overlay.sh, which the
+  // shell's own icon index reads. Rebuilt (debounced) when the setting, the theme, the pack or the app list changes. Off, or no theme and no pack:
+  // the folder is deleted (the Lua side also does that at load, with no shell). SVG only in version one; the script checks every pair again.
+  readonly property bool iconsInLauncher: configReader.value("top", "icons_in_launcher") === true && (root.iconTheme !== "" || root.iconPack !== "")
+  property bool overlayOn: false
+  function syncOverlay() {
+    var script = Paths.fromUrl(Qt.resolvedUrl("tools/icon-overlay.sh"))
+    if (!root.iconsInLauncher) {
+      if (!root.overlayOn) return
+      root.overlayOn = false
+      Quickshell.execDetached(["bash", script, "off"])
+      return
+    }
+    if (!root.iconIndexReady) return
+    root.overlayOn = true
+    var pairs = [], seen = {}, apps = DesktopEntries.applications.values
+    for (var i = 0; i < apps.length; i++) {
+      var icon = apps[i].icon ? String(apps[i].icon) : ""
+      if (icon === "" || icon.charAt(0) === "/" || seen[icon]) continue
+      var path = IconResolve.packPick(root.packIndex, apps[i].id, icon)
+        || (apps[i].startupClass ? IconResolve.packPick(root.packIndex, apps[i].startupClass, icon) : "")
+        || IconResolve.pick(root.iconIndex, IconResolve.candidates(apps[i].id, icon))
+      if (path === "" || !/\.svg$/.test(path)) continue
+      seen[icon] = true
+      pairs.push(icon, path)
+    }
+    Quickshell.execDetached(["bash", script, "refresh"].concat(pairs))
+  }
+  Timer { id: overlayTimer; interval: 750; onTriggered: root.syncOverlay() }
+  onIconsInLauncherChanged: overlayTimer.restart()
+  onIconIndexChanged: overlayTimer.restart()
+  onPackIndexChanged: overlayTimer.restart()
+  Connections { target: DesktopEntries.applications; function onValuesChanged() { overlayTimer.restart() } }
+
   function resolve(appId) {
     if (root.resolved[appId] !== undefined) return root.resolved[appId]
     var result = lookup(appId)

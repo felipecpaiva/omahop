@@ -33,4 +33,7 @@ for bad in "" "../child" "child/../other" 'a b' 'child;touch x' '$(id)' ".." "no
   [[ $(run "$bad") == "$plain" ]] || fail "theme '$bad' must act like no theme"
 done
 [[ ! -e x ]] || fail "a theme name reached a shell"
+# the launcher overlay folder (tools/icon-overlay.sh) is never listed
+mkdir -p "$tmp/home/.local/share/icons/omahop-launcher/apps"; : > "$tmp/home/.local/share/icons/omahop-launcher/apps/overlay-only.svg"
+! run | grep -q overlay-only || fail "the overlay folder must not feed the index"
 echo "ok   icon index: theme first, parents next, fallback, bad names ignored"

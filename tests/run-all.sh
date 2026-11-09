@@ -17,6 +17,7 @@ node tests/pack_editor.test.mjs
 node tests/icon_picker.test.mjs
 bash tests/icon_index.test.sh
 bash tests/icon_picker.test.sh
+bash tests/icon_overlay.test.sh
 bash tests/pack_index.test.sh
 bash tests/pack_zip.test.sh
 bash tests/pack_edit.test.sh
