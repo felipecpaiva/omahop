@@ -95,7 +95,7 @@ function action(name, ctrl, s) {
 }
 
 // ---- commands: argument arrays for Process, never a shell line.
-// tools: {draft, find, preview, pick (pack-edit.sh), themes}. Returns {argv} or {error}.
+// tools: {draft, find, preview, pick (pack-edit.sh), export (pack-export.sh), import (pack-import.sh)}. Returns {argv} or {error}.
 function plain(v) { return typeof v === "string" && v.indexOf("\0") === -1 && v.indexOf("\n") === -1 }
 
 function command(tools, op, a) {
@@ -128,6 +128,22 @@ function command(tools, op, a) {
       case "discard": return { argv: ["bash", tools.draft, "discard"] }
       case "packs": return { argv: ["bash", tools.pick, "list"] }
       case "pick": return { argv: ["bash", tools.pick, "pick", "image"] }
+      case "pickDir": return { argv: ["bash", tools.pick, "pick", "dir"] }
+      case "pickZip": return { argv: ["bash", tools.pick, "pick", "zip"] }
+      case "exportDir": return { argv: ["bash", tools.pick, "export-dir"] }
+      case "export":
+        need(plain(a.name) && /^[A-Za-z0-9._-]+$/.test(a.name), "no pack chosen")
+        need(plain(a.out) && a.out.charAt(0) === "/" && /\.zip$/i.test(a.out), "give the zip's full path, starting with / and ending in .zip")
+        return { argv: ["bash", tools.export, a.name, a.out].concat(a.force ? ["--force"] : []) }
+      case "importCheck":
+        need(plain(a.zip) && a.zip.charAt(0) === "/", "give the zip as a full path, starting with /")
+        return { argv: ["bash", tools.import, a.zip, "--dry-run"] }
+      case "importDo":
+        need(plain(a.zip) && a.zip.charAt(0) === "/", "give the zip as a full path, starting with /")
+        return { argv: ["bash", tools.import, a.zip, "--yes"].concat(a.replace ? ["--replace"] : []) }
+      case "openZip":
+        need(plain(a.zip) && a.zip.charAt(0) === "/", "give the zip as a full path, starting with /")
+        return { argv: ["bash", tools.draft, "open-zip"].concat(a.force ? ["--force"] : [], [a.zip]) }
       default: return { error: "unknown action " + op }
     }
   } catch (e) {
@@ -137,18 +153,47 @@ function command(tools, op, a) {
 
 // ---- the state of the mutating actions: one at a time.
 // phase "idle" or "busy"; message/error: the status line; manualPath: the file chooser did not open, so a typed path is offered.
+// Export and Import (slice 3): effect {exported: {name, icons, bytes, path}}, {overwrite: true} (the zip exists: ask), {dir} (the chosen folder), {run: "importCheck"} after a chosen zip,
+// {summary} (the dry run's result), {installed: folder}, {opened: true} (Edit as draft loaded the icons), {needForce: true} (also for open-zip).
 // effect (from finish): {refresh: true} reload the draft ({saved: folder} too after a save), {run: "add", args} (a picked file goes to add), {clash: true} the pack name is taken
 // (ask Replace or Cancel), {needForce: true} open-pack refused over a draft with changes (ask).
 // packNames(text): the installed pack folders, one per line.
 function packNames(text) { return lines(text).filter((n) => /^[A-Za-z0-9._-]+$/.test(n)) }
 const EXIT_NOTHING_PICKED = 1
 
+// pack-import.sh --dry-run output to {name, author, licence, icons, folder, installed, files}; null when it is not that.
+function parseSummary(text) {
+  const get = (re) => { const m = String(text || "").match(re); return m ? m[1].trim() : "" }
+  const name = get(/^Pack:(.*)$/m)
+  const target = get(/^Install:(.*)$/m).replace(/ \(.*\)$/, "")
+  const icons = parseInt(get(/^Icons:(.*)$/m), 10)
+  if (name === "" || target === "" || !(icons >= 0)) return null
+  const files = String(text).split("\n").filter((l) => /^ {2}\S/.test(l)).map((l) => l.trim())
+  return { name: name, author: get(/^Author:(.*)$/m), licence: get(/^License:(.*)$/m), icons: icons, folder: target.slice(target.lastIndexOf("/") + 1), installed: get(/^Installed already:(.*)$/m) === "yes", files: files }
+}
+
+// "Exported <name> (<n> icons, <bytes> bytes) to <path>" to {name, icons, bytes, path}, or null.
+function parseExported(text) {
+  const m = String(text || "").match(/^Exported (\S+) \((\d+) icons, (\d+) bytes\) to (.+)$/m)
+  return m ? { name: m[1], icons: Number(m[2]), bytes: Number(m[3]), path: m[4] } : null
+}
+
+// 1536 to "1.5 KB": the size shown after an export.
+function sizeText(bytes) {
+  const n = Number(bytes) || 0
+  if (n < 1024) return n + " B"
+  return n < 1048576 ? (n / 1024).toFixed(1) + " KB" : (n / 1048576).toFixed(1) + " MB"
+}
+
+// The path offered for an export: <folder>/<pack>.zip.
+function defaultZipPath(dir, name) { return String(dir || "").replace(/\/+$/, "") + "/" + name + ".zip" }
+
 function initial() { return { phase: "idle", op: "", message: "", error: false, manualPath: false, effect: null } }
 
-function begin(state, op) { return state.phase === "busy" ? state : { phase: "busy", op: op, message: op === "pick" ? "" : "Working...", error: false, manualPath: state.manualPath, effect: null } }
+function begin(state, op) { return state.phase === "busy" ? state : { phase: "busy", op: op, message: /^pick/.test(op) ? "" : "Working...", error: false, manualPath: state.manualPath, effect: null } }
 
 function reason(stderr, code) {
-  const text = lines(stderr).map((l) => l.replace(/^omahop (draft|pack) edit: /, "")).join(" ")
+  const text = lines(stderr).map((l) => l.replace(/^omahop (draft|pack) (edit|import|export): /, "")).join(" ")
   return text !== "" ? text : "Failed (exit " + code + ")"
 }
 
@@ -164,6 +209,14 @@ function finish(state, op, code, stdout, stderr, ctx) {
     if (code !== 0 || path.charAt(0) !== "/") return settled(state, "The file picker did not open. Type the file's full path instead.", true, { manualPath: true })
     return settled(state, "", false, { effect: { run: "add", args: { appId: c.appId, path: path } } })
   }
+  if (op === "pickDir" || op === "pickZip") {
+    if (code === EXIT_NOTHING_PICKED) return settled(state, "", false)
+    const picked = out.length > 0 ? out[0] : ""
+    if (code !== 0 || picked.charAt(0) !== "/") return settled(state, "The file picker did not open. Type the full path instead.", true, { manualPath: true })
+    return settled(state, "", false, { effect: op === "pickDir" ? { dir: picked } : { run: "importCheck", args: { zip: picked } } })
+  }
+  if (code !== 0 && op === "export" && /exists, add --force/.test(stderr)) return settled(state, "", false, { effect: { overwrite: true } })
+  if (code !== 0 && op === "openZip" && /has changes/.test(stderr)) return settled(state, "", false, { effect: { needForce: true } })
   if (code !== 0 && op === "save" && /already exists/.test(stderr)) return settled(state, "", false, { effect: { clash: true } })
   if (code !== 0 && op === "openPack" && /has changes/.test(stderr)) return settled(state, "", false, { effect: { needForce: true } })
   if (code !== 0) return settled(state, reason(stderr, code), true)
@@ -173,6 +226,16 @@ function finish(state, op, code, stdout, stderr, ctx) {
     case "undo": return settled(state, "Undid the last step (" + last + ").", false, { effect: { refresh: true } })
     case "save": return settled(state, "Saved the pack " + last + ".", false, { effect: { refresh: true, saved: last } })
     case "openPack": return settled(state, last + ".", false, { effect: { refresh: true } })
+    case "export": {
+      const x = parseExported(stdout)
+      return x ? settled(state, "Exported " + x.name + " (" + x.icons + " icons, " + sizeText(x.bytes) + ") to " + x.path, false, { effect: { exported: x } }) : settled(state, last, false)
+    }
+    case "importCheck": {
+      const sum = parseSummary(stdout)
+      return sum ? settled(state, "", false, { effect: { summary: sum } }) : settled(state, "That did not look like a pack summary.", true)
+    }
+    case "importDo": return settled(state, "Installed " + (c.name || last) + ". Set Icon pack to it in the settings, or use Open a pack.", false, { effect: { installed: c.folder || "" } })
+    case "openZip": return settled(state, last + ".", false, { effect: { refresh: true, opened: true } })
     case "discard": return settled(state, "Discarded the draft.", false, { effect: { refresh: true } })
     case "reset": return settled(state, last + ".", false, { effect: { refresh: true } })
     default: return settled(state, last, false)

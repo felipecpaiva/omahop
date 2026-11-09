@@ -13,7 +13,7 @@ import "Paths.js" as Paths
 
 // The icon builder, a page of the settings window (D29, docs/research/theme-picker.md). Choose an app, find an icon for it in every installed theme or in a file, see it in the switcher's
 // own row and card, undo or reset. The draft is a private folder in the cache (tools/draft-edit.sh owns every rule); nothing here writes a file, and Escape or Back leaves the draft as it is
-// (Save as pack, Export and Import are the next slices). Pure logic: Builder.js. Loaded only while shown.
+// (Save as pack, Export and Import are dialogs over the page, BuilderDialogs and BuilderShare). Pure logic: Builder.js. Loaded only while shown.
 ColumnLayout {
   id: page
 
@@ -26,14 +26,16 @@ ColumnLayout {
   signal back()
 
   // The file chooser is a normal window; the settings window hides while it runs so the chooser is not under it.
-  readonly property bool picking: page.editor.phase === "busy" && page.editor.op === "pick"
+  readonly property bool picking: page.editor.phase === "busy" && /^pick/.test(page.editor.op)
   readonly property bool busy: page.editor.phase === "busy"
 
   readonly property var tools: ({
     draft: Paths.fromUrl(Qt.resolvedUrl("tools/draft-edit.sh")),
     find: Paths.fromUrl(Qt.resolvedUrl("tools/icon-find.sh")),
     preview: Paths.fromUrl(Qt.resolvedUrl("tools/icon-preview.sh")),
-    pick: Paths.fromUrl(Qt.resolvedUrl("tools/pack-edit.sh"))
+    pick: Paths.fromUrl(Qt.resolvedUrl("tools/pack-edit.sh")),
+    export: Paths.fromUrl(Qt.resolvedUrl("tools/pack-export.sh")),
+    import: Paths.fromUrl(Qt.resolvedUrl("tools/pack-import.sh"))
   })
   readonly property string themesTool: Paths.fromUrl(Qt.resolvedUrl("tools/icon-themes.sh"))
 
@@ -58,8 +60,14 @@ ColumnLayout {
   property var themes: []
   property int baseCursor: 0
   property var nowPath: ({})             // app key to the file the base theme gives it
-  property string startDialog: ""        // dev and test only: "save" or "saved" opens that dialog at once (SettingsPanel's open-page file; "saved" shows a sample name, nothing is saved)
-  property string dialog: ""             // "", "save", "saved", "packs", "replace", "discard", "force" (BuilderDialogs.qml)
+  property string startDialog: ""        // dev and test only: "save", "saved", "export", "import" or "import:/full/path.zip" opens that dialog at once (SettingsPanel's open-page file; "saved" shows a sample name, nothing is saved)
+  property string dialog: ""             // "", "save", "saved", "packs", "replace", "discard", "force", "overwrite", "replacepack" (BuilderDialogs.qml), "export", "import" (BuilderShare.qml)
+  property string exportName: ""         // the pack chosen for export ("" = the first installed)
+  property string exportDir: ""          // where a zip goes by default (pack-edit.sh export-dir)
+  property string exportPath: ""         // the zip path an export waits on an overwrite answer for
+  property var summary: null             // the import dry run's summary, or null
+  property string importPath: ""         // the zip that summary is about
+  property string wantZip: ""            // the zip Edit as draft is waiting on a --force answer for
   property var saveArgs: ({})            // the form values of the save that is waiting on a Replace answer
   property string savedName: ""
   property string wantPack: ""           // the pack open-pack is waiting on a --force answer for
@@ -88,9 +96,17 @@ ColumnLayout {
   spacing: Style.spacing.sm
 
   Component.onCompleted: {
-    page.refreshDraft(); themesProc.running = true; filterField.forceActiveFocus()
+    page.refreshDraft(); themesProc.running = true; dirProc.running = true; filterField.forceActiveFocus()
     if (page.startDialog === "save") page.openDialog("save", "")
     else if (page.startDialog === "saved") { page.savedName = "my-icons"; page.openDialog("saved", "my-icons") }
+    else if (page.startDialog.indexOf("export") === 0) {
+      if (page.startDialog.indexOf("export:") === 0) page.exportDir = page.startDialog.slice(7)   // dev only: a folder to show instead of the real one
+      page.openExport("")
+    }
+    else if (page.startDialog.indexOf("import") === 0) {
+      page.openImport()
+      if (page.startDialog.indexOf("import:") === 0) Qt.callLater(function () { page.checkZip(page.startDialog.slice(7)) })
+    }
   }
   onSelectedKeyChanged: { page.startSearch(); page.lookupNow() }
   onBaseValueChanged: { page.nowPath = ({}); page.lookupNow() }
@@ -165,25 +181,47 @@ ColumnLayout {
   function settle(next) {
     page.editor = next
     var fx = next.effect
-    if (next.error && (page.dialog === "replace" || page.dialog === "force" || page.dialog === "discard")) page.closeDialog()   // the reason shows in the status line
+    var asking = page.dialog === "replace" || page.dialog === "force" || page.dialog === "discard" || page.dialog === "overwrite" || page.dialog === "replacepack"
+    if (next.error && asking) page.leaveQuestion()   // the reason shows in the status line, or in the Export and Import dialogs
     if (!fx) return
+    if (fx.dir) { page.exportDir = fx.dir; return }
+    if (fx.summary) { page.summary = fx.summary; return }
+    if (fx.overwrite) { page.openDialog("overwrite", page.exportPath); return }
+    if (fx.installed !== undefined) { page.summary = null; packLister.running = true; page.dialog = "import"; return }
+    if (fx.exported) { packLister.running = true; page.dialog = "export"; return }
+    if (fx.opened) page.closeDialog()
+    if (fx.run === "importCheck") { share.setZip(fx.args.zip); page.importPath = fx.args.zip }
     if (fx.run) Qt.callLater(page.run, fx.run, fx.args)
     else if (fx.refresh) page.refreshDraft()
     if (fx.saved) { page.savedName = fx.saved; page.openDialog("saved", fx.saved) }
     else if (fx.clash) page.openDialog("replace", page.saveArgs.name)
-    else if (fx.needForce) page.openDialog("force", page.wantPack)
+    else if (fx.needForce) page.openDialog("force", page.wantZip !== "" ? (page.summary ? page.summary.name : "the zip") : page.wantPack)
     else if (page.dialog === "force" || page.dialog === "replace" || page.dialog === "discard") page.closeDialog()
   }
 
   function openDialog(kind, subject) { if (kind === "save") page.editor = Builder.initial(); dialogs.subject = subject || ""; page.dialog = kind; page.zone = "apps" }
   function closeDialog() { page.dialog = ""; page.focusZone() }
+  // Leaving a Replace/Cancel question: back to the Export or Import dialog it came from, else to the page.
+  function leaveQuestion() {
+    if (page.dialog === "overwrite") page.dialog = "export"
+    else if (page.dialog === "replacepack" || (page.dialog === "force" && page.wantZip !== "")) page.dialog = "import"
+    else page.closeDialog()
+  }
 
   function saveWith(replace) {
     var a = Object.assign({}, page.saveArgs, { replace: replace, basedOn: page.baseValue })
     page.run("save", a)
   }
 
-  function openPack(name, force) { page.wantPack = name; page.run("openPack", { name: name, force: force }) }
+  function openPack(name, force) { page.wantPack = name; page.wantZip = ""; page.run("openPack", { name: name, force: force }) }
+
+  // ---- Export and Import
+  function openExport(name) { page.editor = Builder.initial(); page.exportName = name; packLister.running = true; page.openDialog("export", "") }
+  function openImport() { page.editor = Builder.initial(); page.summary = null; page.openDialog("import", "") }
+  function doExport(name, path, force) { page.exportPath = path; page.run("export", { name: name, out: path, force: force }) }
+  function checkZip(path) { page.summary = null; page.importPath = path; share.setZip(path); page.run("importCheck", { zip: path }) }
+  function installZip(replace) { page.run("importDo", { zip: page.importPath, replace: replace, folder: page.summary ? page.summary.folder : "", name: page.summary ? page.summary.name : "" }) }
+  function editZip(force) { page.wantZip = page.importPath; page.wantPack = ""; page.run("openZip", { zip: page.importPath, force: force }) }
 
   // What Use it now does: the pack picker's own write path, so the setting is changed the way the picker changes it.
   function usePack() {
@@ -311,6 +349,11 @@ ColumnLayout {
     command: ["bash", page.tools.pick, "list"]
     stdout: StdioCollector { onStreamFinished: page.packNames = Builder.packNames(text) }
   }
+  Process {
+    id: dirProc
+    command: ["bash", page.tools.pick, "export-dir"]
+    stdout: StdioCollector { onStreamFinished: { var d = text.trim(); if (d.charAt(0) === "/" && page.exportDir === "") page.exportDir = d } }
+  }
   Timer { id: findTimer; interval: 250; onTriggered: page.findNow() }
 
   // ---- header: back, title, base theme
@@ -337,7 +380,7 @@ ColumnLayout {
     }
   }
 
-  // ---- toolbar: undo, reset, and the next slices
+  // ---- toolbar: undo, reset, packs, save, export, import
   RowLayout {
     Layout.fillWidth: true
     spacing: Style.spacing.sm
@@ -359,15 +402,8 @@ ColumnLayout {
     Button { text: "Discard draft"; enabled: !page.busy && page.draft.length > 0; foreground: page.foreground; accent: page.accent; fontFamily: page.fontFamily; fontSize: Style.font.caption; onClicked: page.openDialog("discard", "") }
     Item { Layout.fillWidth: true }
     Button { text: "Save as pack"; bordered: true; enabled: !page.busy && page.draft.length > 0; foreground: page.foreground; accent: page.accent; fontFamily: page.fontFamily; fontSize: Style.font.caption; onClicked: page.openDialog("save", "") }
-    Button { text: "Export"; enabled: false; foreground: page.foreground; accent: page.accent; fontFamily: page.fontFamily; fontSize: Style.font.caption }
-    Button { text: "Import"; enabled: false; foreground: page.foreground; accent: page.accent; fontFamily: page.fontFamily; fontSize: Style.font.caption }
-    Text {
-      textFormat: Text.PlainText
-      text: "next slice"
-      color: Qt.darker(page.foreground, 1.6)
-      font.family: page.fontFamily
-      font.pixelSize: Style.font.caption
-    }
+    Button { text: "Export"; enabled: !page.busy; foreground: page.foreground; accent: page.accent; fontFamily: page.fontFamily; fontSize: Style.font.caption; onClicked: page.openExport(page.savedName) }
+    Button { text: "Import"; enabled: !page.busy; foreground: page.foreground; accent: page.accent; fontFamily: page.fontFamily; fontSize: Style.font.caption; onClicked: page.openImport() }
   }
 
   // ---- body: apps on the left, icons on the right
@@ -614,8 +650,9 @@ ColumnLayout {
     foreground: page.foreground
     accent: page.accent
     fontFamily: page.fontFamily
-    onClosed: page.closeDialog()
+    onClosed: page.leaveQuestion()
     onUseNow: page.usePack()
+    onExportSaved: page.openExport(page.savedName)
     onSaveRequested: function (name, author, licence) {
       page.saveArgs = { name: name, author: author, licence: licence }
       page.saveWith(false)
@@ -624,7 +661,38 @@ ColumnLayout {
     onConfirmed: {
       if (page.dialog === "replace") page.saveWith(true)
       else if (page.dialog === "discard") page.run("discard", {})
-      else if (page.dialog === "force") page.openPack(page.wantPack, true)
+      else if (page.dialog === "force") { if (page.wantZip !== "") page.editZip(true); else page.openPack(page.wantPack, true) }
+      else if (page.dialog === "overwrite") page.doExport(share.pack, page.exportPath, true)
+      else if (page.dialog === "replacepack") page.installZip(true)
     }
+  }
+
+  BuilderShare {
+    id: share
+    parent: page.parent
+    anchors.fill: parent
+    z: 10
+    kind: page.dialog === "export" || page.dialog === "import" ? page.dialog : ""
+    packs: page.packNames
+    chosen: page.exportName
+    dir: page.exportDir
+    count: page.draft.length
+    summary: page.summary
+    busy: page.busy
+    message: page.editor.message
+    failed: page.editor.error
+    foreground: page.foreground
+    accent: page.accent
+    fontFamily: page.fontFamily
+    onClosed: page.closeDialog()
+    onPathEdited: page.summary = null
+    onPackChosen: function (name) { page.exportName = name }
+    onChooseFolder: page.run("pickDir", {})
+    onExportRequested: function (name, path) { page.doExport(name, path, false) }
+    onSaveFirst: page.openDialog("save", "")
+    onChooseZip: page.run("pickZip", {})
+    onCheckRequested: function (path) { page.checkZip(path) }
+    onInstallRequested: function (path) { if (page.summary && page.summary.installed) page.openDialog("replacepack", page.summary.folder); else page.installZip(false) }
+    onEditRequested: function (path) { page.editZip(false) }
   }
 }

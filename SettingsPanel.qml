@@ -68,7 +68,7 @@ Item {
 
   SettingsStore { id: settings }
 
-  // Dev and test only: write a setting key (icon_theme or icon_pack), "builder" (the icon builder, or "builder-save" and "builder-saved" with that dialog already open), into $XDG_RUNTIME_DIR/omahop/open-page and the next open lands on that picker page
+  // Dev and test only: write a setting key (icon_theme or icon_pack), "builder" (the icon builder, or "builder-save", "builder-saved", "builder-export", "builder-export:/folder", "builder-import" and "builder-import:/full/path.zip" with that dialog already open), into $XDG_RUNTIME_DIR/omahop/open-page and the next open lands on that picker page
   // (a screenshot needs no keys). The file is emptied once read. Nothing else reads it; docs/settings.md, "Opening a page without clicks".
   FileView {
     id: devPage

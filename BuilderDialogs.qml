@@ -4,12 +4,12 @@ import qs.Commons
 import qs.Ui
 import "Builder.js" as Builder
 
-// The builder's dialogs, one at a time, drawn over the page: the Save as pack form, the Saved state (Use it now, Close), the list of installed packs to open, and the three
-// Replace/Cancel questions (the pack name is taken, discard the draft, open a pack over a draft with changes). It decides nothing: BuilderPage runs the commands on the signals.
+// The builder's dialogs, one at a time, drawn over the page: the Save as pack form, the Saved state (Use it now, Close), the list of installed packs to open, and the
+// Replace/Cancel questions (the pack name is taken, discard the draft, open a pack or a zip over a draft with changes, the export file exists, the imported pack is installed). It decides nothing: BuilderPage runs the commands on the signals.
 Item {
   id: dialogs
 
-  property string kind: ""   // "", "save", "saved", "packs", "replace", "discard", "force"
+  property string kind: ""   // "", "save", "saved", "packs", "replace", "discard", "force", "overwrite", "replacepack"; export and import are BuilderShare's
   property string subject: ""   // the pack name the question or the Saved state is about
   property var packs: []
   property string message: ""   // the last refusal, shown in the form
@@ -23,15 +23,17 @@ Item {
   signal saveRequested(string name, string author, string licence)
   signal closed()
   signal useNow()
+  signal exportSaved()
   signal confirmed()
   signal packChosen(string name)
 
-  visible: kind !== ""
+  readonly property bool mine: kind !== "" && kind !== "export" && kind !== "import"
+  visible: mine
   onKindChanged: if (kind === "save") { nameField.text = dialogs.subject !== "" ? dialogs.subject : Builder.DEFAULT_NAME; Qt.callLater(function () { nameField.forceActiveFocus(); nameField.selectAll() }) }
-                 else if (kind !== "") Qt.callLater(function () { sink.forceActiveFocus() })
+                 else if (mine) Qt.callLater(function () { sink.forceActiveFocus() })
 
   function submit() { dialogs.saveRequested(nameField.text, authorField.text, dialogs.licence) }
-  readonly property bool asking: kind === "replace" || kind === "discard" || kind === "force"
+  readonly property bool asking: kind === "replace" || kind === "discard" || kind === "force" || kind === "overwrite" || kind === "replacepack"
 
   Rectangle {
     anchors.fill: parent
@@ -55,8 +57,10 @@ Item {
     opened: dialogs.asking
     message: dialogs.kind === "replace" ? "A pack named " + dialogs.subject + " is already installed. Replace it with this draft?"
       : dialogs.kind === "force" ? "The draft has changes. Replace them with a copy of " + dialogs.subject + "?"
+      : dialogs.kind === "overwrite" ? "The file " + dialogs.subject + " exists. Replace it?"
+      : dialogs.kind === "replacepack" ? "A pack named " + dialogs.subject + " is already installed. Replace it with the one in the zip?"
       : "Discard the draft? Its " + dialogs.count + " icons are lost."
-    confirmText: dialogs.kind === "replace" ? "Replace" : dialogs.kind === "force" ? "Replace" : "Discard"
+    confirmText: dialogs.kind === "discard" ? "Discard" : "Replace"
     cancelText: "Cancel"
     selectedIndex: 0
     foreground: dialogs.foreground
@@ -179,6 +183,7 @@ Item {
         RowLayout {
           spacing: Style.spacing.sm
           Button { text: "Use it now"; bordered: true; foreground: dialogs.foreground; accent: dialogs.accent; fontFamily: dialogs.fontFamily; onClicked: dialogs.useNow() }
+          Button { text: "Export"; foreground: dialogs.foreground; accent: dialogs.accent; fontFamily: dialogs.fontFamily; onClicked: dialogs.exportSaved() }
           Button { text: "Close"; foreground: dialogs.foreground; accent: dialogs.accent; fontFamily: dialogs.fontFamily; onClicked: dialogs.closed() }
         }
       }
