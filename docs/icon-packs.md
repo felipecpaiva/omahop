@@ -42,7 +42,7 @@ description = "Optional, one line"
 ```
 
 `name`, `author` and `license` are required and must not be empty. Other keys, numbers and `true`/`false` are allowed and ignored (room for
-later versions), except the two optional keys below. Each text is at most 500 characters, the file at most 16 KB. Quotes inside a text are not possible.
+later versions), except the optional keys below. The builder writes one more ignored key, `based_on = "<theme name>"`, the icon theme the pack was made on (text only, nothing reads it; the strict check allows any key). Each text is at most 500 characters, the file at most 16 KB. Quotes inside a text are not possible.
 
 Optional, for packs whose colours come from the Omarchy theme (older omahop versions ignore both keys and use the committed icons):
 
@@ -189,7 +189,7 @@ It only writes inside `~/.config/omahop/packs/<folder>/`, through a hidden tempo
 
 ## The builder draft
 
-The icon builder (settings window, Icons, Customize icons) keeps its work in `~/.cache/omahop/draft/`, a pack shaped folder that is never in the packs folder. `tools/draft-edit.sh` is its one writer: `list`, `add <app id> <image>`, `remove <icon file>`, `reset-app <app id>`, `undo` (the last 30 steps), `discard`. A theme icon is copied in as a plain file, never linked. Every file passes `pack_check_strict`, the check export and import use, so what the draft holds can always be exported. `tools/icon-find.sh <query>` searches every installed theme for app icons by name. Save as pack, Export and Import from the builder come in the next slices; the pack format does not change.
+The icon builder (settings window, Icons, Customize icons) keeps its work in `~/.cache/omahop/draft/`, a pack shaped folder that is never in the packs folder. `tools/draft-edit.sh` is its one writer: `list`, `add <app id> <image>`, `remove <icon file>`, `reset-app <app id>`, `undo` (the last 30 steps), `discard`. A theme icon is copied in as a plain file, never linked. Every file passes `pack_check_strict`, the check export and import use, so what the draft holds can always be exported. `tools/icon-find.sh <query>` searches every installed theme for app icons by name. `save [--replace] [--based-on <theme>] <name> <author> <licence> [description]` builds the pack in a hidden folder of the packs folder (only `icons/` is copied, never history, undo or placeholders), runs `pack_check_strict` on it, renames it into place and only then discards the draft; it refuses an existing pack without `--replace`, and on any failure the draft and the old pack are untouched. `open-pack [--force] <name>` copies an installed pack's good icons into the draft (a bad icon is skipped with a note) and refuses over a draft with changes without `--force`; a `follows_theme` pack contributes its committed icons and the draft has no `follows_theme`. Export and Import from the builder come in the next slice; the pack format does not change.
 
 ## Share a pack as one zip
 
