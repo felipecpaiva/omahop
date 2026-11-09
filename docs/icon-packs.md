@@ -9,7 +9,7 @@ Off by default: nothing changes until you set `icon_pack`.
 ## Use a pack
 
 1. Put the pack folder in `~/.config/omahop/packs/` (or `$XDG_CONFIG_HOME/omahop/packs/`). The folder may also be a link to a folder kept elsewhere.
-2. Set **Icon pack** in the settings window (group Look) to the folder name, or `icon_pack = "my-pack"` in `config.toml`.
+2. Press the **Choose a pack** button under Icon pack in the settings window (group Look): a picker shows each pack with the same sample apps, Enter chooses (see settings.md, Icon picker). Or type the folder name in the box below it, or `icon_pack = "my-pack"` in `config.toml`.
 
 The pack is read at once. Icons the pack has come first; every other app keeps the icon it had (from `icon_theme` and the installed themes).
 Empty `icon_pack` uses no pack.

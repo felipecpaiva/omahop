@@ -77,7 +77,7 @@ local function arrange(list)
 end
 for _, g in ipairs(groups) do g.settings = arrange(g.settings) end
 
-local out = enc({ schema = C.schema, groups = groups }, "") .. "\n"
+local out = enc({ schema = C.schema, sample_apps = C.sample_apps, groups = groups }, "") .. "\n"
 local path = root .. "/spec.json"
 if arg[1] == "--check" then
   local f = io.open(path, "r")

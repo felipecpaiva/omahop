@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
 import qs.Commons
 import qs.Ui
@@ -17,7 +18,8 @@ Item {
   property var manifest: null
 
   property bool opened: false
-  property string page: ""   // "" for the settings list, or the editor page a setting asked for ("packs")
+  property string page: ""   // "" for the settings list, or the editor page a setting asked for ("icons", the picker; "packs", the pack editor)
+  property string pageKey: "icon_theme"   // the setting that opened the picker, so it starts on the right tab
 
   // Categories with something to show, the chosen one (the first until a click), and which categories have their advanced settings open.
   property string category: ""
@@ -44,6 +46,7 @@ Item {
     root.page = ""
     root.opened = true
     settings.reload()
+    devPage.reload()
     Qt.callLater(function () { content.forceActiveFocus() })
   }
 
@@ -64,6 +67,21 @@ Item {
   }
 
   SettingsStore { id: settings }
+
+  // Dev and test only: write a setting key (icon_theme or icon_pack) into $XDG_RUNTIME_DIR/omahop/open-page and the next open lands on that picker page
+  // (a screenshot needs no keys). The file is emptied once read. Nothing else reads it; docs/settings.md, "Opening a page without clicks".
+  FileView {
+    id: devPage
+    path: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/omahop/open-page"
+    printErrors: false
+    onLoaded: {
+      var key = text().trim()
+      if (key === "" || !root.opened) return // the load at start up is not an open
+      root.pageKey = key
+      root.page = "icons"
+      setText("")
+    }
+  }
 
   PanelWindow {
     id: window
@@ -147,7 +165,24 @@ Item {
               foreground: root.foreground
               accent: root.accent
               fontFamily: root.fontFamily
-              onBack: root.page = ""
+              onBack: { root.page = ""; content.forceActiveFocus() }
+            }
+          }
+
+          Loader {
+            active: root.page === "icons"
+            visible: active
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            sourceComponent: IconPickerPage {
+              store: settings
+              byId: root.byId
+              settingKey: root.pageKey
+              foreground: root.foreground
+              accent: root.accent
+              fontFamily: root.fontFamily
+              onBack: { root.page = ""; content.forceActiveFocus() }
+              onPackEditorRequested: root.page = "packs"
             }
           }
 
@@ -225,7 +260,7 @@ Item {
                         foreground: root.foreground
                         accent: root.accent
                         fontFamily: root.fontFamily
-                        onEditorRequested: function (editor) { root.page = editor }
+                        onEditorRequested: function (editor, key) { root.pageKey = key; root.page = editor }
                       }
                     }
                   }

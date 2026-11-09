@@ -71,10 +71,10 @@ C.spec = {
       help = "Pairs of letter and app class, comma separated, for example: c=google-chrome, t=kitty. Used when Quick jump keys is App letters." },
     action_keys = { default = "", group = "keys", subgroup = "Quick jump keys", advanced = true, label = "Quit and minimize keys",
       help = "Pairs of key and action, comma separated, for example: q=close, m=minimize. While the list is up and nothing is typed yet, that key acts on the selected window and the selection moves to the next row; once you have typed a letter, every key types. Actions: close, minimize. Empty (the default) turns it off. A key a hint already uses is left to the hint." },
-    icon_theme = { default = "", group = "look", subgroup = "Icons", advanced = true, label = "Icon theme",
-      help = "Type the folder name of an installed icon theme, such as Papirus, to prefer its icons. Empty uses whichever installed theme the scan finds first. An app the theme has no icon for still gets one from the others. " },
-    icon_pack = { default = "", group = "look", subgroup = "Icons", advanced = true, label = "Icon pack",
-      help = "Type the folder name of an icon pack in ~/.config/omahop/packs, such as omahop-sample. Its icons come first; an app the pack has no icon for keeps its usual one. Empty uses no pack. A pack you made yourself or copied from someone: see docs/icon-packs.md for the format. Applies at once. To share a pack as one zip or install one, run tools/pack-export.sh <name> or tools/pack-import.sh <file.zip> from the plugin folder (~/.config/omarchy/plugins/io.github.felipecpaiva.omahop)." },
+    icon_theme = { default = "", group = "look", subgroup = "Icons", label = "Icon theme", editor = "icons", editor_label = "Choose a theme", names = { [""] = "Automatic" },
+      help = "The button opens a picker with a preview of each installed theme. Or type the folder name of an installed icon theme, such as Papirus, to prefer its icons. Empty uses whichever installed theme the scan finds first. An app the theme has no icon for still gets one from the others. " },
+    icon_pack = { default = "", group = "look", subgroup = "Icons", label = "Icon pack", editor = "icons", editor_label = "Choose a pack", names = { [""] = "No pack" },
+      help = "The button opens the same picker for your packs. Or type the folder name of an icon pack in ~/.config/omahop/packs, such as omahop-sample. Its icons come first; an app the pack has no icon for keeps its usual one. Empty uses no pack. A pack you made yourself or copied from someone: see docs/icon-packs.md for the format. Applies at once. To share a pack as one zip or install one, run tools/pack-export.sh <name> or tools/pack-import.sh <file.zip> from the plugin folder (~/.config/omarchy/plugins/io.github.felipecpaiva.omahop)." },
     swipe_trigger = { default = false, group = "swipe", subgroup = "Swipe", reload = true, label = "Swipe on the touchpad to switch",
       help = "Off by default. When on, a swipe left or right with several fingers on the touchpad opens the list and moves the selection one row per stretch of travel; lifting the fingers picks. Swipe back to the window you started on and lift to close without switching. Touchpads only: a touchscreen swipe cannot reach omahop. Works where omahop takes over Alt+Tab. Applies after a Hyprland reload." },
     swipe_fingers = { default = 4, min = 3, max = 4, group = "swipe", subgroup = "Swipe", depends = "top.swipe_trigger", reload = true, label = "Fingers",
@@ -119,6 +119,9 @@ C.groups = {
   { id = "tabs", title = "Browser tabs" },
   { id = "swipe", title = "Touchpad swipe" },
 }
+-- The apps whose icons the icon picker shows on every card, so choices compare side by side. App ids, not names: an icon the theme lacks stays blank.
+C.sample_apps = { "firefox", "kitty", "org.gnome.Nautilus", "code", "spotify", "discord", "thunderbird", "org.gnome.Calculator" }
+
 C.order = { "top.profile", "top.takeover", "top.modifier", "top.scope", "top.search", "top.search_fuzzy", "top.search_linger_seconds", "windows.workspaces", "windows.monitors", "windows.minimized", "windows.specials", "windows.ignore",
   "top.style", "top.thumbnails", "top.thumbnail_exclude", "top.reveal_delay_ms", "top.border", "top.icon_theme", "top.icon_pack", "top.audio_marker", "top.actions", "top.peek", "top.peek_position",
   "windows.ignore_titles", "windows.first", "top.passthrough_fullscreen", "top.passthrough", "top.same_app_key", "top.hints", "top.hint_keys", "top.action_keys", "keys.repeat_delay_ms", "keys.repeat_ms",

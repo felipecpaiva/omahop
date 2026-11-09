@@ -374,28 +374,38 @@
       "subgroup": "Style",
       "type": "bool"
     }, {
-      "advanced": true,
+      "advanced": false,
       "default": "",
       "depth": 0,
-      "help": "Type the folder name of an installed icon theme, such as Papirus, to prefer its icons. Empty uses whichever installed theme the scan finds first. An app the theme has no icon for still gets one from the others. ",
+      "editor": "icons",
+      "editor_label": "Choose a theme",
+      "help": "The button opens a picker with a preview of each installed theme. Or type the folder name of an installed icon theme, such as Papirus, to prefer its icons. Empty uses whichever installed theme the scan finds first. An app the theme has no icon for still gets one from the others. ",
       "hidden": false,
       "id": "top.icon_theme",
       "key": "icon_theme",
       "label": "Icon theme",
+      "names": {
+        "": "Automatic"
+      },
       "overridable": true,
       "reload": false,
       "section": "top",
       "subgroup": "Icons",
       "type": "text"
     }, {
-      "advanced": true,
+      "advanced": false,
       "default": "",
       "depth": 0,
-      "help": "Type the folder name of an icon pack in ~/.config/omahop/packs, such as omahop-sample. Its icons come first; an app the pack has no icon for keeps its usual one. Empty uses no pack. A pack you made yourself or copied from someone: see docs/icon-packs.md for the format. Applies at once. To share a pack as one zip or install one, run tools/pack-export.sh <name> or tools/pack-import.sh <file.zip> from the plugin folder (~/.config/omarchy/plugins/io.github.felipecpaiva.omahop).",
+      "editor": "icons",
+      "editor_label": "Choose a pack",
+      "help": "The button opens the same picker for your packs. Or type the folder name of an icon pack in ~/.config/omahop/packs, such as omahop-sample. Its icons come first; an app the pack has no icon for keeps its usual one. Empty uses no pack. A pack you made yourself or copied from someone: see docs/icon-packs.md for the format. Applies at once. To share a pack as one zip or install one, run tools/pack-export.sh <name> or tools/pack-import.sh <file.zip> from the plugin folder (~/.config/omarchy/plugins/io.github.felipecpaiva.omahop).",
       "hidden": false,
       "id": "top.icon_pack",
       "key": "icon_pack",
       "label": "Icon pack",
+      "names": {
+        "": "No pack"
+      },
       "overridable": true,
       "reload": false,
       "section": "top",
@@ -680,5 +690,6 @@
     }],
     "title": "Touchpad swipe"
   }],
+  "sample_apps": ["firefox", "kitty", "org.gnome.Nautilus", "code", "spotify", "discord", "thunderbird", "org.gnome.Calculator"],
   "schema": 1
 }

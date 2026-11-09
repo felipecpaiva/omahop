@@ -14,7 +14,9 @@ node tests/peek_model.test.mjs
 node tests/icon_resolve.test.mjs
 node tests/audio_marker.test.mjs
 node tests/pack_editor.test.mjs
+node tests/icon_picker.test.mjs
 bash tests/icon_index.test.sh
+bash tests/icon_picker.test.sh
 bash tests/pack_index.test.sh
 bash tests/pack_zip.test.sh
 bash tests/pack_edit.test.sh

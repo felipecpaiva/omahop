@@ -13,8 +13,8 @@ ColumnLayout {
   property color accent: Color.accent
   property string fontFamily: Style.font.menuFamily
 
-  // A setting with an editor page (spec field `editor`, such as "packs" on icon_pack) shows a button that asks the panel for that page.
-  signal editorRequested(string editor)
+  // A setting with an editor page (spec field `editor`, such as "icons" on icon_theme and icon_pack) shows a button, labelled with the current value, that asks the panel for that page.
+  signal editorRequested(string editor, string key)
 
   readonly property var current: row.store ? row.store.value(row.setting) : row.setting.default
   readonly property var overridden: row.store ? row.store.override(row.setting) : undefined
@@ -127,12 +127,12 @@ ColumnLayout {
 
   Button {
     visible: !!row.setting.editor
-    text: row.setting.editor_label || ""
+    text: (row.setting.editor_label || "") + ": " + row.shown(row.current)
     bordered: true
     foreground: row.foreground
     accent: row.accent
     fontFamily: row.fontFamily
-    onClicked: row.editorRequested(row.setting.editor)
+    onClicked: row.editorRequested(row.setting.editor, row.setting.key)
   }
 
   Button {
