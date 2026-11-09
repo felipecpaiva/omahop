@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs"
 import assert from "node:assert/strict"
 const B = new Function(readFileSync(new URL("../Builder.js", import.meta.url), "utf8").replace(".pragma library", "") +
-  "; return { parseDraft, parseFind, suggestQuery, nowNames, nowPick, decorate, draftUrl, previewRows, gridMove, action, command, initial, begin, finish, refuse }")()
+  "; return { parseDraft, parseFind, suggestQuery, nowNames, nowPick, decorate, draftUrl, previewRows, gridMove, action, command, initial, begin, finish, refuse, packNames, LICENCES, DEFAULT_NAME }")()
 const E = new Function(readFileSync(new URL("../PackEditor.js", import.meta.url), "utf8").replace(".pragma library", "") + "; return { appRows, iconStem }")()
 
 // reading the scripts' output
@@ -85,11 +85,33 @@ done = B.finish(B.begin(B.initial(), "add"), "add", 1, "", "omahop draft edit: n
 assert.equal(done.error, true)
 assert.match(done.message, /^not added, the image must be a PNG or a plain SVG: line 2$/, "the script's prefix is dropped")
 assert.equal(B.finish(B.begin(B.initial(), "undo"), "undo", 1, "", "", {}).message, "Failed (exit 1)")
-let pickDone = B.finish(B.begin(B.initial(), "pick"), "pick", 0, "/home/x/a.png\n", "", { appId: "kitty" })
-assert.deepEqual(pickDone.effect, { run: "add", args: { appId: "kitty", path: "/home/x/a.png" } }, "a picked file goes to add for the app chosen at the time")
+let pickDone = B.finish(B.begin(B.initial(), "pick"), "pick", 0, "/pics/a.png\n", "", { appId: "kitty" })
+assert.deepEqual(pickDone.effect, { run: "add", args: { appId: "kitty", path: "/pics/a.png" } }, "a picked file goes to add for the app chosen at the time")
 pickDone = B.finish(B.begin(B.initial(), "pick"), "pick", 1, "", "", {})
 assert.deepEqual([pickDone.error, pickDone.message, pickDone.manualPath], [false, "", false], "nothing picked is not an error")
 pickDone = B.finish(B.begin(B.initial(), "pick"), "pick", 2, "", "no chooser", {})
 assert.deepEqual([pickDone.error, pickDone.manualPath], [true, true], "a chooser that did not open offers a typed path")
 assert.equal(B.finish(B.begin(pickDone, "add"), "add", 0, "a.png", "", {}).manualPath, false, "a successful add clears it")
+// save, open-pack, discard
+const sv = { name: " my icons ", author: "Nova", licence: "MIT", description: "", basedOn: "" }
+assert.deepEqual(B.command(tools, "save", sv).argv, ["bash", "/t/draft-edit.sh", "save", "my icons", "Nova", "MIT"], "trimmed, no empty description")
+assert.deepEqual(B.command(tools, "save", Object.assign({}, sv, { replace: true, basedOn: "Papirus", description: "d", author: "" })).argv,
+  ["bash", "/t/draft-edit.sh", "save", "--replace", "--based-on", "Papirus", "my icons", "", "MIT", "d"], "an empty author stays an argument")
+for (const bad of [{ name: "  " }, { name: "a\nb" }, { licence: "" }, { description: "x\ny" }, { author: "a\0" }]) assert.ok(B.command(tools, "save", Object.assign({}, sv, bad)).error, JSON.stringify(bad))
+assert.deepEqual(B.command(tools, "openPack", { name: "mine", force: true }).argv, ["bash", "/t/draft-edit.sh", "open-pack", "--force", "mine"])
+assert.deepEqual(B.command(tools, "openPack", { name: "mine" }).argv, ["bash", "/t/draft-edit.sh", "open-pack", "mine"])
+for (const name of ["", "../x", "a b", "--force"]) assert.ok(name === "--force" ? B.command(tools, "openPack", { name }).argv : B.command(tools, "openPack", { name }).error, name)
+assert.deepEqual(B.command(tools, "discard", {}).argv, ["bash", "/t/draft-edit.sh", "discard"])
+assert.deepEqual(B.packNames("a\n\n../x\nb-1\n"), ["a", "b-1"])
+assert.ok(B.LICENCES.includes("CC0-1.0") && B.DEFAULT_NAME === "my-icons")
+let sd = B.finish(B.begin(B.initial(), "save"), "save", 0, "my-icons\n", "", {})
+assert.deepEqual([sd.error, sd.effect], [false, { refresh: true, saved: "my-icons" }])
+sd = B.finish(B.begin(B.initial(), "save"), "save", 1, "", "omahop draft edit: a pack named my-icons already exists (use Replace)\n", {})
+assert.deepEqual([sd.error, sd.message, sd.effect], [false, "", { clash: true }], "a clash is a question, not an error")
+sd = B.finish(B.begin(B.initial(), "save"), "save", 1, "", "omahop draft edit: not saved, the draft is untouched:\nskipped icons/x.svg\n", {})
+assert.equal(sd.error, true)
+assert.deepEqual(B.finish(B.begin(B.initial(), "openPack"), "openPack", 1, "", "omahop draft edit: the draft has changes; discard it first or use --force", {}).effect, { needForce: true })
+assert.equal(B.finish(B.begin(B.initial(), "openPack"), "openPack", 1, "", "omahop draft edit: no pack folder named x", {}).error, true)
+assert.deepEqual(B.finish(B.begin(B.initial(), "openPack"), "openPack", 0, "Opened a with 3 icons\n", "", {}).effect, { refresh: true })
+assert.deepEqual(B.finish(B.begin(B.initial(), "discard"), "discard", 0, "Discarded the draft\n", "", {}).effect, { refresh: true })
 console.log("ok   builder logic: parsers, rows, preview, grid, keys, commands, state machine")

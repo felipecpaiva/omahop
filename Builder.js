@@ -4,6 +4,8 @@
 // App rows come from PackEditor.appRows (fed the draft's files instead of a pack's), so the builder and the pack editor list apps the same way. Design: D29.
 
 const FIND_MIN = 2   // the shortest search text; icon-find.sh refuses less
+const LICENCES = ["CC0-1.0", "MIT", "CC-BY-4.0", "All rights reserved"]   // the save dialog's choices; the script accepts any text it can store
+const DEFAULT_NAME = "my-icons"
 
 function lines(text) { return String(text || "").split("\n").map((l) => l.trim()).filter((l) => l !== "") }
 
@@ -113,6 +115,18 @@ function command(tools, op, a) {
         need(plain(a.query) && a.query.length >= FIND_MIN, "type at least " + FIND_MIN + " letters")
         return { argv: ["bash", tools.find, a.query, "120"] }
       case "now": return { argv: ["bash", tools.preview, plain(a.theme) && a.theme !== "" ? a.theme : "-"].concat(nowNames(a.names)) }
+      case "save": {
+        need(plain(a.name) && a.name.trim() !== "", "give the pack a name")
+        need(plain(a.author) && plain(a.licence) && a.licence !== "", "choose a licence")
+        need(plain(a.description || "") && plain(a.basedOn || ""), "the description must be one line")
+        const flags = (a.replace ? ["--replace"] : []).concat(a.basedOn ? ["--based-on", a.basedOn] : [])
+        return { argv: ["bash", tools.draft, "save"].concat(flags, [a.name.trim(), a.author.trim(), a.licence], a.description ? [a.description] : []) }
+      }
+      case "openPack":
+        need(plain(a.name) && /^[A-Za-z0-9._-]+$/.test(a.name), "no pack chosen")
+        return { argv: ["bash", tools.draft, "open-pack"].concat(a.force ? ["--force"] : [], [a.name]) }
+      case "discard": return { argv: ["bash", tools.draft, "discard"] }
+      case "packs": return { argv: ["bash", tools.pick, "list"] }
       case "pick": return { argv: ["bash", tools.pick, "pick", "image"] }
       default: return { error: "unknown action " + op }
     }
@@ -123,7 +137,10 @@ function command(tools, op, a) {
 
 // ---- the state of the mutating actions: one at a time.
 // phase "idle" or "busy"; message/error: the status line; manualPath: the file chooser did not open, so a typed path is offered.
-// effect (from finish): {refresh: true} reload the draft, or {run: "add", args} (a picked file goes to add).
+// effect (from finish): {refresh: true} reload the draft ({saved: folder} too after a save), {run: "add", args} (a picked file goes to add), {clash: true} the pack name is taken
+// (ask Replace or Cancel), {needForce: true} open-pack refused over a draft with changes (ask).
+// packNames(text): the installed pack folders, one per line.
+function packNames(text) { return lines(text).filter((n) => /^[A-Za-z0-9._-]+$/.test(n)) }
 const EXIT_NOTHING_PICKED = 1
 
 function initial() { return { phase: "idle", op: "", message: "", error: false, manualPath: false, effect: null } }
@@ -147,11 +164,16 @@ function finish(state, op, code, stdout, stderr, ctx) {
     if (code !== 0 || path.charAt(0) !== "/") return settled(state, "The file picker did not open. Type the file's full path instead.", true, { manualPath: true })
     return settled(state, "", false, { effect: { run: "add", args: { appId: c.appId, path: path } } })
   }
+  if (code !== 0 && op === "save" && /already exists/.test(stderr)) return settled(state, "", false, { effect: { clash: true } })
+  if (code !== 0 && op === "openPack" && /has changes/.test(stderr)) return settled(state, "", false, { effect: { needForce: true } })
   if (code !== 0) return settled(state, reason(stderr, code), true)
   const last = out.length > 0 ? out[out.length - 1] : "Done"
   switch (op) {
     case "add": return settled(state, "Set icons/" + last + " in the draft.", false, { manualPath: false, effect: { refresh: true } })
     case "undo": return settled(state, "Undid the last step (" + last + ").", false, { effect: { refresh: true } })
+    case "save": return settled(state, "Saved the pack " + last + ".", false, { effect: { refresh: true, saved: last } })
+    case "openPack": return settled(state, last + ".", false, { effect: { refresh: true } })
+    case "discard": return settled(state, "Discarded the draft.", false, { effect: { refresh: true } })
     case "reset": return settled(state, last + ".", false, { effect: { refresh: true } })
     default: return settled(state, last, false)
   }

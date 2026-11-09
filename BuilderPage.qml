@@ -58,6 +58,12 @@ ColumnLayout {
   property var themes: []
   property int baseCursor: 0
   property var nowPath: ({})             // app key to the file the base theme gives it
+  property string startDialog: ""        // dev and test only: "save" or "saved" opens that dialog at once (SettingsPanel's open-page file; "saved" shows a sample name, nothing is saved)
+  property string dialog: ""             // "", "save", "saved", "packs", "replace", "discard", "force" (BuilderDialogs.qml)
+  property var saveArgs: ({})            // the form values of the save that is waiting on a Replace answer
+  property string savedName: ""
+  property string wantPack: ""           // the pack open-pack is waiting on a --force answer for
+  property var packNames: []
 
   readonly property var windows: Hyprland.toplevels.values.map(function (t) {
     var id = t.wayland ? String(t.wayland.appId || "") : String((t.lastIpcObject && t.lastIpcObject["class"]) || "")
@@ -72,6 +78,7 @@ ColumnLayout {
   readonly property var selected: page.rows.length > 0 ? page.rows[Math.min(page.cursor, page.rows.length - 1)] : null
   readonly property string selectedKey: page.selected ? page.selected.key : ""
   readonly property var setting: page.byId["top.icon_theme"]
+  readonly property var packSetting: page.byId["top.icon_pack"]
   readonly property string baseValue: page.store && page.setting ? String(page.store.value(page.setting)) : ""
   readonly property var baseChoices: Picker.choices(Picker.KINDS[0], page.themes)
   readonly property string baseTitle: page.baseChoices[Picker.indexOfValue(page.baseChoices, page.baseValue)].title
@@ -80,7 +87,11 @@ ColumnLayout {
 
   spacing: Style.spacing.sm
 
-  Component.onCompleted: { page.refreshDraft(); themesProc.running = true; filterField.forceActiveFocus() }
+  Component.onCompleted: {
+    page.refreshDraft(); themesProc.running = true; filterField.forceActiveFocus()
+    if (page.startDialog === "save") page.openDialog("save", "")
+    else if (page.startDialog === "saved") { page.savedName = "my-icons"; page.openDialog("saved", "my-icons") }
+  }
   onSelectedKeyChanged: { page.startSearch(); page.lookupNow() }
   onBaseValueChanged: { page.nowPath = ({}); page.lookupNow() }
 
@@ -154,9 +165,30 @@ ColumnLayout {
   function settle(next) {
     page.editor = next
     var fx = next.effect
+    if (next.error && (page.dialog === "replace" || page.dialog === "force" || page.dialog === "discard")) page.closeDialog()   // the reason shows in the status line
     if (!fx) return
     if (fx.run) Qt.callLater(page.run, fx.run, fx.args)
     else if (fx.refresh) page.refreshDraft()
+    if (fx.saved) { page.savedName = fx.saved; page.openDialog("saved", fx.saved) }
+    else if (fx.clash) page.openDialog("replace", page.saveArgs.name)
+    else if (fx.needForce) page.openDialog("force", page.wantPack)
+    else if (page.dialog === "force" || page.dialog === "replace" || page.dialog === "discard") page.closeDialog()
+  }
+
+  function openDialog(kind, subject) { if (kind === "save") page.editor = Builder.initial(); dialogs.subject = subject || ""; page.dialog = kind; page.zone = "apps" }
+  function closeDialog() { page.dialog = ""; page.focusZone() }
+
+  function saveWith(replace) {
+    var a = Object.assign({}, page.saveArgs, { replace: replace, basedOn: page.baseValue })
+    page.run("save", a)
+  }
+
+  function openPack(name, force) { page.wantPack = name; page.run("openPack", { name: name, force: force }) }
+
+  // What Use it now does: the pack picker's own write path, so the setting is changed the way the picker changes it.
+  function usePack() {
+    if (page.packSetting && page.savedName !== "") page.store.setValue(page.packSetting, page.savedName)
+    page.closeDialog()
   }
 
   // A command that could not start never sends exited: settle it as exit 127 once both signals had their turn.
@@ -274,6 +306,11 @@ ColumnLayout {
     command: ["bash", page.themesTool]
     stdout: StdioCollector { onStreamFinished: page.themes = Picker.parseThemes(text) }
   }
+  Process {
+    id: packLister
+    command: ["bash", page.tools.pick, "list"]
+    stdout: StdioCollector { onStreamFinished: page.packNames = Builder.packNames(text) }
+  }
   Timer { id: findTimer; interval: 250; onTriggered: page.findNow() }
 
   // ---- header: back, title, base theme
@@ -318,8 +355,10 @@ ColumnLayout {
       foreground: page.foreground; accent: page.accent; fontFamily: page.fontFamily; fontSize: Style.font.caption
       onClicked: page.run("reset", { appId: page.selected.key })
     }
+    Button { text: "Open a pack"; enabled: !page.busy; foreground: page.foreground; accent: page.accent; fontFamily: page.fontFamily; fontSize: Style.font.caption; onClicked: { packLister.running = true; page.openDialog("packs", "") } }
+    Button { text: "Discard draft"; enabled: !page.busy && page.draft.length > 0; foreground: page.foreground; accent: page.accent; fontFamily: page.fontFamily; fontSize: Style.font.caption; onClicked: page.openDialog("discard", "") }
     Item { Layout.fillWidth: true }
-    Button { text: "Save as pack"; enabled: false; foreground: page.foreground; accent: page.accent; fontFamily: page.fontFamily; fontSize: Style.font.caption }
+    Button { text: "Save as pack"; bordered: true; enabled: !page.busy && page.draft.length > 0; foreground: page.foreground; accent: page.accent; fontFamily: page.fontFamily; fontSize: Style.font.caption; onClicked: page.openDialog("save", "") }
     Button { text: "Export"; enabled: false; foreground: page.foreground; accent: page.accent; fontFamily: page.fontFamily; fontSize: Style.font.caption }
     Button { text: "Import"; enabled: false; foreground: page.foreground; accent: page.accent; fontFamily: page.fontFamily; fontSize: Style.font.caption }
     Text {
@@ -548,7 +587,7 @@ ColumnLayout {
     Layout.fillWidth: true
     textFormat: Text.PlainText
     wrapMode: Text.WordWrap
-    text: page.editor.message !== "" ? page.editor.message : "Theme icons keep their theme's licence. The draft lives in your cache folder until Save as pack exists (next slice)."
+    text: page.editor.message !== "" ? page.editor.message : "Theme icons keep their theme's licence. The draft lives in your cache folder until you save it as a pack."
     color: page.editor.error ? Color.urgent : Qt.darker(page.foreground, 1.6)
     font.family: page.fontFamily
     font.pixelSize: Style.font.caption
@@ -560,5 +599,32 @@ ColumnLayout {
     color: Qt.darker(page.foreground, 1.6)
     font.family: page.fontFamily
     font.pixelSize: Style.font.caption
+  }
+
+  BuilderDialogs {
+    id: dialogs
+    parent: page.parent   // the Loader, not the layout, so it can cover the page
+    anchors.fill: parent
+    z: 10
+    kind: page.dialog
+    message: page.editor.error ? page.editor.message : ""
+    packs: page.packNames
+    count: page.draft.length
+    baseTitle: page.baseValue !== "" ? page.baseTitle : ""
+    foreground: page.foreground
+    accent: page.accent
+    fontFamily: page.fontFamily
+    onClosed: page.closeDialog()
+    onUseNow: page.usePack()
+    onSaveRequested: function (name, author, licence) {
+      page.saveArgs = { name: name, author: author, licence: licence }
+      page.saveWith(false)
+    }
+    onPackChosen: function (name) { page.dialog = ""; page.openPack(name, false) }
+    onConfirmed: {
+      if (page.dialog === "replace") page.saveWith(true)
+      else if (page.dialog === "discard") page.run("discard", {})
+      else if (page.dialog === "force") page.openPack(page.wantPack, true)
+    }
   }
 }
