@@ -130,3 +130,17 @@ console.log(`config io ok (profile parity on ${fixtures.length} fixtures)`)
   assert.equal(V.visible(by["top.schema"] || { hidden: true }, by, val({}), true), false, "hidden never shows")
   for (const s of settings) assert.ok(s.subgroup && typeof s.depth === "number", "spec.json lacks layout fields for " + s.id)
 }
+
+// The scope setting a click used to flip (tests/live_panel.py, now opt-in): in the spec under a group and subgroup, and the writer changes that one line.
+{
+  const spec = JSON.parse(readFileSync(root + "spec.json", "utf8"))
+  const g = spec.groups.find((x) => x.settings.some((s) => s.id === "top.scope"))
+  assert.ok(g, "top.scope sits in a category")
+  const s = g.settings.find((x) => x.id === "top.scope")
+  assert.ok(s.subgroup && s.names.all === "All workspaces" && s.names.floating === "Floating workspaces only")
+  const base = "# my notes\nschema = 1\nreveal_delay_ms = 0 # keep this comment\n"
+  const all = P.set(base, "top", "scope", "all")
+  assert.ok(all.includes('scope = "all"') && all.includes("# my notes") && all.includes("reveal_delay_ms = 0 # keep this comment"))
+  const fl = P.set(all, "top", "scope", "floating")
+  assert.ok(fl.includes('scope = "floating"') && fl.split("scope =").length === 2, "the same line changes")
+}

@@ -2,7 +2,9 @@
 (one line, everything else untouched). Your own config file is saved and put back.
 Click positions are logical pixels measured for a 1280x800 logical screen (2560x1600 at scale 2) with the panel centred; on another screen the test
 SKIPs instead of clicking blind (an earlier editor test of ours clicked stale positions and hit the wrong controls).
-Needs the plugin enabled and the shell restarted since the last QML change. Usage: python3 tests/live_panel.py"""
+Needs the plugin enabled and the shell restarted since the last QML change. Usage: OMAHOP_LIVE_CLICKS=1 python3 tests/live_panel.py
+Opt-in only: pixel clicks hit wrong controls in earlier versions (the settings layout moved), so it skips by default. The layout is now a side list of
+categories, so SCOPE_Y is stale until re-measured. The same behaviour is checked without input in tests/config_io.test.mjs."""
 import json, os, subprocess, sys, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from uinput_kbd import Mouse
@@ -26,6 +28,10 @@ SCOPE_Y = 538
 def move(x, y):
     ev(f"hl.dispatch(hl.dsp.cursor.move({{ x = {x}, y = {y} }}))"); time.sleep(0.5)
 
+
+if os.environ.get("OMAHOP_LIVE_CLICKS") != "1":
+    print("skip: needs live input (set OMAHOP_LIVE_CLICKS=1)")
+    sys.exit(0)
 
 mon = json.loads(sh("hyprctl", "monitors", "-j"))[0]
 logical = (int(mon["width"] / mon["scale"]), int(mon["height"] / mon["scale"]))
