@@ -187,6 +187,10 @@ bash $OMAHOP/tools/pack-edit.sh list
 
 It only writes inside `~/.config/omahop/packs/<folder>/`, through a hidden temporary name and one rename, and refuses anything else with a reason.
 
+## The builder draft
+
+The icon builder (settings window, Icons, Customize icons) keeps its work in `~/.cache/omahop/draft/`, a pack shaped folder that is never in the packs folder. `tools/draft-edit.sh` is its one writer: `list`, `add <app id> <image>`, `remove <icon file>`, `reset-app <app id>`, `undo` (the last 30 steps), `discard`. A theme icon is copied in as a plain file, never linked. Every file passes `pack_check_strict`, the check export and import use, so what the draft holds can always be exported. `tools/icon-find.sh <query>` searches every installed theme for app icons by name. Save as pack, Export and Import from the builder come in the next slices; the pack format does not change.
+
 ## Share a pack as one zip
 
 The commands live in the plugin folder, `~/.config/omarchy/plugins/io.github.felipecpaiva.omahop/` (below as `$OMAHOP`). The editor runs
