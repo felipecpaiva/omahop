@@ -24,6 +24,7 @@ ColumnLayout {
 
   signal back()
   signal packEditorRequested()
+  signal builderRequested()
 
   property var kind: Picker.kindFor(page.settingKey)
   property var found: []              // themes or packs the scan listed for the tab
@@ -251,22 +252,14 @@ ColumnLayout {
       fontFamily: page.fontFamily
       onClicked: page.packEditorRequested()
     }
-    // The builder is the next slice (D29); the button is here so the page does not move when it arrives.
     Button {
       text: "Customize icons"
-      enabled: false
       foreground: page.foreground
       accent: page.accent
       fontFamily: page.fontFamily
+      onClicked: page.builderRequested()
     }
-    Text {
-      Layout.fillWidth: true
-      textFormat: Text.PlainText
-      text: "coming next"
-      color: Qt.darker(page.foreground, 1.6)
-      font.family: page.fontFamily
-      font.pixelSize: Style.font.caption
-    }
+    Item { Layout.fillWidth: true }
     Text {
       textFormat: Text.PlainText
       text: "Up and Down preview, Enter chooses, Esc goes back"

@@ -18,7 +18,7 @@ Item {
   property var manifest: null
 
   property bool opened: false
-  property string page: ""   // "" for the settings list, or the editor page a setting asked for ("icons", the picker; "packs", the pack editor)
+  property string page: ""   // "" for the settings list, or the editor page a setting asked for ("icons", the picker; "packs", the pack editor; "builder", the icon builder)
   property string pageKey: "icon_theme"   // the setting that opened the picker, so it starts on the right tab
 
   // Categories with something to show, the chosen one (the first until a click), and which categories have their advanced settings open.
@@ -68,7 +68,7 @@ Item {
 
   SettingsStore { id: settings }
 
-  // Dev and test only: write a setting key (icon_theme or icon_pack) into $XDG_RUNTIME_DIR/omahop/open-page and the next open lands on that picker page
+  // Dev and test only: write a setting key (icon_theme or icon_pack), or "builder", into $XDG_RUNTIME_DIR/omahop/open-page and the next open lands on that picker page
   // (a screenshot needs no keys). The file is emptied once read. Nothing else reads it; docs/settings.md, "Opening a page without clicks".
   FileView {
     id: devPage
@@ -78,15 +78,15 @@ Item {
       var key = text().trim()
       if (key === "" || !root.opened) return // the load at start up is not an open
       root.pageKey = key
-      root.page = "icons"
+      root.page = key === "builder" ? "builder" : "icons"
       setText("")
     }
   }
 
   PanelWindow {
     id: window
-    // Hidden while the pack editor's file chooser is open: the chooser is a normal window and would open under this overlay.
-    visible: root.opened && !(editorLoader.item && editorLoader.item.picking)
+    // Hidden while the pack editor's or the builder's file chooser is open: the chooser is a normal window and would open under this overlay.
+    visible: root.opened && !(editorLoader.item && editorLoader.item.picking) && !(builderLoader.item && builderLoader.item.picking)
     onVisibleChanged: if (visible) Qt.callLater(function () { content.forceActiveFocus() })
     anchors { top: true; bottom: true; left: true; right: true }
     color: "transparent"
@@ -183,6 +183,23 @@ Item {
               fontFamily: root.fontFamily
               onBack: { root.page = ""; content.forceActiveFocus() }
               onPackEditorRequested: root.page = "packs"
+              onBuilderRequested: root.page = "builder"
+            }
+          }
+
+          Loader {
+            id: builderLoader
+            active: root.page === "builder"
+            visible: active
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            sourceComponent: BuilderPage {
+              store: settings
+              byId: root.byId
+              foreground: root.foreground
+              accent: root.accent
+              fontFamily: root.fontFamily
+              onBack: { root.page = "icons"; content.forceActiveFocus() }
             }
           }
 

@@ -15,12 +15,15 @@ node tests/icon_resolve.test.mjs
 node tests/audio_marker.test.mjs
 node tests/pack_editor.test.mjs
 node tests/icon_picker.test.mjs
+node tests/builder.test.mjs
 bash tests/icon_index.test.sh
 bash tests/icon_picker.test.sh
+bash tests/icon_find.test.sh
 bash tests/icon_overlay.test.sh
 bash tests/pack_index.test.sh
 bash tests/pack_zip.test.sh
 bash tests/pack_edit.test.sh
+bash tests/draft_edit.test.sh
 bash tests/refpack.test.sh
 bash tests/refpack_theme.test.sh
 bash tests/tabs_helpers.test.sh
