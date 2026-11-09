@@ -6,8 +6,9 @@
 #   pack-edit.sh meta <folder> <name> <author> <license> [description]   rewrites those keys of pack.toml, keeps every other line
 #   pack-edit.sh add <folder> <app id> </full/path/to/image>       copies a PNG or SVG in as icons/<stem>.png|svg; prints the file name
 #   pack-edit.sh remove <folder> <icon file>                       deletes that icon (a link itself, never its target)
-#   pack-edit.sh pick image|zip                                    Omarchy's file chooser for a PNG or SVG, or a zip: prints the path;
+#   pack-edit.sh pick image|zip|dir                                Omarchy's file chooser for a PNG or SVG, a zip, or a folder: prints the path;
 #                                                                  exit 1 nothing picked, 2 the chooser failed or is not installed
+#   pack-edit.sh export-dir                                        where an exported zip goes by default: ~/Downloads when it exists, else the home folder
 # Arguments are positional only, so no value is ever read as a flag. Every rule comes from pack-lib.sh (the ones export and import use);
 # writes go only under packs/<folder>/, through hidden temporary names in that folder and one rename. Any refusal exits 1 with the reason.
 set -euo pipefail
@@ -18,11 +19,11 @@ source "$(dirname "${BASH_SOURCE[0]}")/pack-lib.sh"
 
 readonly META_KEYS=(name author license description)
 readonly EXIT_CHOOSER_FAILED=2   # omarchy-file-select's code for a chooser that did not run
-declare -rA PICK_TITLE=([image]="Choose an icon image" [zip]="Choose an icon pack zip")
-declare -rA PICK_EXTENSIONS=([image]="png svg" [zip]="zip")
+declare -rA PICK_TITLE=([image]="Choose an icon image" [zip]="Choose an icon pack zip" [dir]="Choose a folder for the zip")
+declare -rA PICK_EXTENSIONS=([image]="png svg" [zip]="zip" [dir]="")
 
 die() { printf 'omahop pack edit: %s\n' "$1" >&2; exit 1; }
-usage() { die "usage: pack-edit.sh list | stem <app id> | init <name> <author> <license> [description] | meta <folder> <name> <author> <license> [description] | add <folder> <app id> <image> | remove <folder> <icon file> | pick image|zip"; }
+usage() { die "usage: pack-edit.sh list | stem <app id> | init <name> <author> <license> [description] | meta <folder> <name> <author> <license> [description] | add <folder> <app id> <image> | remove <folder> <icon file> | pick image|zip|dir | export-dir"; }
 
 packs_dir() { dirname -- "$(pack_dir x)"; }
 
@@ -91,7 +92,15 @@ cmd_pick() {
     exit "$EXIT_CHOOSER_FAILED"
   fi
   if [[ -n $caller_lc_all ]]; then export LC_ALL=$caller_lc_all; else unset LC_ALL; fi
-  exec omarchy file select --title "${PICK_TITLE[$1]}" --extensions "${PICK_EXTENSIONS[$1]}"
+  case $1 in
+    dir) exec omarchy file select --title "${PICK_TITLE[$1]}" --directory ;;
+    *) exec omarchy file select --title "${PICK_TITLE[$1]}" --extensions "${PICK_EXTENSIONS[$1]}" ;;
+  esac
+}
+
+cmd_export_dir() {
+  (( $# == 0 )) || usage
+  if [[ -d $HOME/Downloads ]]; then printf '%s\n' "$HOME/Downloads"; else printf '%s\n' "$HOME"; fi
 }
 
 cmd_init() {
@@ -187,5 +196,6 @@ case $command in
   add) cmd_add "$@" ;;
   remove) cmd_remove "$@" ;;
   pick) cmd_pick "$@" ;;
+  export-dir) cmd_export_dir "$@" ;;
   *) usage ;;
 esac

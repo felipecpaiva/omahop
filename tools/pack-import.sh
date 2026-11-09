@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Installs an icon pack shared as one zip (made by pack-export.sh) into ${XDG_CONFIG_HOME:-~/.config}/omahop/packs/<folder>/.
 # Usage: pack-import.sh <file.zip> [--yes] [--replace] [--dry-run]. --yes installs without asking, --replace replaces an installed pack of
-# that name, --dry-run runs every check and prints the summary, then stops (the settings window shows it before asking).
+# that name, --dry-run runs every check and prints the summary, then stops (the settings window shows it before asking). --extract <new folder> runs
+# every check, copies the checked pack there instead of installing it, and stops (the icon builder's "Edit as draft", via draft-edit.sh open-zip).
 # The zip comes from someone else, so in this order:
 #   1. the listing is checked before anything is extracted: only pack.toml and icons/<name>.png|svg, no absolute or leaving paths, no
 #      links or special files, no hidden names, no other folders, no duplicates ignoring case, caps on entries, sizes and compression ratio;
@@ -23,7 +24,7 @@ readonly TOOL_TIMEOUT=20s                       # per bsdtar call
 readonly ZIP_MAGIC=504b0304                     # a zip starts with a local file header
 
 die() { printf 'omahop pack import: %s\n' "$1" >&2; exit 1; }
-usage() { die "usage: pack-import.sh <file.zip> [--yes] [--replace] [--dry-run]"; }
+usage() { die "usage: pack-import.sh <file.zip> [--yes] [--replace] [--dry-run] [--extract <new folder>]"; }
 reject() { die "refused, the zip holds $(pack_shown "$1"): $2"; }
 # printable() <text>: pack.toml text as it may be shown in a terminal (no escape sequences)
 printable() { printf '%s' "${1//[^[:print:]]/?}"; }
@@ -36,15 +37,17 @@ entry_cap() {
   esac
 }
 
-zip="" yes=0 replace=0 dry=0
-for arg in "$@"; do
-  case $arg in
+zip="" yes=0 replace=0 dry=0 extract=""
+while (( $# > 0 )); do
+  case $1 in
     --yes) yes=1 ;;
     --replace) replace=1 ;;
     --dry-run) dry=1 ;;
+    --extract) (( $# >= 2 )) && [[ -z $extract ]] || usage; extract=$2; shift ;;
     -*) usage ;;
-    *) [[ -z $zip ]] || usage; zip=$arg ;;
+    *) [[ -z $zip ]] || usage; zip=$1 ;;
   esac
+  shift
 done
 [[ -n $zip ]] || usage
 command -v bsdtar >/dev/null || die "needs bsdtar (libarchive)"
@@ -114,6 +117,13 @@ done
 # ---- 3. the same rules as an installed pack, strictly
 pack_check_strict "$stage/pack" || die "refused:"$'\n'"$PACK_ERR"
 icon_count=${#PACK_GOOD[@]}
+
+if [[ -n $extract ]]; then
+  [[ $extract == /* && ! -e $extract && ! -L $extract && -d $(dirname -- "$extract") ]] || die "--extract needs a new folder with a full path"
+  cp -R -- "$stage/pack" "$extract"
+  printf 'Checked %d icons, copied to the folder given\n' "$icon_count"
+  exit 0
+fi
 
 # ---- 4. the folder name: pack.toml name, lower case, runs of other characters as one dash, no leading or trailing dot or dash
 folder=$(pack_folder_name "${PACK_META[name]}") || die "refused, pack.toml name gives no usable folder name (use letters or digits)"

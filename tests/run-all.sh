@@ -22,6 +22,7 @@ bash tests/icon_find.test.sh
 bash tests/icon_overlay.test.sh
 bash tests/pack_index.test.sh
 bash tests/pack_zip.test.sh
+bash tests/pack_privacy.test.sh
 bash tests/pack_edit.test.sh
 bash tests/draft_edit.test.sh
 bash tests/refpack.test.sh

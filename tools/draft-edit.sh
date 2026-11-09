@@ -11,6 +11,7 @@
 #                                              turns the draft into the installed pack of that name (icons/ only, strict check) and then discards the draft;
 #                                              refuses an existing pack unless --replace; on any failure the draft is untouched; prints the pack folder name
 #   draft-edit.sh open-pack [--force] <name>   loads an installed pack into the draft as a copy; refuses over a draft with changes unless --force
+#   draft-edit.sh open-zip [--force] </full/path.zip>   the same for a shared zip, installing nothing: pack-import.sh checks and unpacks it (every import rule), then its icons are copied in
 # Positional arguments only. Every image rule is pack-lib.sh's, the one export and import use, so a draft file always passes what export accepts.
 # Writes stay under $XDG_CACHE_HOME/omahop/draft/, through a hidden staging folder and one rename. A refusal exits 1 with the reason.
 set -euo pipefail
@@ -22,7 +23,7 @@ readonly HIST_MAX=30
 HIST_LINE='^[0-9]+'$'\t''[a-z0-9][a-z0-9._+-]{0,199}'$'\t''(png|svg|-)$'
 
 die() { printf 'omahop draft edit: %s\n' "$1" >&2; exit 1; }
-usage() { die "usage: draft-edit.sh list | add <app id> <image> | remove <icon file> | reset-app <app id> | undo | discard | save [--replace] [--based-on <theme>] <name> <author> <licence> [description] | open-pack [--force] <name>"; }
+usage() { die "usage: draft-edit.sh list | add <app id> <image> | remove <icon file> | reset-app <app id> | undo | discard | save [--replace] [--based-on <theme>] <name> <author> <licence> [description] | open-pack [--force] <name> | open-zip [--force] <zip>"; }
 
 DRAFT=${XDG_CACHE_HOME:-$HOME/.cache}/omahop/draft
 STAGES=()
@@ -194,18 +195,16 @@ cmd_save() {
   printf '%s\n' "$folder"
 }
 
-cmd_open_pack() {
-  local force=0 cache src new old n=0 path note
-  if [[ ${1:-} == --force ]]; then force=1; shift; fi
-  (( $# == 1 )) || usage
-  pack_name_ok "$1" || die "a pack name has only letters, digits, dot, dash and underscore"
-  src=$(pack_dir "$1")
-  [[ -d $src ]] || die "no pack folder named $1"
-  pack_check "$src" || die "the pack cannot be opened: $PACK_ERR"
-  [[ $PACK_ROOT == "$(realpath -e -- "${src%/*}")/$1" ]] || die "$1 is not a folder of the packs folder"
-  if [[ $force == 0 && -d $DRAFT && ! -L $DRAFT ]] && { [[ -s $DRAFT/history ]] || [[ -n $(find "$DRAFT/icons" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null) ]]; }; then
+# draft_guard <force>: a draft with changes is replaced only with --force.
+draft_guard() {
+  if [[ $1 == 0 && -d $DRAFT && ! -L $DRAFT ]] && { [[ -s $DRAFT/history ]] || [[ -n $(find "$DRAFT/icons" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null) ]]; }; then
     die "the draft has changes; discard it first or use --force"
   fi
+}
+
+# load_draft <label>: after pack_check on a pack, its good icons become the draft (copies, never links), in a hidden staging folder and one rename.
+load_draft() {
+  local cache new old n=0 path
   note() { printf 'omahop draft edit: %s\n' "$1" >&2; }
   pack_icons note
   (( ${#PACK_GOOD[@]} > 0 )) || die "$1 has no usable icons"
@@ -223,6 +222,35 @@ cmd_open_pack() {
   printf 'Opened %s with %s icons\n' "$1" "$n"
 }
 
+cmd_open_pack() {
+  local force=0 src
+  if [[ ${1:-} == --force ]]; then force=1; shift; fi
+  (( $# == 1 )) || usage
+  pack_name_ok "$1" || die "a pack name has only letters, digits, dot, dash and underscore"
+  src=$(pack_dir "$1")
+  [[ -d $src ]] || die "no pack folder named $1"
+  pack_check "$src" || die "the pack cannot be opened: $PACK_ERR"
+  [[ $PACK_ROOT == "$(realpath -e -- "${src%/*}")/$1" ]] || die "$1 is not a folder of the packs folder"
+  draft_guard "$force"
+  load_draft "$1"
+}
+
+cmd_open_zip() {
+  local force=0 zip cache x
+  if [[ ${1:-} == --force ]]; then force=1; shift; fi
+  (( $# == 1 )) || usage
+  zip=$1
+  [[ $zip == /* ]] || die "give the zip as a full path"
+  draft_guard "$force"
+  cache=${DRAFT%/*}
+  [[ ! -L $cache ]] || die "the draft folder is a link"
+  (umask 077; mkdir -p -- "$cache"); chmod 700 -- "$cache"
+  stage_dir "$cache" .zip; x=$STAGE
+  bash "$PACK_LIB_DIR/pack-import.sh" "$zip" --extract "$x/pack" > /dev/null   # refuses with its own reason on stderr
+  pack_check "$x/pack" || die "the zip's pack cannot be opened: $PACK_ERR"
+  load_draft "the zip"
+}
+
 (( $# >= 1 )) || usage
 command=$1
 shift
@@ -235,5 +263,6 @@ case $command in
   discard) cmd_discard "$@" ;;
   save) cmd_save "$@" ;;
   open-pack) cmd_open_pack "$@" ;;
+  open-zip) cmd_open_zip "$@" ;;
   *) usage ;;
 esac

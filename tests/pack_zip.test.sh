@@ -11,6 +11,7 @@ importer=$here/tools/pack-import.sh
 exporter=$here/tools/pack-export.sh
 readonly MANY_ENTRIES=3000
 readonly BOMB_BYTES=1900000            # under the 2 MB PNG cap, so only the ratio rule can stop it
+readonly PACK_TOML_BOMB=60000          # over the 16 KB pack.toml cap
 readonly HUGE_BYTES=$((3 * 1024 * 1024))
 fail() { echo "FAIL pack_zip: $1" >&2; exit 1; }
 
@@ -81,6 +82,10 @@ mkzip "$z/badtoml.zip" "s:pack.toml:name = \$(touch $tmp/ran)" "d:icons/"
 mkzip "$z/noname.zip" 's:pack.toml:name = "***"
 author = "a"
 license = "CC0-1.0"' "d:icons/"
+mkzip "$z/tomlink.zip" "l:pack.toml:/etc/passwd" "d:icons/" "f:icons/kitty.png:$sample/icons/kitty.png"
+mkzip "$z/tomlbomb.zip" "z:pack.toml:$((PACK_TOML_BOMB))" "d:icons/" "f:icons/kitty.png:$sample/icons/kitty.png"
+mkzip "$z/dirslip.zip" "${good[@]}" "d:../"
+mkzip "$z/dirlink.zip" "${good[@]}" "l:icons/sub:/etc"
 tar -cf "$z/tar.zip" -C "$sample" pack.toml icons
 
 refused "$z/slip.zip" "a path that leads out of the pack" || fail "zip slip ../"
@@ -100,6 +105,10 @@ refused "$z/nestedfile.zip" "not pack.toml or icons/" || fail "file in a nested 
 refused "$z/extra.zip" "not pack.toml or icons/" || fail "a script next to the pack"
 refused "$z/badtoml.zip" "line 1" || fail "pack.toml that is not key = text"
 refused "$z/noname.zip" "no usable folder name" || fail "pack.toml name without letters"
+refused "$z/tomlink.zip" "a link or special file" || fail "pack.toml as a symlink"
+refused "$z/tomlbomb.zip" "a file larger than" || fail "pack.toml that unpacks huge"
+refused "$z/dirslip.zip" "a path that leads out of the pack" || fail "a ../ folder entry"
+refused "$z/dirlink.zip" "a link or special file" || fail "a symlink inside icons/"
 refused "$z/tar.zip" "not a zip" || fail "a tar named .zip"
 for f in "$tmp/evil.png" "$tmp/abs-evil.png" "$tmp/ran" "$tmp/victim/evil.png" "$tmp/victim/config/evil.png"; do
   [[ ! -e $f ]] || fail "a hostile zip wrote $f"
@@ -133,7 +142,9 @@ empty "$P" && empty "$C" || fail "a declined import leaves nothing"
 bash "$importer" "$tmp/shared.zip" --yes > "$tmp/out" || fail "the exported zip imports"
 grep -q "Author:   omahop contributors" "$tmp/out" && grep -q "Icons:    3" "$tmp/out" || fail "import shows author and icon count: $(cat "$tmp/out")"
 dst=$P/omahop-sample
-for f in pack.toml icons/alacritty.png icons/firefox.svg icons/kitty.png; do
+# export writes pack.toml fresh from its known keys, so the comment line goes and nothing else changes (tests/pack_privacy.test.sh)
+[[ $(cat "$dst/pack.toml") == "$(grep -v '^#' "$src/pack.toml")" ]] || fail "round trip keeps every key of pack.toml"
+for f in icons/alacritty.png icons/firefox.svg icons/kitty.png; do
   [[ $(sha256sum < "$src/$f") == $(sha256sum < "$dst/$f") ]] || fail "round trip keeps $f byte for byte"
 done
 [[ $(cd "$dst" && find . | sort | tr '\n' ' ') == ". ./icons ./icons/alacritty.png ./icons/firefox.svg ./icons/kitty.png ./pack.toml " ]] \
@@ -159,4 +170,4 @@ for rule in zip-slip:slip.zip:"a path that leads out of the pack" links:symlink.
   if refused "$z/$zipname" "$words" "$tmp/mutant/pack-import.sh" 2> /dev/null; then fail "the $tag case still passes with its rule deleted"; fi
 done
 
-echo "ok   pack zip: 18 hostile zips refused with nothing left, export is stable, round trip is byte for byte, rules are load-bearing"
+echo "ok   pack zip: 22 hostile zips refused with nothing left, export is stable, round trip is byte for byte, rules are load-bearing"
