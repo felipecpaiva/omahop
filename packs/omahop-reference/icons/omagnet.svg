@@ -1,1 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>omagnet</title><rect x="8" y="8" width="112" height="112" rx="28" fill="#424242"/><g fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" color="#ffffff"><circle cx="64" cy="64" r="10"/><path d="M64 32v10M64 86v10M32 64h10M86 64h10M41 41l7 7M80 80l7 7M87 41l-7 7M48 80l-7 7"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#16181d"/>
+  <path d="M 106 170 A 64 64 0 0 1 170 106 H 248 V 170 H 186 A 16 16 0 0 0 170 186 V 248 H 106 Z" fill="#e8e6ff"/>
+  <path d="M 106 170 A 64 64 0 0 1 170 106 H 248 V 170 H 186 A 16 16 0 0 0 170 186 V 248 H 106 Z" transform="rotate(180 256 256)" fill="#e8e6ff"/>
+  <path d="M 106 170 A 64 64 0 0 1 170 106 H 248 V 170 H 186 A 16 16 0 0 0 170 186 V 248 H 106 Z" transform="rotate(270 256 256)" fill="#e8e6ff"/>
+  <path d="M 106 170 A 64 64 0 0 1 170 106 H 248 V 170 H 186 A 16 16 0 0 0 170 186 V 248 H 106 Z" transform="translate(34 -34) rotate(90 256 256)" fill="#8b7bff"/>
+  <line x1="266" y1="128" x2="284" y2="110" stroke="#6b7080" stroke-width="9" stroke-linecap="round"/>
+  <line x1="266" y1="147" x2="284" y2="129" stroke="#6b7080" stroke-width="9" stroke-linecap="round"/>
+  <line x1="266" y1="166" x2="284" y2="148" stroke="#6b7080" stroke-width="9" stroke-linecap="round"/>
+</svg>

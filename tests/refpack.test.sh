@@ -28,6 +28,7 @@ want=$(grep -vc -E '^(#|$)' "$here/tools/refpack/apps.tsv")
 [[ $(find "$tmp/pack/icons" -type f -size +16k | wc -l) == 0 ]] || fail "an icon is larger than 16 KB (limit is 256 KB)"
 dups=$(ls "$tmp/pack/icons" | sed 's/\.svg$//' | tr 'A-Z' 'a-z' | sort | uniq -d)
 [[ -z $dups ]] || fail "duplicate stems: $dups"
+grep -q 'fill="#ffc83d"' "$tmp/pack/icons/omahop.svg" || fail "omahop.svg is not the real brand logo"
 grep -q 'fill="#7aa2f7"' "$tmp/pack/icons/firefox.svg" || fail "tile colour does not come from the given palette"
 if grep -rlE '/home/|192\.168\.|@[a-z]+\.[a-z]{2,}|https?://[^"]*' --exclude=LICENSE "$tmp/pack" | grep -v 'icons/' | grep -q .; then fail "private-looking text in pack files"; fi
 grep -rlE '/home/|192\.168\.' "$tmp/pack/icons" | grep -q . && fail "home path or LAN address in an icon"

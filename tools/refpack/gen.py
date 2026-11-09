@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Writes the omahop reference icon pack: one plain SVG per line of apps.tsv, in the Omarchy look (flat rounded tile, one glyph or monogram).
+A glyph written =name copies tools/refpack/brand/name.svg (a real logo of ours, MIT) instead, with its own colours.
 Usage: gen.py [--colors colors.toml] [--out DIR] [--apps apps.tsv]. Stdlib only. Colours come from an Omarchy colors.toml (default: the active theme)."""
 import argparse, os, re, sys
 from xml.sax.saxutils import escape
@@ -97,6 +98,17 @@ def svg(label, tile, glyph, pal):
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><title>{escape(label)}</title>'
             f'<rect x="8" y="8" width="112" height="112" rx="28" fill="{tile}"/>{body}</svg>\n')
 
+BRAND = os.path.join(HERE, "brand")
+BRAND_BAD = re.compile(r"<!(DOCTYPE|ENTITY)|<(script|foreignObject|iframe|embed|object|handler|listener)[ />]|(^| )on[a-z]+ *=|url\( *[\"']?[^#\"' ]|href *=", re.I)
+
+def brand_svg(name):
+    """A real logo from tools/refpack/brand/<name>.svg, kept as it is (own colours; a themed tile would hide the brand) after the same
+    kind of checks as pack_svg_ok in tools/pack-lib.sh: one plain <svg>, nothing that loads or runs, under 16 KB."""
+    text = open(os.path.join(BRAND, name + ".svg"), encoding="utf-8").read()
+    if not re.search(r"<svg[ >]", text) or BRAND_BAD.search(re.sub(r"\s+", " ", text)) or len(text) > 16384:
+        sys.exit(f"gen.py: brand/{name}.svg is not a plain small SVG")
+    return text.strip() + "\n"
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--colors", default=ACTIVE)
@@ -119,15 +131,18 @@ def main():
         if len(f) != 5: sys.exit(f"apps.tsv line {n}: need 5 tab separated fields")
         stem, label, cat, glyph, src = f
         if stem != stem.lower() or stem in seen: sys.exit(f"apps.tsv line {n}: stem not lower case or duplicate: {stem}")
-        if cat not in ACCENT or src not in ("machine", "common") or (glyph.startswith("@") and glyph[1:] not in GLYPHS):
+        if cat not in ACCENT or src not in ("machine", "common") or (glyph.startswith("@") and glyph[1:] not in GLYPHS) \
+                or (glyph.startswith("=") and not os.path.isfile(os.path.join(BRAND, glyph[1:] + ".svg"))):
             sys.exit(f"apps.tsv line {n}: unknown category, source or glyph")
         seen.add(stem)
-        open(os.path.join(icons, stem + ".svg"), "w", encoding="utf-8").write(svg(label, tiles[cat], glyph, pal))
+        out = brand_svg(glyph[1:]) if glyph.startswith("=") else svg(label, tiles[cat], glyph, pal)
+        open(os.path.join(icons, stem + ".svg"), "w", encoding="utf-8").write(out)
     open(os.path.join(a.out, "pack.toml"), "w").write(
         'name = "omahop reference"\nauthor = "omahop"\nlicense = "CC0-1.0"\n'
         'description = "Reference pack: common Linux apps and the apps of one Omarchy machine, flat tiles in the active theme colours (follows_theme: omahop regenerates them when the theme changes). Made by tools/refpack/gen.py."\n'
         'follows_theme = true\ngenerator = "refpack"\n')
-    open(os.path.join(a.out, "LICENSE"), "w").write("CC0 1.0 Universal: the icons in this pack are dedicated to the public domain.\nhttps://creativecommons.org/publicdomain/zero/1.0/\n")
+    open(os.path.join(a.out, "LICENSE"), "w").write("CC0 1.0 Universal: the icons in this pack are dedicated to the public domain.\nhttps://creativecommons.org/publicdomain/zero/1.0/\n"
+        "Exception: the omahop and omagnet logos (icons/omahop.svg, icons/omagnet.svg) are the projects' own, MIT licensed, copyright Felipe Paiva.\n")
     print(f"{len(seen)} icons in {a.out}")
 
 if __name__ == "__main__": main()

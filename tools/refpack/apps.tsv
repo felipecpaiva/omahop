@@ -1,4 +1,4 @@
-# stem<TAB>label<TAB>category<TAB>glyph (@name = hand drawn, else letters)<TAB>source
+# stem<TAB>label<TAB>category<TAB>glyph (@name = hand drawn, =name = real logo from brand/name.svg, else letters)<TAB>source
 chromium	Chromium	browser	@browser	machine
 google-chrome	Google Chrome	browser	@browser	machine
 firefox	Firefox	browser	@browser	common
@@ -114,8 +114,8 @@ system-config-printer	Print Settings	system	@settings	machine
 aether	Aether	system	@settings	machine
 hyprmoncfg	hyprmoncfg	system	@monitor	machine
 omabarconfigurator	OmaBar Configurator	system	@settings	machine
-omagnet	omagnet	system	@settings	machine
-omahop	omahop	system	@settings	machine
+omagnet	omagnet	system	=omagnet	machine
+omahop	omahop	system	=omahop	machine
 omaland	Omaland	system	@settings	machine
 online-accounts	Online Accounts	system	@settings	machine
 org.pulseaudio.pavucontrol	Volume Control	system	@mic	common
