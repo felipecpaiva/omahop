@@ -1,4 +1,6 @@
 name = "omahop reference"
 author = "omahop"
 license = "CC0-1.0"
-description = "Reference pack: common Linux apps and the apps of one Omarchy machine, flat tiles in the active theme colours. Made by tools/refpack/gen.py."
+description = "Reference pack: common Linux apps and the apps of one Omarchy machine, flat tiles in the active theme colours (follows_theme: omahop regenerates them when the theme changes). Made by tools/refpack/gen.py."
+follows_theme = true
+generator = "refpack"

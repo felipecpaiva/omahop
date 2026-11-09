@@ -20,6 +20,11 @@ PACK_ICONS=""   # its icons folder, links resolved
 PACK_ERR=""     # why pack_check refused the pack
 PACK_GOOD=()    # pack_icons: the good icon paths, sorted
 declare -gA PACK_META=()
+declare -gA PACK_FLAGS=()   # the bare true/false keys of pack.toml (for example follows_theme)
+# Built-in generators a pack may name with generator = "<name>" (with follows_theme = true). Only these run, never anything from the pack.
+PACK_GENERATORS=(refpack)
+PACK_THEMED=""   # pack_themed: the folder it made
+PACK_LIB_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 # pack_name_ok <name>: the icon_pack rule for a pack folder name (no slash, no traversal, nothing a shell would read).
 pack_name_ok() { [[ $1 =~ ^[A-Za-z0-9._-]+$ && $1 != "." && $1 != ".." ]]; }
@@ -52,7 +57,7 @@ pack_inside() { [[ $1 == "$PACK_ROOT"/* ]]; }
 # kept elsewhere); everything inside must stay inside its real folder.
 pack_check() {
   local line n=0 key
-  PACK_META=()
+  PACK_META=() PACK_FLAGS=()
   PACK_ROOT=$(realpath -e -- "$1") || { pack_fail "the pack folder is missing"; return; }
   PACK_TOML=$PACK_ROOT/pack.toml
   [[ -e $PACK_TOML ]] || { pack_fail "pack.toml is missing"; return; }
@@ -65,8 +70,8 @@ pack_check() {
     [[ $line =~ ^[[:space:]]*(#.*)?$ ]] && continue
     if [[ $line =~ ^[[:space:]]*([A-Za-z0-9_]+)[[:space:]]*=[[:space:]]*\"([^\"]*)\"[[:space:]]*(#.*)?$ ]]; then
       PACK_META[${BASH_REMATCH[1]}]=${BASH_REMATCH[2]}
-    elif [[ $line =~ ^[[:space:]]*[A-Za-z0-9_]+[[:space:]]*=[[:space:]]*(-?[0-9]+|true|false)[[:space:]]*(#.*)?$ ]]; then
-      : # a number or a switch (for example a later schema = 1): allowed, not used yet
+    elif [[ $line =~ ^[[:space:]]*([A-Za-z0-9_]+)[[:space:]]*=[[:space:]]*(-?[0-9]+|true|false)[[:space:]]*(#.*)?$ ]]; then
+      PACK_FLAGS[${BASH_REMATCH[1]}]=${BASH_REMATCH[2]}  # a number or a switch: only follows_theme is used, the rest is room for later versions
     else
       pack_fail "pack.toml line $n is not  key = \"text\""; return
     fi
@@ -140,11 +145,44 @@ pack_icons() {
   done < <(find "$PACK_ICONS" -mindepth 1 -maxdepth 1 -print0 | sort -z)
 }
 
+# pack_generator_ok <name>: is it one of the built-in generators.
+pack_generator_ok() { local g; for g in "${PACK_GENERATORS[@]}"; do [[ $g == "$1" ]] && return 0; done; return 1; }
+
+# pack_themed <pack name> <generator>: for a pack with follows_theme = true. Makes the pack's icons from the running Omarchy theme palette with the
+# built-in generator of that name, in a private folder $XDG_CACHE_HOME/omahop/themed-packs/<name>/<stamp>/ (mode 700; the stamp is a hash of the
+# palette and the generator, so a new palette is a new path and no picture cache keeps the old file), and sets PACK_THEMED to that folder. Nothing is redone
+# when the stamp folder exists. Returns 1 with PACK_ERR set when there is no palette, the generator is not on the list, or it fails.
+pack_themed() {
+  local name=$1 gen=$2 colors stamp cache dir tmp old
+  pack_generator_ok "$gen" || { pack_fail "generator \"$gen\" is not a built-in one (${PACK_GENERATORS[*]})"; return; }
+  colors=${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/current/theme/colors.toml
+  [[ -f $colors ]] || { pack_fail "no theme palette at $colors"; return; }
+  stamp=$(cat -- "$colors" "$PACK_LIB_DIR/refpack/gen.py" "$PACK_LIB_DIR/refpack/apps.tsv" | sha256sum) || { pack_fail "cannot hash the palette"; return; }
+  stamp=${stamp:0:12}
+  cache=${XDG_CACHE_HOME:-$HOME/.cache}/omahop/themed-packs/$name
+  dir=$cache/$stamp
+  if [[ ! -d $dir/icons ]]; then
+    [[ -L ${cache%/*} || -L $cache ]] && { pack_fail "the themed cache folder is a link"; return; }
+    (umask 077; mkdir -p -- "$cache") && chmod 700 -- "${cache%/*/*}" "${cache%/*}" "$cache" || { pack_fail "cannot make $cache"; return; }
+    tmp=$(mktemp -d -- "$cache/.new.XXXXXX") || { pack_fail "cannot make a folder in $cache"; return; }
+    case $gen in
+      refpack) python3 -I "$PACK_LIB_DIR/refpack/gen.py" --colors "$colors" --out "$tmp" >/dev/null 2>&1 ;;
+    esac || { rm -rf -- "$tmp"; pack_fail "generator $gen failed on $colors"; return; }
+    rm -rf -- "$dir"
+    mv -- "$tmp" "$dir" || { rm -rf -- "$tmp"; pack_fail "cannot move the generated icons into place"; return; }
+    for old in "$cache"/*; do [[ $old == "$dir" ]] || rm -rf -- "$old"; done
+  fi
+  PACK_THEMED=$dir
+}
+
 # pack_check_strict <folder>: pack_check plus pack_icons where any skipped file refuses the pack (export and import: a shared pack has no
-# junk in it). Sets PACK_ERR to every reason, one per line.
+# junk in it). Sets PACK_ERR to every reason, one per line. A pack with follows_theme = true must name a built-in generator.
 pack_check_strict() {
   local -a bad=()
   pack_check "$1" || return 1
+  if [[ ${PACK_FLAGS[follows_theme]:-} == true ]]; then
+    pack_generator_ok "${PACK_META[generator]:-}" || { pack_fail "follows_theme = true needs generator = \"<built-in name>\" (${PACK_GENERATORS[*]})"; return; }
+  fi
   _pack_strict_note() { bad+=("$1"); }
   pack_icons _pack_strict_note
   (( ${#bad[@]} == 0 )) || { pack_fail "$(printf '%s\n' "${bad[@]}")"; return; }

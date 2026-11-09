@@ -6,9 +6,13 @@ from xml.sax.saxutils import escape
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ACTIVE = os.path.join(os.environ.get("XDG_STATE_HOME") or os.path.expanduser("~/.local/state"), "omarchy/current/theme/colors.toml")
-# category -> palette key for the tile
-ACCENT = {"browser": "blue", "terminal": "green", "dev": "magenta", "files": "yellow", "media": "red", "chat": "cyan", "office": "accent",
-          "system": "muted", "game": "bright_red", "graphics": "bright_cyan", "utility": "bright_green"}
+# category -> palette keys for the tile, best first. A key is used when its colour differs enough from the tiles already given out; when all
+# do not, the first key's colour is shaded toward the theme foreground or background (see tile_colors).
+ACCENT = {"browser": ["blue", "bright_blue"], "terminal": ["green", "bright_green"], "dev": ["magenta", "bright_magenta"],
+          "files": ["yellow", "bright_yellow"], "media": ["red", "bright_red"], "chat": ["cyan", "bright_cyan"], "office": ["accent"],
+          "system": ["muted"], "game": ["bright_red", "red"], "graphics": ["bright_cyan", "cyan"], "utility": ["bright_green", "green"]}
+HUE_KEYS = ["red", "yellow", "green", "cyan", "blue", "magenta", "bright_red", "bright_yellow", "bright_green", "bright_cyan", "bright_blue", "bright_magenta"]
+SHADES = [0, .1, -.1, .2, -.2, .3, -.3, .4, -.4, .5, -.5]  # mix toward the foreground (+) or background (-)
 # Hand drawn glyphs: stroked shapes inside the 32..96 box, drawn with the foreground colour (stroke only, round joins).
 GLYPHS = {
     "terminal": '<path d="M36 44l16 14-16 14M60 76h24"/>',
@@ -52,10 +56,38 @@ def contrast(a, b):
     x, y = sorted((lum(a), lum(b)), reverse=True)
     return (x + 0.05) / (y + 0.05)
 
-def svg(label, cat, glyph, pal):
-    tile = pal.get(ACCENT.get(cat, "accent"), pal["accent"])
-    # glyph colour: whichever of the theme's background or foreground reads better on the tile
+def rgb(h): return [int(h[i:i + 2], 16) for i in (1, 3, 5)]
+
+def dist(a, b): return sum((x - y) ** 2 for x, y in zip(rgb(a), rgb(b))) ** 0.5
+
+def mix(a, b, t): return "#" + "".join(f"{round(x + (y - x) * t):02x}" for x, y in zip(rgb(a), rgb(b)))
+
+def chromatic(h):
+    c = rgb(h)
+    return max(c) > 0 and (max(c) - min(c)) / max(c) > 0.2
+
+def tile_colors(pal):
+    """One tile colour per category, as distinct as the theme allows. A theme with three or more coloured hues uses them (category's own
+    key first); a theme without hues (White, Vantablack) gets shades of its accent instead, so categories still differ."""
+    hues = sum(chromatic(pal[k]) for k in HUE_KEYS if k in pal) >= 3
+    step = 36 if hues else 16  # smallest colour distance (of 441) between two tiles
+    out, used = {}, []
+    for cat, keys in ACCENT.items():
+        keys = [k for k in keys if k in pal] if hues else ["accent"]
+        base = pal[keys[0]] if keys else pal["accent"]
+        cands = [pal[k] for k in keys] + [mix(base, pal["foreground" if t > 0 else "background"], abs(t)) for t in SHADES]
+        out[cat] = next((c for c in cands if all(dist(c, u) >= step for u in used)), max(cands, key=lambda c: min([dist(c, u) for u in used] or [0])))
+        used.append(out[cat])
+    return out
+
+def ink_for(tile, pal):
+    """Glyph colour: the theme's background or foreground, whichever contrasts more; plain black or white when neither reaches 4.5."""
     ink = max((pal["background"], pal["foreground"]), key=lambda c: contrast(tile, c))
+    if contrast(tile, ink) < 4.5: ink = max(("#000000", "#ffffff"), key=lambda c: contrast(tile, c))
+    return ink
+
+def svg(label, tile, glyph, pal):
+    ink = ink_for(tile, pal)
     if glyph.startswith("@"):
         body = f'<g fill="none" stroke="{ink}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" color="{ink}">{GLYPHS[glyph[1:]]}</g>'
     else:
@@ -74,7 +106,7 @@ def main():
     pal = read_palette(a.colors)
     for k in ("accent", "background", "foreground"):
         if k not in pal: sys.exit(f"gen.py: {a.colors} has no {k}")
-    for k in set(ACCENT.values()): pal.setdefault(k, pal["accent"])
+    tiles = tile_colors(pal)
     icons = os.path.join(a.out, "icons")
     os.makedirs(icons, exist_ok=True)
     for f in os.listdir(icons):  # drop icons removed from apps.tsv
@@ -90,11 +122,12 @@ def main():
         if cat not in ACCENT or src not in ("machine", "common") or (glyph.startswith("@") and glyph[1:] not in GLYPHS):
             sys.exit(f"apps.tsv line {n}: unknown category, source or glyph")
         seen.add(stem)
-        open(os.path.join(icons, stem + ".svg"), "w", encoding="utf-8").write(svg(label, cat, glyph, pal))
+        open(os.path.join(icons, stem + ".svg"), "w", encoding="utf-8").write(svg(label, tiles[cat], glyph, pal))
     open(os.path.join(a.out, "pack.toml"), "w").write(
         'name = "omahop reference"\nauthor = "omahop"\nlicense = "CC0-1.0"\n'
-        'description = "Reference pack: common Linux apps and the apps of one Omarchy machine, flat tiles in the active theme colours. Made by tools/refpack/gen.py."\n')
+        'description = "Reference pack: common Linux apps and the apps of one Omarchy machine, flat tiles in the active theme colours (follows_theme: omahop regenerates them when the theme changes). Made by tools/refpack/gen.py."\n'
+        'follows_theme = true\ngenerator = "refpack"\n')
     open(os.path.join(a.out, "LICENSE"), "w").write("CC0 1.0 Universal: the icons in this pack are dedicated to the public domain.\nhttps://creativecommons.org/publicdomain/zero/1.0/\n")
     print(f"{len(seen)} icons in {a.out}")
 
-main()
+if __name__ == "__main__": main()

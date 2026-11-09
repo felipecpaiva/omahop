@@ -42,7 +42,22 @@ description = "Optional, one line"
 ```
 
 `name`, `author` and `license` are required and must not be empty. Other keys, numbers and `true`/`false` are allowed and ignored (room for
-later versions). Each text is at most 500 characters, the file at most 16 KB. Quotes inside a text are not possible.
+later versions), except the two optional keys below. Each text is at most 500 characters, the file at most 16 KB. Quotes inside a text are not possible.
+
+Optional, for packs whose colours come from the Omarchy theme (older omahop versions ignore both keys and use the committed icons):
+
+```toml
+follows_theme = true        # bare true, not "true"
+generator = "refpack"       # a built-in generator, chosen by name
+```
+
+With `follows_theme = true` omahop does not list the pack's own `icons/`. It runs the built-in generator named by `generator` on the palette of
+the running theme (`~/.local/state/omarchy/current/theme/colors.toml`) and lists the result, kept in `$XDG_CACHE_HOME/omahop/themed-packs/<name>/<stamp>/`
+(mode 700; the stamp is a hash of palette and generator, so a new palette is a new folder and the old one is deleted). The only generator is
+`refpack` (the list `PACK_GENERATORS` in `tools/pack-lib.sh`); a script inside a pack is never run, and a name not on the list is not a generator.
+The shell rescans the pack half a second after Omarchy rewrites `current/theme.generation` or `theme.name` (what `omarchy-theme-set` does last).
+No palette, an unknown generator or a failed run: the pack's own committed icons are used and the shell log says why. The strict check (export,
+import) refuses `follows_theme = true` without a listed `generator`. The picker's sample cards show the committed icons, not the themed copy.
 
 A pack.toml that is missing, too big, has a line that is not `key = value`, or lacks a required key: the **whole pack is not used**, the switcher
 keeps the system icons, and the shell log says why. Read the notes with
@@ -116,11 +131,16 @@ ln -s "$PWD/packs/omahop-reference" ~/.config/omahop/packs/omahop-reference
   references. Tile colour is one palette key per category (browser blue, terminal green, dev magenta, files yellow, media red, chat cyan,
   office accent, system muted, game bright_red, graphics bright_cyan, utility bright_green). The glyph colour is the theme's background or
   foreground, whichever contrasts more with the tile.
-- **Palette**: the active theme's `colors.toml` (`~/.local/state/omarchy/current/theme/colors.toml`). A theme change means regenerating:
-  `bash tools/refpack/gen.sh` (or `--colors <file>` for another theme, for example one under `/usr/share/omarchy/themes/<name>/colors.toml`).
-  The committed pack was made with the White theme, which is grey only, so the categories differ by shade, not hue. Regenerate with a coloured
-  theme to test colour.
-- **Test**: `tests/refpack.test.sh` regenerates with a fixed palette, runs the strict pack check, and checks unique stems, size, no private text,
+- **Palette**: the active theme's `colors.toml`. The pack has `follows_theme = true` and `generator = "refpack"`, so omahop regenerates it by itself
+  when the theme changes (see pack.toml above); `bash tools/refpack/gen.sh` (or `--colors <file>`, for example one under
+  `/usr/share/omarchy/themes/<name>/colors.toml`) rewrites the committed copy, which is the fallback. Each category asks for its own hue
+  (browser blue, terminal green, dev magenta, files yellow, media red, chat cyan, office accent, system muted, game, graphics and utility the bright
+  variants); a hue too close to one already given (distance under 36 of 441) is shaded toward the foreground or background instead. A theme with fewer
+  than three coloured hues (White, Vantablack) gets 11 shades of its accent (distance 16 or more). Glyph colour: the theme's background or
+  foreground, whichever contrasts more, or black or white when neither reaches 4.5. Previews: `docs/research/img/refpack-themes.png` (Tokyo Night,
+  Gruvbox, White) and `refpack-theme-<name>.png`. The committed pack is made with White (grey only).
+- **Test**: `tests/refpack_theme.test.sh` (generator list, strict check, themed index in a temp HOME, fallbacks, tile distinctness and contrast on all
+  installed themes); `tests/refpack.test.sh` regenerates with a fixed palette, runs the strict pack check, and checks unique stems, size, no private text,
   and that the committed pack has the stems of `apps.tsv`.
 
 ### Omarchy design language (what the pack copies)

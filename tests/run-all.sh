@@ -22,6 +22,7 @@ bash tests/pack_index.test.sh
 bash tests/pack_zip.test.sh
 bash tests/pack_edit.test.sh
 bash tests/refpack.test.sh
+bash tests/refpack_theme.test.sh
 bash tests/tabs_helpers.test.sh
 bash tests/audio_sample.test.sh
 lua tools/gen-spec.lua --check

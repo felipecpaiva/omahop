@@ -154,15 +154,17 @@ Item {
   property string scannedPack: ""
   property var packIndex: IconResolve.parseIndex("")
   onIconPackChanged: root.scanPack()
+  property bool packDirty: false  // a rescan was asked for while one ran
   function scanPack() {
-    if (packScan.running) return
+    if (packScan.running) { root.packDirty = true; return }
+    root.packDirty = false
     root.scannedPack = root.iconPack
     packScan.running = true
   }
   Process {
     id: packScan
     command: ["bash", Paths.fromUrl(Qt.resolvedUrl("tools/pack-index.sh")), root.scannedPack]
-    onRunningChanged: if (!running && root.iconPack !== root.scannedPack) root.scanPack()
+    onRunningChanged: if (!running && (root.packDirty || root.iconPack !== root.scannedPack)) root.scanPack()
     stdout: StdioCollector {
       onStreamFinished: {
         root.packIndex = IconResolve.parseIndex(text)
@@ -182,6 +184,28 @@ Item {
     watchChanges: true
     printErrors: false
     onFileChanged: root.scanPack()
+  }
+
+  // A pack with follows_theme = true is regenerated from the running Omarchy theme by tools/pack-index.sh, so a theme change means a rescan of the pack.
+  // Omarchy swaps the whole theme folder and then rewrites current/theme.generation and theme.name (in place), so those two small files are the safe
+  // watch (the folder or colors.toml may be replaced under a watch); the rewrite comes in bursts, hence the debounce.
+  readonly property string omarchyState: (Quickshell.env("XDG_STATE_HOME") || (Quickshell.env("HOME") + "/.local/state")) + "/omarchy/current"
+  Timer {
+    id: themeTimer
+    interval: 500
+    onTriggered: if (root.iconPack !== "") root.scanPack()
+  }
+  FileView {
+    path: root.omarchyState + "/theme.generation"
+    watchChanges: true
+    printErrors: false
+    onFileChanged: themeTimer.restart()
+  }
+  FileView {
+    path: root.omarchyState + "/theme.name"
+    watchChanges: true
+    printErrors: false
+    onFileChanged: themeTimer.restart()
   }
 
   // ---- icons in the Omarchy app grid, bar and menu (setting icons_in_launcher, off by default, D30): the same file this resolver picks for each desktop
