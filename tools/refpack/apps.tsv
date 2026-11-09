@@ -1,0 +1,133 @@
+# stem<TAB>label<TAB>category<TAB>glyph (@name = hand drawn, else letters)<TAB>source
+chromium	Chromium	browser	@browser	machine
+google-chrome	Google Chrome	browser	@browser	machine
+firefox	Firefox	browser	@browser	common
+brave-browser	Brave	browser	Br	common
+zen	Zen Browser	browser	Z	common
+vivaldi-stable	Vivaldi	browser	V	common
+librewolf	LibreWolf	browser	Lw	common
+microsoft-edge	Microsoft Edge	browser	E	common
+youtube	YouTube	media	@video	machine
+x	X	chat	X	machine
+google-maps	Google Maps	utility	Gm	machine
+google-photos	Google Photos	graphics	@image	machine
+google-contacts	Google Contacts	utility	Gc	machine
+google-messages	Google Messages	chat	@chat	machine
+kitty	kitty	terminal	@terminal	machine
+foot	Foot	terminal	@terminal	machine
+alacritty	Alacritty	terminal	@terminal	common
+com.mitchellh.ghostty	Ghostty	terminal	@terminal	common
+org.wezfurlong.wezterm	WezTerm	terminal	@terminal	common
+org.kde.konsole	Konsole	terminal	@terminal	common
+org.gnome.terminal	GNOME Terminal	terminal	@terminal	common
+xterm	XTerm	terminal	@terminal	common
+herdr	Herdr	terminal	@terminal	machine
+tuios	TUIOS	terminal	@terminal	machine
+com.microsoft.vscode	Visual Studio Code	dev	@code	machine
+code	Visual Studio Code	dev	@code	common
+nvim	Neovim	dev	@code	machine
+cmake-gui	CMake	dev	Cm	machine
+com.anthropic.claude	Claude	dev	Cl	machine
+chatgpt	ChatGPT	dev	Gp	machine
+docker	lazydocker	dev	Dk	machine
+emacs	Emacs	dev	Em	common
+sublime_text	Sublime Text	dev	@code	common
+dev.zed.zed	Zed	dev	@code	common
+jetbrains-idea	IntelliJ IDEA	dev	Ij	common
+org.gnome.gedit	gedit	dev	@notes	common
+org.kde.kate	Kate	dev	@notes	common
+postman	Postman	dev	Pm	common
+dbeaver	DBeaver	dev	@disk	common
+org.gnome.nautilus	Files	files	@files	machine
+yazi	Yazi	files	@files	machine
+thunar	Thunar	files	@files	common
+org.kde.dolphin	Dolphin	files	@files	common
+pcmanfm	PCManFM	files	@files	common
+ranger	ranger	files	@files	common
+localsend	LocalSend	files	@download	machine
+qbittorrent	qBittorrent	files	@download	common
+transmission-gtk	Transmission	files	@download	common
+mpv	mpv	media	@video	machine
+vlc	VLC	media	@video	common
+io.github.celluloid_player.celluloid	Celluloid	media	@video	common
+spotify	Spotify	media	@music	common
+cliamp	cliamp	media	@music	machine
+rhythmbox	Rhythmbox	media	@music	common
+audacious	Audacious	media	@music	common
+com.obsproject.studio	OBS Studio	media	@record	machine
+obs	OBS Studio	media	@record	machine
+org.kde.kdenlive	Kdenlive	media	@video	machine
+omacut	Omacut	media	@video	machine
+monologue	Monologue	media	@mic	machine
+voxtype	Voxtype	media	@mic	machine
+imv	imv	graphics	@image	machine
+org.gnome.loupe	Loupe	graphics	@image	common
+com.github.pintaproject.pinta	Pinta	graphics	@image	machine
+pinta	Pinta	graphics	@image	machine
+omasnap	Omasnap	graphics	@camera	machine
+gimp	GIMP	graphics	Gi	common
+org.inkscape.inkscape	Inkscape	graphics	Ik	common
+org.kde.krita	Krita	graphics	Kr	common
+blender	Blender	graphics	Bl	common
+discord	Discord	chat	@chat	machine
+omarchy-discord	Discord	chat	@chat	machine
+slack	Slack	chat	@chat	machine
+whatsapp	WhatsApp	chat	@chat	machine
+org.telegram.desktop	Telegram	chat	@chat	common
+signal	Signal	chat	@chat	common
+element	Element	chat	@chat	common
+zoom	Zoom	chat	@video	machine
+teams-for-linux	Teams	chat	@chat	common
+hey	HEY	chat	@mail	machine
+basecamp	Basecamp	chat	Bc	machine
+org.mozilla.thunderbird	Thunderbird	chat	@mail	common
+org.gnome.evolution	Evolution	chat	@mail	common
+libreoffice-startcenter	LibreOffice	office	Lo	machine
+libreoffice-writer	LibreOffice Writer	office	@doc	machine
+libreoffice-calc	LibreOffice Calc	office	@sheet	machine
+libreoffice-impress	LibreOffice Impress	office	@slides	machine
+libreoffice-draw	LibreOffice Draw	office	@image	machine
+libreoffice-base	LibreOffice Base	office	@disk	machine
+libreoffice-math	LibreOffice Math	office	Fx	machine
+hype	Hype	office	@slides	machine
+omawrite	Omawrite	office	@doc	machine
+signed	Signed	office	Sg	machine
+md.obsidian.obsidian	Obsidian	office	@notes	machine
+org.gnome.calendar	Calendar	office	@calendar	machine
+org.gnome.evince	Document Viewer	office	@doc	machine
+org.gnome.papers	Papers	office	@doc	machine
+com.github.xournalpp.xournalpp	Xournal++	office	@notes	machine
+org.kde.okular	Okular	office	@doc	common
+zathura	Zathura	office	@doc	common
+org.gnome.settings	Settings	system	@settings	machine
+omacalc	Omacalc	system	@calculator	machine
+org.gnome.calculator	Calculator	system	@calculator	common
+btop	btop	system	@monitor	machine
+nvtop	nvtop	system	@monitor	machine
+htop	htop	system	@monitor	common
+org.gnome.systemmonitor	System Monitor	system	@monitor	common
+lstopo	lstopo	system	@monitor	machine
+disktree	disktree	system	@disk	machine
+org.gnome.diskutility	Disks	system	@disk	machine
+cups	Printing	system	@settings	machine
+system-config-printer	Print Settings	system	@settings	machine
+aether	Aether	system	@settings	machine
+hyprmoncfg	hyprmoncfg	system	@monitor	machine
+omabarconfigurator	OmaBar Configurator	system	@settings	machine
+omagnet	omagnet	system	@settings	machine
+omahop	omahop	system	@settings	machine
+omaland	Omaland	system	@settings	machine
+online-accounts	Online Accounts	system	@settings	machine
+org.pulseaudio.pavucontrol	Volume Control	system	@mic	common
+nm-connection-editor	Network Connections	system	@settings	common
+com.moonlight_stream.moonlight	Moonlight	game	@gamepad	machine
+steam	Steam	game	@gamepad	machine
+gliff	Gliff	utility	Gl	machine
+net.lutris.lutris	Lutris	game	@gamepad	common
+heroic	Heroic Launcher	game	@gamepad	common
+com.usebottles.bottles	Bottles	game	@gamepad	common
+org.prismlauncher.prismlauncher	Prism Launcher	game	@gamepad	common
+com.valvesoftware.steam	Steam	game	@gamepad	common
+org.keepassxc.keepassxc	KeePassXC	utility	Kp	common
+1password	1Password	utility	1P	common
+bitwarden	Bitwarden	utility	Bw	common

@@ -95,6 +95,42 @@ cp -r docs/examples/packs/omahop-sample ~/.config/omahop/packs/
 
 then set Icon pack to `omahop-sample`.
 
+## Reference pack (test fixture)
+
+`packs/omahop-reference/` is a complete pack made by `tools/refpack/gen.sh`: 132 plain SVG icons (about 0.5 KB each, CC0) for the apps of one
+Omarchy machine plus the usual Linux desktop apps (browsers, terminals, editors, file managers, media, chat, office, games, system tools).
+It is the shared fixture for testing the icon picker and the coming builder with a pack that has many icons. Preview: `docs/research/img/refpack-sheet.png`.
+
+Install (copy, or link so a regenerate shows at once), then pick it in the picker. Nothing enables it for you:
+
+```bash
+ln -s "$PWD/packs/omahop-reference" ~/.config/omahop/packs/omahop-reference
+```
+
+- **Data**: `tools/refpack/apps.tsv`, one line per icon: `stem`, label, category, glyph, source (`machine` or `common`), tab separated. Stem is the
+  window class in lower case (or the desktop entry icon name for web apps). Adding an app is one line, then `bash tools/refpack/gen.sh`.
+- **Glyph**: `@name` is a hand drawn glyph (23 of them: terminal, browser, files, code, music, video, chat, mail, settings, calculator, camera,
+  monitor, doc, sheet, slides, gamepad, calendar, image, download, notes, disk, mic, record), anything else is a one to three letter monogram.
+  Hand drawn glyphs are simple strokes in `GLYPHS` in `gen.py`; 105 of the 132 icons use one, the other 27 are monograms.
+- **Look**: 128x128 viewBox, rounded square tile (radius 28 of 112), one stroked glyph or a bold monogram, no gradients, no shadows, no external
+  references. Tile colour is one palette key per category (browser blue, terminal green, dev magenta, files yellow, media red, chat cyan,
+  office accent, system muted, game bright_red, graphics bright_cyan, utility bright_green). The glyph colour is the theme's background or
+  foreground, whichever contrasts more with the tile.
+- **Palette**: the active theme's `colors.toml` (`~/.local/state/omarchy/current/theme/colors.toml`). A theme change means regenerating:
+  `bash tools/refpack/gen.sh` (or `--colors <file>` for another theme, for example one under `/usr/share/omarchy/themes/<name>/colors.toml`).
+  The committed pack was made with the White theme, which is grey only, so the categories differ by shade, not hue. Regenerate with a coloured
+  theme to test colour.
+- **Test**: `tests/refpack.test.sh` regenerates with a fixed palette, runs the strict pack check, and checks unique stems, size, no private text,
+  and that the committed pack has the stems of `apps.tsv`.
+
+### Omarchy design language (what the pack copies)
+
+Read from the machine, not from the web: the menu (`/usr/share/omarchy/default/omarchy/omarchy-menu.jsonc`) draws every entry with one Nerd Font
+glyph, a single flat shape with no outline and no colour of its own; the theme files (`colors.toml`, 24 themes under `/usr/share/omarchy/themes`)
+give each theme one accent, a background and foreground pair, three background steps and the six ANSI hues. So the look is flat, monochrome
+per tile, rounded, with colour only from the theme. The pack follows that and adds the tile because an app icon has to stand alone on any
+background.
+
 ## The editor
 
 Open the settings window, find **Icon pack** (group Look) and press **Make or edit icon packs**. The settings list gives way to the editor;
