@@ -1,3 +1,4 @@
 branding/board*.html
 branding/board.html
 .claude/
+__pycache__/
