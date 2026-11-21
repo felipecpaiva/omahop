@@ -420,6 +420,7 @@ ColumnLayout {
       spacing: Style.spacing.xs
       TextField {
         id: filterField
+        maximumLength: 128
         Layout.fillWidth: true
         placeholderText: "Filter apps"
         foreground: page.foreground
@@ -527,6 +528,7 @@ ColumnLayout {
         Button { text: "A file"; bordered: page.tab === "file"; foreground: page.foreground; accent: page.accent; fontFamily: page.fontFamily; fontSize: Style.font.caption; onClicked: { page.tab = "file"; page.setZone("icons") } }
         TextField {
           id: searchField
+          maximumLength: 128
           visible: page.tab === "themes"
           Layout.fillWidth: true
           placeholderText: "Search icons by name in all themes"
@@ -538,6 +540,7 @@ ColumnLayout {
         }
         TextField {
           id: pathField
+          maximumLength: 4096
           visible: page.tab === "file"
           Layout.fillWidth: true
           placeholderText: "Full path of a PNG or SVG, then Enter"

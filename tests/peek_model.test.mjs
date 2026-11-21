@@ -20,6 +20,10 @@ g = M.group(list, { onlyFloating: true, monitor: "eDP-1" })
 assert.deepEqual(g.map((x) => x.appId), ["kitty", "chrome"], "only this screen's windows")
 assert.equal(g[0].windows.length, 3, "the minimized window shows on every screen")
 assert.deepEqual(M.group([], {}), [], "no windows, no groups")
+// a client-chosen app id such as __proto__ must not hit Object.prototype
+g = M.group([w("8", "__proto__"), w("9", "constructor"), w("10", "__proto__"), w("11", "kitty")], {})
+assert.deepEqual(g.map((x) => x.appId), ["__proto__", "constructor", "kitty"], "prototype-like app ids group like any other")
+assert.equal(g[0].windows.length, 2, "both __proto__ windows land in one group")
 assert.deepEqual(M.group(list), M.group(list, {}), "options are optional")
 
 // edge choice: an explicit edge wins; auto is a free edge (not the dock's, not the bar's), preferring right

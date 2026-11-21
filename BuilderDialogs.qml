@@ -105,6 +105,7 @@ Item {
         spacing: Style.spacing.xs
         TextField {
           id: nameField
+          maximumLength: 64
           Layout.fillWidth: true
           placeholderText: "Pack name"
           foreground: dialogs.foreground
@@ -116,6 +117,7 @@ Item {
         }
         TextField {
           id: authorField
+          maximumLength: 64
           Layout.fillWidth: true
           placeholderText: "Author (your name, optional)"
           foreground: dialogs.foreground

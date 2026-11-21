@@ -86,4 +86,9 @@ assert.deepEqual(A.playingAddresses(null, windows, norm), {})
 assert.deepEqual(A.playingAddresses(sample, [], norm), {})
 assert.deepEqual(A.playingAddresses(sample, undefined, norm), {})
 
+// client-chosen window classes like __proto__ or constructor must not throw or match inherited properties
+const odd = [{ address: "0xa", pid: 0, appId: "__proto__" }, { address: "0xb", pid: 0, appId: "constructor" }, { address: "0xc", pid: 0, appId: "kitty" }]
+const oddSample = { streams: [{ pid: 0, binary: "constructor", app: "x", playing: true }, { pid: 0, binary: "toString", app: "y", playing: true }], parents: {} }
+assert.deepEqual(A.playingAddresses(oddSample, odd, norm), { b: true })
+
 console.log("audio marker ok")

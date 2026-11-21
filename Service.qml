@@ -225,7 +225,7 @@ Item {
     }
     if (!root.iconIndexReady) return
     root.overlayOn = true
-    var pairs = [], seen = {}, apps = DesktopEntries.applications.values
+    var pairs = [], seen = Object.create(null), apps = DesktopEntries.applications.values
     for (var i = 0; i < apps.length; i++) {
       var icon = apps[i].icon ? String(apps[i].icon) : ""
       if (icon === "" || icon.charAt(0) === "/" || seen[icon]) continue
@@ -302,7 +302,7 @@ Item {
     printErrors: false
   }
   function writeNames() {
-    var seen = {}, lines = []
+    var seen = Object.create(null), lines = []
     for (var i = 0; i < root.entries.length; i++) {
       var id = root.entries[i].appId
       if (seen[id]) continue

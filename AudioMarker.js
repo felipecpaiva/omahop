@@ -64,7 +64,7 @@ function addTo(index, key, address) {
 
 // The windows that own each pid, and each class (whole, and its last dot part: org.mozilla.firefox also answers to firefox).
 function indexWindows(windows) {
-  var byPid = {}, byClass = {}
+  var byPid = {}, byClass = Object.create(null)
   for (var i = 0; i < windows.length; i++) {
     var w = windows[i], address = w.address
     if (!address) continue

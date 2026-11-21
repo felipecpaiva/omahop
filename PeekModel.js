@@ -6,7 +6,7 @@
 // A minimized window has no real monitor (its origin is lost, as in the switcher), so it is listed on every screen.
 function group(windows, opts) {
   var o = opts || {}
-  var groups = [], byApp = {}
+  var groups = [], byApp = Object.create(null)
   for (var i = 0; i < windows.length; i++) {
     var w = windows[i]
     if (!w.appId) continue

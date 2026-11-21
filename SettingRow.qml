@@ -94,6 +94,7 @@ ColumnLayout {
   }
 
   TextField {
+    maximumLength: 1024
     visible: row.setting.type === "text"
     Layout.fillWidth: true
     text: row.setting.type === "text" ? String(row.current) : ""
